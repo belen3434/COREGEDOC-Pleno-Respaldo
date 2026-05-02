@@ -1,5 +1,16 @@
 <?php
 
+require_once dirname(__DIR__) . '/app/config/Constants.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['idUsuario'])) {
+    header('Location: ../index.php?action=login');
+    exit();
+}
+
 $vista = $_GET['vista'] ?? 'index';
 
 $vistasPermitidas = [
@@ -10,29 +21,15 @@ $vistasPermitidas = [
     'tabla' => __DIR__ . '/views/tabla.php',
 ];
 
-$vistaActual = $vistasPermitidas[$vista] ?? $vistasPermitidas['index'];
-?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Modulo de Pleno</title>
-    <link rel="stylesheet" href="assets/css/pleno.css">
-</head>
-<body>
-    <nav>
-        <a href="../index.php?action=home">Volver al CORE</a>
-        <a href="index.php">Inicio Pleno</a>
-        <a href="index.php?vista=sesiones">Sesiones</a>
-        <a href="index.php?vista=crear_sesion">Crear Sesion</a>
-        <a href="index.php?vista=tabla">Tabla</a>
-    </nav>
+$childView = $vistasPermitidas[$vista] ?? $vistasPermitidas['index'];
 
-    <main>
-        <?php include $vistaActual; ?>
-    </main>
+$data = [
+    'usuario' => [
+        'nombre' => $_SESSION['pNombre'] ?? '',
+        'apellido' => $_SESSION['aPaterno'] ?? '',
+        'rol' => $_SESSION['tipoUsuario_id'] ?? 0,
+    ],
+    'pagina_actual' => 'pleno',
+];
 
-    <script src="assets/js/pleno.js"></script>
-</body>
-</html>
+require_once dirname(__DIR__) . '/app/views/layouts/main.php';
