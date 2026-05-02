@@ -13,6 +13,18 @@
                 </a>
             </li>
 
+            <?php if (($paginaActual ?? '') === 'pleno'): ?>
+                </ul>
+    </div>
+
+    <div class="sidebar-footer border-top p-3">
+        <a href="index.php?action=logout" class="nav-link nav-link-logout text-danger fw-bold d-flex align-items-center">
+            <i class="fas fa-sign-out-alt fa-fw me-2"></i> Cerrar SesiÃ³n
+        </a>
+    </div>
+</nav>
+<?php return; endif; ?>
+
             <?php 
             // --- BLOQUE EXCLUSIVO CONSEJERO (ID 1) ---
             if ($tipoUsuario == 1): 
