@@ -1,0 +1,21 @@
+,Desarrollo ágil: Pila de Producto (Product Backlog),,,,,,,
+,Elaborado por: pmoinformatica.com,,,,,,,
+,,,,,,,,
+,Identificador (ID) de la Historia,Enunciado de la Historia,Alias,Estado,Dimensión / Esfuerzo,Iteración (Sprint),Prioridad,Comentarios
+,HU-01,"Como Secretaría de Pleno, necesito acceder al módulo de pleno con mi perfil autorizado, con la finalidad de ingresar a la gestión de la sesión plenaria.",Acceso Secretaría,Planificada,1,1,Must,Acceso al módulo según autenticación propia del sistema CORE
+,HU-02,"Como Consejero Regional, necesito acceder al módulo de pleno, con la finalidad de visualizar la tabla de contenidos de la sesión.",Acceso Consejero,Planificada,2,1,Must,Acceso con permisos de solo visualización inicial.
+,HU-03,"Como Gobernador, necesito acceder al módulo de pleno, con la finalidad de visualizar la información de la sesión plenaria.",Acceso Gobernador,Planificada,2,1,Should,Funciona igual que el Consejero en este sprint (sin firma electrónica aún).
+,HU-04,"Como Secretario Ejecutivo, necesito acceder al módulo de pleno, con la finalidad de supervisar la información de la sesión.",Acceso Ejecutivo,Planificada,2,1,Must,Acceso de supervisión con visualización general.
+,HU-05,"Como usuario del sistema (Secretaría de Pleno, Consejero Regional, Gobernador y Secretario Ejecutivo), necesito cerrar sesión, con la finalidad de salir de forma segura del módulo de pleno.",Cerrar Sesión,Planificada,1,1,Should,Funcionalidad común para todos los perfiles.
+,HU-06,"Como Secretaría de Pleno, necesito crear una sesión plenaria, con la finalidad de organizar una reunión oficial del CORE.",Crear Sesión,Planificada,3,1,Must,"Registro de sesión en base de datos."
+,HU-07," Como Secretaría de Pleno, necesito modificar una sesión plenaria, con la finalidad de actualizar su información.
+",Modificar Sesión,Planificada,2,1,Must,Permite modificar una sesion
+,HU-08,"Como Secretaría de Pleno, necesito eliminar una sesión plenaria, con la finalidad de eliminar registros incorrectos.",Eliminar Sesión,Planificada,2,1,Should,Permite eliminar una sesion plenaria
+,HU-09,"Como Secretaría de Pleno, necesito visualizar la lista de sesiones plenarias, con la finalidad de administrarlas.",Lista Sesiones,Planificada,2,1,Must,Funcionalidad que visualiza la lista de sesiones plenarias
+,HU-10,"Como Secretaría de Pleno, necesito precargar temas provenientes de comisiones a una sesión plenaria, con la finalidad de presentarlos en el pleno.",Precargar temas,Planificada,3,1,Must,Permite precargar los temas provenientes de las comisiones
+,HU-11,"Como Secretaría de Pleno, necesito visualizar los temas asociados a una sesión, con la finalidad de revisar los temas a tratar en el pleno.",Ver temas,Planificada,2,1,Must,"Permite revisar los temas provenientes de comisiones asociadas a una sesión plenaria."
+,HU-12,"Como Secretaría de Pleno, necesito eliminar un tema de una sesión, con la finalidad de corregir errores en la carga.",Eliminar tema,Planificada,2,1,Should,"Permite eliminar temas asociados a una sesión en caso de error."
+,HU-13,"Como Secretaría de Pleno, necesito modificar la asociación o el orden de un tema dentro de la sesión, con la finalidad de organizar correctamente la tabla del pleno.  ",Modificar Tema,Planificada,2,1,Could,"Permite actualizar información básica de la propuesta asociada a la sesión (si el proceso lo permite)."
+,HU-14,"Como Secretaría de Pleno, necesito gestionar los puntos de la tabla de la sesión, con la finalidad de definir el orden del día.",Editar Tabla,Planificada,2,1,Must,Permite gestionar los puntos de la tabla
+,HU-15,"Como usuario del sistema (Consejero, Gobernador, Secretario Ejecutivo y perfil Resumen/Tabla), necesito visualizar la tabla de la sesión plenaria, con la finalidad de conocer el orden del día.",Ver Tabla,Planificada,2,1,Must,"La tabla muestra título de sesión, puntos fijos, comisiones precargadas y sección “Varios”.
+"

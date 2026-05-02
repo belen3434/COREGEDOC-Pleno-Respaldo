@@ -1,0 +1,13 @@
+{
+    "name": "joorges/coregedoc",
+    "description": "Sistema de Gestión Documental CORE",
+    "require": {
+        "php": ">=7.4",
+        "vlucas/phpdotenv": "^5.5" 
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}

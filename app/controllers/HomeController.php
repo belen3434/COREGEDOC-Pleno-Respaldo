@@ -1,0 +1,303 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Config\Database;
+use PDO;
+
+class HomeController
+{
+
+    private $db;
+
+    public function __construct()
+    {
+        // Conexión a la BD
+        $database = new Database();
+        $this->db = $database->getConnection();
+    }
+
+    public function index()
+    {
+        // 1. Verificar sesión (Seguridad básica)
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // --- INICIO: CONTROL DE INACTIVIDAD (60 MINUTOS) ---
+        $tiempoLimite = 3600; // 60 minutos * 60 segundos
+
+        if (isset($_SESSION['ultima_actividad'])) {
+            $segundosInactivo = time() - $_SESSION['ultima_actividad'];
+
+            if ($segundosInactivo > $tiempoLimite) {
+                // Si pasó el tiempo, borramos todo y redirigimos
+                session_unset();
+                session_destroy();
+                header('Location: index.php?action=login&msg=sesion_expirada');
+                exit();
+            }
+        }
+
+        // Actualizamos la marca de tiempo a "ahora" para la próxima comprobación
+        $_SESSION['ultima_actividad'] = time();
+        // --- FIN: CONTROL DE INACTIVIDAD ---
+
+
+        // Comenta o borra temporalmente esta redirección para probar
+        /*
+        if (!isset($_SESSION['idUsuario'])) {
+            header('Location: index.php?action=login');
+            exit();
+        }
+        */
+        
+        // 2. Preparar variables de usuario
+        $idUsuarioLogueado = $_SESSION['idUsuario'] ?? null; 
+        $tipoUsuario = $_SESSION['tipoUsuario_id'] ?? null;
+
+        // Cargar constantes si no están cargadas
+        require_once __DIR__ . '/../config/Constants.php';
+
+        // 3. Inicializar datos para la vista
+        $data = [
+            'tareas_pendientes' => [],
+            'actividad_reciente' => [],
+            'proximas_reuniones' => [],
+            'minutas_recientes_aprobadas' => [],
+            'usuario' => [
+                'nombre' => $_SESSION['pNombre'] ?? '',
+                'apellido' => $_SESSION['aPaterno'] ?? '',
+                'rol' => $tipoUsuario
+            ],
+            'pagina_actual' => 'home' // Para activar el menú
+        ];
+
+        // --- INICIO: LÓGICA DE VISTA REFACTORIZADA (MOVIDA DESDE home.php) ---
+
+        // A. Definir un saludo según la hora + Nombre Usuario (SIN ROL)
+        $hora = date('G');
+        if ($hora >= 5 && $hora < 12) {
+            $saludoBase = "Buenos días";
+        } elseif ($hora >= 12 && $hora < 20) {
+            $saludoBase = "Buenas tardes";
+        } else {
+            $saludoBase = "Buenas noches";
+        }
+
+        // Obtenemos nombre y apellido de la sesión
+        $pNombre = $_SESSION['pNombre'] ?? '';
+        $aPaterno = $_SESSION['aPaterno'] ?? '';
+        
+        // Concatenamos SOLO nombre y apellido, sin el rol.
+        $nombreCompleto = trim("$pNombre $aPaterno");
+        
+        if (!empty($nombreCompleto)) {
+            $data['saludo'] = "$saludoBase, $nombreCompleto";
+        } else {
+            $data['saludo'] = $saludoBase;
+        }
+
+
+        $imagenesZonas = [
+            // 1. FIRMA DIGITAL
+            [
+                'file' => 'public/img/zonas_region/imagen_zona_1.jpg',
+                'title' => 'Firma Digital Avanzada',
+                'subtitle' => 'Procesos de validación documental más rápidos y seguros.',
+                'icon' => 'fas fa-file-signature'
+            ],
+
+            // 2. ACCESO A LA INFORMACIÓN
+            [
+                'file' => 'public/img/zonas_region/imagen_zona_2.jpg',
+                'title' => 'Información en Tiempo Real',
+                'subtitle' => 'Transparencia y rendición de cuentas inmediata del CORE.',
+                'icon' => 'fas fa-chart-line'
+            ],
+
+            // 3. PROCESOS SIN PAPEL
+            [
+                'file' => 'public/img/zonas_region/imagen_zona_3.jpg',
+                'title' => 'Participación Activa',
+                'subtitle' => 'Facilitando y optimizando la labor de los Consejeros.',
+                'icon' => 'fas fa-hands-helping'
+            ],
+
+            // 4. PROYECTOS COMUNITARIOS
+            [
+                'file' => 'public/img/zonas_region/imagen_zona_4.jpg',
+                'title' => 'Registro de Proyectos',
+                'subtitle' => 'Trazabilidad y seguimiento de proyectos de desarrollo regional.',
+                'icon' => 'fas fa-city'
+            ],
+
+            // 5. COORDINACIÓN
+            [
+                'file' => 'public/img/zonas_region/imagen_zona_5.jpg',
+                'title' => 'Coordinación Intersectorial',
+                'subtitle' => 'Unificando procesos y optimizando la colaboración entre áreas.',
+                'icon' => 'fas fa-link'
+            ],
+
+            // 6. SEGUIMIENTO DE ACUERDOS
+            [
+                'file' => 'public/img/zonas_region/imagen_zona_6.jpg',
+                'title' => 'Seguimiento de Acuerdos',
+                'subtitle' => 'Monitoreo automatizado del avance de compromisos y tareas.',
+                'icon' => 'fas fa-chart-bar'
+            ],
+
+            // 7. APROBACIÓN DE MINUTAS
+            [
+                'file' => 'public/img/zonas_region/imagen_zona_7.jpg',
+                'title' => 'Aprobación Rápida de Minutas',
+                'subtitle' => 'Ciclos de revisión y sanción documental eficientes y cortos.',
+                'icon' => 'fas fa-gavel'
+            ],
+
+            // 8. DATOS HISTÓRICOS
+            [
+                'file' => 'public/img/zonas_region/imagen_zona_8.jpg',
+                'title' => 'Base de Datos Documental',
+                'subtitle' => 'Acceso y búsqueda rápida a todos los registros históricos.',
+                'icon' => 'fas fa-database'
+            ],
+        ];
+        $data['imagenes_zonas'] = $imagenesZonas;
+
+        try {
+            // A. Tareas para Presidente (Firmas pendientes)
+            if ($tipoUsuario == ROL_PRESIDENTE_COMISION) {
+                $sql = "SELECT COUNT(DISTINCT m.idMinuta)
+                        FROM t_aprobacion_minuta am
+                        JOIN t_minuta m ON am.t_minuta_idMinuta = m.idMinuta
+                        WHERE am.t_usuario_idPresidente = :idUsuario
+                        AND am.estado_firma = 'PENDIENTE'
+                        AND m.estadoMinuta NOT IN ('APROBADA', 'BORRADOR')";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([':idUsuario' => $idUsuarioLogueado]);
+                $conteo = $stmt->fetchColumn();
+
+                if ($conteo > 0) {
+                    $s = $conteo > 1 ? 's' : '';
+                    $data['tareas_pendientes'][] = [
+                        'texto' => "Tienes <strong>{$conteo} minuta{$s}</strong> esperando tu firma.",
+                        'link'  => "index.php?action=minutaPendiente",
+                        'icono' => "fa-file-signature",
+                        'color' => "danger"
+                    ];
+                }
+            }
+
+            // B. Tareas para Consejero/Presidente (Votos pendientes)
+            if ($tipoUsuario == ROL_CONSEJERO || $tipoUsuario == ROL_PRESIDENTE_COMISION) {
+                $sql = "SELECT COUNT(v.idVotacion) 
+                        FROM t_votacion v
+                        WHERE v.habilitada = 1
+                        AND NOT EXISTS (
+                            SELECT 1 FROM t_voto 
+                            WHERE t_votacion_idVotacion = v.idVotacion 
+                            AND t_usuario_idUsuario = :idUsuario
+                        )";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([':idUsuario' => $idUsuarioLogueado]);
+                $conteo = $stmt->fetchColumn();
+
+                if ($conteo > 0) {
+                    // Corrección de Pluralización:
+                    $es = $conteo > 1 ? 'es' : ''; // Para 'votacion' -> votaciones
+                    $s  = $conteo > 1 ? 's' : '';  // Para 'activa' -> activas y 'pendiente' -> pendientes
+                    
+                    $data['tareas_pendientes'][] = [
+                        'texto' => "Tienes <strong>{$conteo} votacion{$es} activa{$s}</strong> pendiente{$s}.",
+                        'link'  => "index.php?action=voto_autogestion",
+                        'icono' => "fa-vote-yea",
+                        'color' => "primary"
+                    ];
+                }
+            }
+
+            // C. Tareas Secretario Técnico
+            if ($tipoUsuario == ROL_SECRETARIO_TECNICO) {
+                // Feedback
+                $stmt = $this->db->query("SELECT COUNT(*) FROM t_minuta WHERE estadoMinuta = 'REQUIERE_REVISION'");
+                $conteo = $stmt->fetchColumn();
+                if ($conteo > 0) {
+                    // Se corrige la conjugación verbal para tercera persona del plural: requiere -> requieren
+                    $s = $conteo > 1 ? 's' : '';
+                    $requiere = $conteo > 1 ? 'requieren' : 'requiere';
+
+                    $data['tareas_pendientes'][] = [
+                        'texto' => "Hay <strong>{$conteo} minuta{$s}</strong> que {$requiere} tu revisión.",
+                        'link'  => "index.php?action=minutas_pendientes",
+                        'icono' => "fa-comment-dots",
+                        'color' => "danger"
+                    ];
+                }
+                // Borradores
+                $stmt = $this->db->query("SELECT COUNT(*) FROM t_minuta WHERE estadoMinuta = 'BORRADOR'");
+                $conteo = $stmt->fetchColumn();
+                if ($conteo > 0) {
+                    $s = $conteo > 1 ? 's' : '';
+                    $data['tareas_pendientes'][] = [
+                        'texto' => "Tienes <strong>{$conteo} minuta{$s} en borrador</strong>.",
+                        'link'  => "index.php?action=minutas_pendientes",
+                        'icono' => "fa-pencil-alt",
+                        'color' => "info"
+                    ];
+                }
+            }
+
+            // D. Actividad Reciente / Minutas
+            if ($tipoUsuario == ROL_CONSEJERO) {
+                $sql = "SELECT m.idMinuta, m.fechaAprobacion, m.pathArchivo, r.nombreReunion
+                        FROM t_minuta m
+                        LEFT JOIN t_reunion r ON m.idMinuta = r.t_minuta_idMinuta
+                        WHERE m.estadoMinuta = 'APROBADA'
+                        AND m.fechaAprobacion >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                        ORDER BY m.fechaAprobacion DESC LIMIT 5";
+                $data['minutas_recientes_aprobadas'] = $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                $sql = "SELECT s.fecha_hora, s.accion, s.detalle, 
+                        COALESCE(TRIM(CONCAT(u.pNombre, ' ', u.aPaterno)), 'Sistema') as usuario_nombre
+                        FROM t_minuta_seguimiento s
+                        LEFT JOIN t_usuario u ON s.t_usuario_idUsuario = u.idUsuario
+                        ORDER BY s.fecha_hora DESC LIMIT 5";
+                $data['actividad_reciente'] = $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            // E. Próximas Reuniones (Con formato de fecha corregido)
+            $sql = "SELECT r.idReunion, r.nombreReunion, r.fechaInicioReunion, c.nombreComision
+                    FROM t_reunion r
+                    LEFT JOIN t_comision c ON r.t_comision_idComision = c.idComision
+                    WHERE r.fechaInicioReunion >= NOW()
+                    ORDER BY r.fechaInicioReunion ASC LIMIT 3";
+            
+            $reuniones = $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+            // LOGICA: Traducir meses a español manualmente para el Dashboard
+            $mesesEsp = [
+                1 => 'ENE', 2 => 'FEB', 3 => 'MAR', 4 => 'ABR', 5 => 'MAY', 6 => 'JUN',
+                7 => 'JUL', 8 => 'AGO', 9 => 'SEP', 10 => 'OCT', 11 => 'NOV', 12 => 'DIC'
+            ];
+
+            foreach ($reuniones as &$r) {
+                $timestamp = strtotime($r['fechaInicioReunion']);
+                // Agregamos dos campos nuevos para usar en la vista home.php
+                $r['dia_fmt'] = date('d', $timestamp); // Ej: 15
+                $r['mes_esp'] = $mesesEsp[(int)date('n', $timestamp)]; // Ej: DIC (en vez de DEC)
+            }
+            unset($r); // Romper referencia
+
+            $data['proximas_reuniones'] = $reuniones;
+
+        } catch (\Exception $e) {
+            // error_log($e->getMessage());
+        }
+
+        // 4. Cargar la Vista dentro del Layout
+        $childView = __DIR__ . '/../views/home.php';
+        require_once __DIR__ . '/../views/layouts/main.php';
+    }
+}
