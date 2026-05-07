@@ -1,14 +1,16 @@
 ﻿<?php
-// Vista principal del modulo de pleno.
+// Vista principal del módulo de pleno.
+$perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
 ?>
-<div class="container-fluid mt-4 pt-2">
+<div class="container-fluid mt-4">
+    <div class="alert alert-info py-2" role="alert">
+        <strong>Perfil activo:</strong> <?php echo htmlspecialchars($perfilActivo, ENT_QUOTES, 'UTF-8'); ?>
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
-            <i class="fas fa-landmark me-2 text-primary"></i>Modulo de Pleno
+            <i class="fas fa-landmark me-2 text-primary"></i>Módulo de Pleno
         </h2>
-        <a href="../index.php?action=home" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left me-1"></i>Volver al inicio
-        </a>
     </div>
 
     <div class="row g-3">
@@ -27,10 +29,10 @@
         <div class="col-md-6 col-xl-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Crear sesion</h5>
-                    <p class="card-text text-muted">Registra una nueva sesion plenaria.</p>
+                    <h5 class="card-title">Crear sesión</h5>
+                    <p class="card-text text-muted">Registra una nueva sesión plenaria.</p>
                     <a href="index.php?vista=crear_sesion" class="btn btn-success btn-sm">
-                        <i class="fas fa-plus me-1"></i>Nueva sesion
+                        <i class="fas fa-plus me-1"></i>Nueva sesión
                     </a>
                 </div>
             </div>
@@ -40,7 +42,7 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h5 class="card-title">Tabla del pleno</h5>
-                    <p class="card-text text-muted">Visualiza el orden del dia de la sesion.</p>
+                    <p class="card-text text-muted">Visualiza el orden del día de la sesión.</p>
                     <a href="index.php?vista=tabla" class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-table me-1"></i>Ver tabla
                     </a>

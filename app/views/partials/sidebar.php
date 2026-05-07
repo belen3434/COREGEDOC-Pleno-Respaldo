@@ -1,11 +1,25 @@
-<nav class="sidebar d-flex flex-column flex-shrink-0 bg-white border-end" id="sidebar-wrapper">
+﻿<nav class="sidebar d-flex flex-column flex-shrink-0 bg-white border-end" id="sidebar-wrapper">
+    <?php
+    $isPleno = (($paginaActual ?? '') === 'pleno');
+    $logoPath = $isPleno ? '../public/img/logoCore1.png' : 'public/img/logoCore1.png';
+    ?>
 
-    <div class="sidebar-heading text-center py-3 border-bottom">
-        <img src="public/img/logoCore1.png" alt="Logo CORE" class="img-fluid" style="max-width: 250px; height: auto;">
+    <div class="sidebar-heading text-center py-3 border-bottom <?php echo $isPleno ? 'pleno-sidebar-heading' : ''; ?>">
+        <img src="<?php echo $logoPath; ?>" alt="Logo CORE Valparaíso" class="img-fluid" style="max-width: 250px; height: auto;">
     </div>
 
     <div class="flex-grow-1 overflow-auto custom-scrollbar">
         <ul class="nav nav-pills flex-column mb-auto p-3 gap-1">
+            <?php if ($isPleno): ?>
+                <li class="nav-item mt-2 px-2">
+                    <a href="../index.php?action=home" class="btn btn-pleno-volver w-100">
+                        <i class="fas fa-arrow-left me-2"></i>Volver al inicio
+                    </a>
+                </li>
+            </ul>
+    </div>
+</nav>
+<?php return; endif; ?>
 
             <li class="nav-item">
                 <a href="index.php?action=home" class="nav-link <?php echo esActivo('home', $paginaActual) ? 'active' : ''; ?>">
@@ -13,21 +27,9 @@
                 </a>
             </li>
 
-            <?php if (($paginaActual ?? '') === 'pleno'): ?>
-                </ul>
-    </div>
-
-    <div class="sidebar-footer border-top p-3">
-        <a href="index.php?action=logout" class="nav-link nav-link-logout text-danger fw-bold d-flex align-items-center">
-            <i class="fas fa-sign-out-alt fa-fw me-2"></i> Cerrar SesiÃ³n
-        </a>
-    </div>
-</nav>
-<?php return; endif; ?>
-
-            <?php 
+            <?php
             // --- BLOQUE EXCLUSIVO CONSEJERO (ID 1) ---
-            if ($tipoUsuario == 1): 
+            if ($tipoUsuario == 1):
             ?>
                 <li class="nav-item mt-3 mb-1 text-muted small fw-bold text-uppercase px-2">Consultas</li>
 
@@ -45,8 +47,8 @@
             <?php endif; ?>
 
             <?php
-            $rolesGestion = [ROL_ADMINISTRADOR, ROL_SECRETARIO_TECNICO, ROL_PRESIDENTE_COMISION];
-            $rolesAvanzados = [ROL_ADMINISTRADOR];
+            $rolesGestion = [ROL_ADMINISTRADOR, ROL_SECRETARIO_TECNICO, ROL_PRESIDENTE_COMISION, 20, 21, 22];
+            $rolesAvanzados = [ROL_ADMINISTRADOR, 20, 21, 22];
             ?>
 
             <?php if (in_array($tipoUsuario, $rolesGestion)): ?>
@@ -59,7 +61,7 @@
                     </a>
                 </li>
 
-                <?php if (in_array($tipoUsuario, [ROL_ADMINISTRADOR, ROL_SECRETARIO_TECNICO])): ?>
+                <?php if (in_array($tipoUsuario, [ROL_ADMINISTRADOR, ROL_SECRETARIO_TECNICO, 20])): ?>
                     <li class="nav-item">
                         <a href="index.php?action=reuniones_dashboard"
                             class="nav-link <?php echo ($paginaActual == 'reuniones_menu') ? 'active' : ''; ?>">
@@ -71,11 +73,13 @@
                 <?php if (in_array($tipoUsuario, $rolesAvanzados)): ?>
                     <li class="nav-item mt-3 mb-1 text-muted small fw-bold text-uppercase px-2">Administración</li>
 
-                    <li class="nav-item">
-                        <a href="index.php?action=usuarios_dashboard" class="nav-link <?php echo ($paginaActual == 'usuarios_dashboard') ? 'active' : ''; ?>">
-                            <i class="fas fa-users-cog fa-fw me-2"></i> Usuarios
-                        </a>
-                    </li>
+                    <?php if ($tipoUsuario == ROL_ADMINISTRADOR): ?>
+                        <li class="nav-item">
+                            <a href="index.php?action=usuarios_dashboard" class="nav-link <?php echo ($paginaActual == 'usuarios_dashboard') ? 'active' : ''; ?>">
+                                <i class="fas fa-users-cog fa-fw me-2"></i> Usuarios
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
                     <li class="nav-item">
                         <a href="index.php?action=comisiones_dashboard" class="nav-link <?php echo ($paginaActual == 'comisiones_dashboard') ? 'active' : ''; ?>">
@@ -84,14 +88,14 @@
                     </li>
 
                     <li class="nav-item">
-                        <a href="pleno/index.php" class="nav-link">
+                        <a href="pleno/index.php" class="nav-link <?php echo ($paginaActual == 'pleno') ? 'active' : ''; ?>">
                             <i class="fas fa-landmark fa-fw me-2"></i> Pleno
                         </a>
                     </li>
 
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($paginaActual == 'reporte_asistencia') ? 'active' : ''; ?>" href="index.php?action=reporte_asistencia">
-                            <i class="fas fa-file-contract fa-fw me-2"></i> Reportes Asistencia
+                            <i class="fas fa-file-contract fa-fw me-2"></i> Reportes de Asistencia
                         </a>
                     </li>
                 <?php endif; ?>
@@ -130,7 +134,7 @@
 
     <div class="sidebar-footer border-top p-3">
         <a href="index.php?action=logout" class="nav-link nav-link-logout text-danger fw-bold d-flex align-items-center">
-            <i class="fas fa-sign-out-alt fa-fw me-2"></i> Cerrar Sesión
+            <i class="fas fa-sign-out-alt fa-fw me-2"></i> Cerrar sesión
         </a>
     </div>
 </nav>

@@ -243,7 +243,7 @@ class AsistenciaController
     public function reporte()
     {
         $this->verificarSesion();
-        if ($_SESSION['tipoUsuario_id'] != 6) { header('Location: index.php?action=home'); exit; }
+        if (!in_array((int)$_SESSION['tipoUsuario_id'], [6, 20], true)) { header('Location: index.php?action=home'); exit; }
 
         $comisionModel = new Comision();
         $data = [
@@ -342,7 +342,7 @@ class AsistenciaController
         header('Content-Type: application/json');
         $this->verificarSesion();
 
-        if ($_SESSION['tipoUsuario_id'] != 6) {
+        if (!in_array((int)$_SESSION['tipoUsuario_id'], [6, 20], true)) {
             echo json_encode(['status' => 'error', 'message' => 'Acceso denegado']); exit;
         }
 
@@ -382,7 +382,7 @@ class AsistenciaController
     {
         if (ob_get_length()) ob_clean();
         $this->verificarSesion();
-        if ($_SESSION['tipoUsuario_id'] != 6) die('Acceso denegado');
+        if (!in_array((int)$_SESSION['tipoUsuario_id'], [6, 20], true)) die('Acceso denegado');
 
         $filtros = [
             'desde' => $_GET['desde'] ?? date('Y-m-01'),

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // /coregedoc/views/login.php
 
 if (!isset($error_message)) {
@@ -11,7 +11,7 @@ if (!isset($error_message)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COREGEDOC - Login</title>
+    <title>COREGEDOC - Iniciar sesión</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/coregedoc/public/css/login_style.css">
@@ -59,8 +59,6 @@ if (!isset($error_message)) {
             </form>
         </div>
     </div>
-
-    
 
 </body>
 

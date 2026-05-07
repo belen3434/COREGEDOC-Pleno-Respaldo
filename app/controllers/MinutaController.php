@@ -338,7 +338,7 @@ class MinutaController
 
         $minutaModel = new Minuta();
         $tipoUsuario = $_SESSION['tipoUsuario_id'] ?? 0;
-        $esSecretarioTecnico = ($tipoUsuario == 2 || $tipoUsuario == 6);
+        $esSecretarioTecnico = ($tipoUsuario == 2 || $tipoUsuario == 6 || $tipoUsuario == 20);
         $estadoReunion = $minutaModel->verificarEstadoReunion($idMinuta);
 
         $adjuntosRaw = $minutaModel->getAdjuntosPorMinuta($idMinuta);
@@ -428,7 +428,7 @@ class MinutaController
         header('Content-Type: application/json');
         $this->verificarSesion();
 
-        if (!in_array($_SESSION['tipoUsuario_id'], [2, 6])) {
+        if (!in_array($_SESSION['tipoUsuario_id'], [2, 6, 20])) {
             echo json_encode(['status' => 'error', 'message' => 'No autorizado']);
             exit;
         }

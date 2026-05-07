@@ -1,4 +1,4 @@
-<style>
+﻿<style>
     .bg-gradient-core-dark {
         /* Fallback para navegadores antiguos */
         background: #000000; 
@@ -60,7 +60,7 @@
                     
                     <li>
                         <a class="dropdown-item" href="index.php?action=perfil">
-                            <i class="fas fa-user fa-fw me-2 text-primary"></i> Ver mi Perfil
+                            <i class="fas fa-user fa-fw me-2 text-primary"></i> Ver mi perfil
                         </a>
                     </li>
                     <li>
@@ -73,7 +73,7 @@
                     
                     <li>
                         <a class="dropdown-item text-danger" href="index.php?action=logout">
-                            <i class="fas fa-sign-out-alt fa-fw me-2"></i> Cerrar Sesión
+                            <i class="fas fa-sign-out-alt fa-fw me-2"></i> Cerrar sesión
                         </a>
                     </li>
                 </ul>

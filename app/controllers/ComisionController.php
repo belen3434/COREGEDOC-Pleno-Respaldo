@@ -5,10 +5,10 @@ use App\Models\Comision;
 
 class ComisionController {
 
-    private function checkAdmin() {
+    private function checkOperativoComisiones() {
         if (session_status() === PHP_SESSION_NONE) session_start();
-        // Validar ROL_ADMINISTRADOR (ID 6)
-        if (!isset($_SESSION['idUsuario']) || $_SESSION['tipoUsuario_id'] != ROL_ADMINISTRADOR) {
+        // Operativo: Administrador (6) y Secretaría de Pleno (20)
+        if (!isset($_SESSION['idUsuario']) || !in_array((int)$_SESSION['tipoUsuario_id'], [ROL_ADMINISTRADOR, 20], true)) {
             header('Location: index.php?action=home');
             exit();
         }
@@ -18,6 +18,7 @@ class ComisionController {
     {
         if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
+        $this->checkOperativoComisiones();
         
         $db = new \App\Config\Database();
         $conn = $db->getConnection();
@@ -111,7 +112,7 @@ class ComisionController {
     {
         if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
-        $this->checkAdmin(); // Seguridad
+        $this->checkOperativoComisiones(); // Seguridad
 
         $input = json_decode(file_get_contents('php://input'), true);
         $id = $input['id'] ?? 0;
@@ -138,7 +139,7 @@ class ComisionController {
     }
 
     public function index() {
-        $this->checkAdmin();
+        $this->checkOperativoComisiones();
         $model = new Comision();
         
         $data = [
@@ -152,7 +153,7 @@ class ComisionController {
     }
 
     public function form() {
-        $this->checkAdmin();
+        $this->checkOperativoComisiones();
         $model = new Comision();
         $id = $_GET['id'] ?? null;
 
@@ -168,7 +169,7 @@ class ComisionController {
     }
 
     public function store() {
-        $this->checkAdmin();
+        $this->checkOperativoComisiones();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $model = new Comision();
             $id = $_POST['idComision'] ?? '';
