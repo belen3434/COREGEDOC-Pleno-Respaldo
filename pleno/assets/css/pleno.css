@@ -1,4 +1,85 @@
-/*
- * Estilos base para el modulo de pleno.
- * Se agregaran reglas visuales cuando se desarrolle la interfaz.
- */
+﻿/* Ajuste vertical exclusivo del contenido del módulo Pleno */
+.pleno-main-offset {
+    padding-top: 60px !important;
+}
+
+/* Sidebar minimalista para módulo Pleno */
+#sidebar-wrapper .pleno-sidebar-heading {
+    padding-top: 2.35rem !important;
+}
+
+#sidebar-wrapper .btn-pleno-volver {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 52px;
+    padding: 0.85rem 1rem;
+    border: 0;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-decoration: none;
+    background: linear-gradient(135deg, #0071bc 0%, #00a650 100%);
+    box-shadow: 0 8px 18px rgba(0, 113, 188, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+#sidebar-wrapper .btn-pleno-volver:hover,
+#sidebar-wrapper .btn-pleno-volver:focus {
+    color: #ffffff;
+    filter: brightness(1.03);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(0, 113, 188, 0.32);
+}
+
+#sidebar-wrapper .btn-pleno-volver:active {
+    transform: translateY(0);
+}
+
+.btn-pleno-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0.55rem 1rem;
+    border: 0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-decoration: none;
+    background: linear-gradient(135deg, #0071bc 0%, #00a650 100%);
+    box-shadow: 0 6px 14px rgba(0, 113, 188, 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn-pleno-back:hover,
+.btn-pleno-back:focus {
+    color: #ffffff;
+    filter: brightness(1.03);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(0, 113, 188, 0.28);
+}
+
+.btn-pleno-back:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    #sidebar-wrapper .pleno-sidebar-heading {
+        padding-top: 2rem !important;
+    }
+
+    #sidebar-wrapper .btn-pleno-volver {
+        min-height: 48px;
+        font-size: 0.95rem;
+    }
+
+    .btn-pleno-back {
+        min-height: 40px;
+        font-size: 0.9rem;
+    }
+}
+

@@ -1,15 +1,10 @@
 <?php
 
 require_once dirname(__DIR__) . '/app/config/Constants.php';
+require_once dirname(__DIR__) . '/app/config/Database.php';
+require_once __DIR__ . '/helpers/auth.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (!isset($_SESSION['idUsuario'])) {
-    header('Location: ../index.php?action=login');
-    exit();
-}
+$plenoAuth = plenoRequireAuthorizedUser();
 
 $vista = $_GET['vista'] ?? 'index';
 
@@ -30,6 +25,11 @@ $data = [
         'rol' => $_SESSION['tipoUsuario_id'] ?? 0,
     ],
     'pagina_actual' => 'pleno',
+    'pleno_auth' => $plenoAuth,
 ];
+
+if (!$plenoAuth['authorized']) {
+    $childView = __DIR__ . '/views/acceso_denegado.php';
+}
 
 require_once dirname(__DIR__) . '/app/views/layouts/main.php';

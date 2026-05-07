@@ -20,8 +20,8 @@ class ReunionController
 
         // DEFINIMOS LOS ROLES QUE PUEDEN ENTRAR AQUÍ:
         // Usamos las constantes definidas en app/config/Constants.php
-        // ROL_ADMINISTRADOR (6) y ROL_SECRETARIO_TECNICO (2)
-        $rolesPermitidos = [ROL_ADMINISTRADOR, ROL_SECRETARIO_TECNICO];
+        // ROL_ADMINISTRADOR (6), ROL_SECRETARIO_TECNICO (2) y SECRETARIA PLENO (20)
+        $rolesPermitidos = [ROL_ADMINISTRADOR, ROL_SECRETARIO_TECNICO, 20];
 
         // Si prefieres usar números directos, sería: $rolesPermitidos = [6, 2];
 

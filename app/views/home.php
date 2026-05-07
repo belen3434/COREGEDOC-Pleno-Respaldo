@@ -1,5 +1,5 @@
-<?php
-// --- INICIO DE SESIÓN Y DATOS DEL USUARIO ---
+﻿<?php
+// --- INICIO DE SESIÃ“N Y DATOS DEL USUARIO ---
 $nombreUser = htmlspecialchars($_SESSION['pNombre'] ?? 'Consejero');
 $apellidoUser = htmlspecialchars($_SESSION['aPaterno'] ?? '');
 $rolUser = $_SESSION['tipoUsuario_id'] ?? 0;
@@ -130,7 +130,7 @@ if ($rolUser == 3) $nombreRol = 'Presidente de Comisión';
                         
                         <div>
                             <h5 class="c-gris text-uppercase ls-1 mb-1" style="font-size: 0.9rem;">
-                                Bienvenid@ a COREGEDOC
+                                Bienvenido(a) a COREGEDOC
                             </h5>
 
                             <h2 class="fw-bold text-dark mb-1">
@@ -181,7 +181,7 @@ if ($rolUser == 3) $nombreRol = 'Presidente de Comisión';
                     <img src="public/img/LogoGORE.png" 
                          alt="Logo Coregedoc" 
                          class="img-fluid" 
-                         /* Cambié max-height de 120px a 180px */
+                         /* CambiÃ© max-height de 120px a 180px */
                          style="max-height: 180px; width: auto; max-width: 100%;">
                 </div>
             </div>
@@ -366,7 +366,7 @@ if ($rolUser == 3) $nombreRol = 'Presidente de Comisión';
                     const humidEl = document.getElementById('weather-humidity');
                     const descEl = document.getElementById('weather-desc');
 
-                    cityEl.innerText = data.name; 
+                    cityEl.innerText = data.name;
                     tempEl.innerText = Math.round(data.main.temp) + '°';
                     descEl.innerText = data.weather[0].description;
 
