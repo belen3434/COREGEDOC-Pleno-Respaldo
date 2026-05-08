@@ -17,6 +17,27 @@
     }
 </style>
 
+<?php
+$isPleno = (($paginaActual ?? '') === 'pleno');
+$indexPath = $isPleno ? '../index.php' : 'index.php';
+
+$rutaImagenSesion = $_SESSION['rutaImagenPerfil'] ?? '';
+$rutaImagenFisica = '';
+
+if (!empty($rutaImagenSesion)) {
+    $rutaNormalizada = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rutaImagenSesion);
+    $rutaImagenFisica = ROOT_PATH . DIRECTORY_SEPARATOR . ltrim($rutaNormalizada, DIRECTORY_SEPARATOR);
+}
+
+$imgPerfil = (!empty($rutaImagenFisica) && file_exists($rutaImagenFisica))
+    ? $rutaImagenSesion
+    : 'public/img/user_placeholder.png';
+
+if ($isPleno && !preg_match('#^(?:[a-z]+:)?//#i', $imgPerfil)) {
+    $imgPerfil = '../' . ltrim($imgPerfil, '/\\');
+}
+?>
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-gradient-core-dark shadow fixed-top">
     <div class="container-fluid">
         
@@ -24,7 +45,7 @@
             <i class="fas fa-bars"></i>
         </button>
 
-        <a class="navbar-brand fw-bold text-white" href="index.php?action=home">
+        <a class="navbar-brand fw-bold text-white" href="<?php echo $indexPath; ?>?action=home">
             </i>CORE<span class="text-white-50"> REGIÓN DE VALPARAÍSO</span>
         </a>
 
@@ -32,12 +53,6 @@
             
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-white" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <?php 
-                        // Lógica de imagen de perfil segura
-                        $imgPerfil = !empty($_SESSION['rutaImagenPerfil']) && file_exists($_SESSION['rutaImagenPerfil']) 
-                            ? $_SESSION['rutaImagenPerfil'] 
-                            : 'public/img/user_placeholder.png'; 
-                    ?>
                     <img src="<?php echo $imgPerfil; ?>" alt="Perfil" width="32" height="32" class="rounded-circle me-2 border border-white" style="object-fit: cover;">
                     
                     <span class="d-none d-md-inline fw-medium">
@@ -59,12 +74,12 @@
                     <li><hr class="dropdown-divider"></li>
                     
                     <li>
-                        <a class="dropdown-item" href="index.php?action=perfil">
+                        <a class="dropdown-item" href="<?php echo $indexPath; ?>?action=perfil">
                             <i class="fas fa-user fa-fw me-2 text-primary"></i> Ver mi perfil
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="index.php?action=configuracion">
+                        <a class="dropdown-item" href="<?php echo $indexPath; ?>?action=configuracion">
                             <i class="fas fa-cog fa-fw me-2 text-secondary"></i> Configuración
                         </a>
                     </li>
@@ -72,7 +87,7 @@
                     <li><hr class="dropdown-divider"></li>
                     
                     <li>
-                        <a class="dropdown-item text-danger" href="index.php?action=logout">
+                        <a class="dropdown-item text-danger" href="<?php echo $indexPath; ?>?action=logout">
                             <i class="fas fa-sign-out-alt fa-fw me-2"></i> Cerrar sesión
                         </a>
                     </li>
