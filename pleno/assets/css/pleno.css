@@ -67,6 +67,210 @@
     transform: translateY(0);
 }
 
+.pleno-session-card {
+    border: 1px solid rgba(0, 113, 188, 0.08);
+    border-radius: 18px;
+}
+
+.pleno-session-card .card-body {
+    padding: 1.5rem;
+}
+
+.pleno-meta-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #5d6b75;
+}
+
+.pleno-pill-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.pleno-pill-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 42px;
+    padding: 0.65rem 1rem;
+    border: 1px solid #d9e4e8;
+    border-radius: 12px;
+    background-color: #ffffff;
+    color: #5b6770;
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 38, 56, 0.04);
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.pleno-pill-toggle-btn:hover {
+    border-color: #bfcfd6;
+    background-color: #f8fbfc;
+    color: #4e5b63;
+}
+
+.pleno-pill-toggle .btn-check:focus + .pleno-pill-toggle-btn {
+    border-color: #9fc0cf;
+    box-shadow: 0 0 0 0.2rem rgba(0, 113, 188, 0.1);
+}
+
+.pleno-pill-toggle .btn-check:checked + .pleno-pill-toggle-btn {
+    border-color: #8cc9a1;
+    background-color: #e8f5ec;
+    color: #4d7c5e;
+    box-shadow: 0 8px 16px rgba(77, 124, 94, 0.12);
+}
+
+.pleno-pill-toggle .btn-check:checked + .pleno-pill-toggle-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 18px rgba(77, 124, 94, 0.16);
+}
+
+.pleno-pill-indicator {
+    width: 0.52rem;
+    height: 0.52rem;
+    border-radius: 50%;
+    background-color: #1f9153;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pleno-pill-toggle .btn-check:checked + .pleno-pill-toggle-btn .pleno-pill-indicator {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.pleno-session-code {
+    min-height: 42px;
+    border-color: #d9e4e8;
+    border-radius: 12px;
+    background-color: #f6fbf9;
+    color: #6f7f88;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.pleno-session-code[readonly] {
+    cursor: default;
+}
+
+.pleno-session-code:focus {
+    border-color: #b7c9d1;
+    box-shadow: none;
+}
+
+.pleno-session-tools {
+    border-top: 1px solid #e9eef3;
+}
+
+.pleno-session-tool-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pleno-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 42px;
+    padding: 0.65rem 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    box-shadow: 0 8px 18px rgba(15, 38, 56, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.pleno-tool-btn:hover,
+.pleno-tool-btn:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 22px rgba(15, 38, 56, 0.12);
+}
+
+.pleno-tool-btn-outline {
+    color: #0f7c46;
+    border-color: #80c69c;
+    background: linear-gradient(180deg, #ffffff 0%, #effaf3 100%);
+}
+
+.pleno-tool-btn-outline:hover,
+.pleno-tool-btn-outline:focus {
+    color: #0b6338;
+    border-color: #62b181;
+    background: linear-gradient(180deg, #fafffb 0%, #e4f6ea 100%);
+}
+
+.pleno-tool-btn-warning {
+    color: #7a5b16;
+    border-color: #e9cf88;
+    background: linear-gradient(180deg, #fffefb 0%, #fff4d5 100%);
+}
+
+.pleno-tool-btn-warning:hover,
+.pleno-tool-btn-warning:focus {
+    color: #5f4610;
+    border-color: #d6b966;
+    background: linear-gradient(180deg, #fff9ec 0%, #ffedbf 100%);
+}
+
+.pleno-tool-btn-primary {
+    color: #ffffff;
+    border-color: #007a9d;
+    background: linear-gradient(135deg, #0a93b1 0%, #006f94 100%);
+}
+
+.pleno-tool-btn-primary:hover,
+.pleno-tool-btn-primary:focus {
+    color: #ffffff;
+    filter: brightness(1.03);
+}
+
+.pleno-modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.pleno-modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pleno-modal-header-success {
+    background: linear-gradient(180deg, #f1fbf5 0%, #e5f7ec 100%);
+    color: #16693f;
+}
+
+.pleno-modal-header-warning {
+    background: linear-gradient(180deg, #fff9ea 0%, #fff0c7 100%);
+    color: #7d5b10;
+}
+
+.pleno-modal-header-primary {
+    background: linear-gradient(135deg, #0a93b1 0%, #006f94 100%);
+    color: #ffffff;
+}
+
+.pleno-modal-content .modal-body {
+    padding: 1.25rem;
+}
+
+.pleno-modal-content .modal-footer {
+    border-top: 1px solid #eef2f5;
+}
+
 @media (max-width: 768px) {
     #sidebar-wrapper .pleno-sidebar-heading {
         padding-top: 2rem !important;
@@ -80,6 +284,27 @@
     .btn-pleno-back {
         min-height: 40px;
         font-size: 0.9rem;
+    }
+
+    .pleno-session-card .card-body {
+        padding: 1rem;
+    }
+
+    .pleno-pill-toggle {
+        width: 100%;
+    }
+
+    .pleno-pill-toggle-btn {
+        flex: 1 1 100%;
+    }
+
+    .pleno-session-tool-buttons {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .pleno-session-tool-buttons .btn {
+        width: 100%;
     }
 }
 
