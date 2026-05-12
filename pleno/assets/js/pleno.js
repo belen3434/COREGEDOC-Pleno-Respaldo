@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Interaccion visual del resumen de puntos agendados en Crear sesion plenaria.
  */
 (function () {
@@ -16,6 +16,7 @@
         var btnAgregarComision = document.getElementById("btnAgregarComisionResumen");
         var btnAgregarImprevista = document.getElementById("btnAgregarImprevistaResumen");
         var btnAgregarTabla = document.getElementById("btnAgregarTablaResumen");
+        var createSessionForm = document.getElementById("plenoCrearSesionForm");
 
         function getItemsCount() {
             return summaryBody.querySelectorAll("tr[data-summary-item='true']").length;
@@ -133,6 +134,17 @@
                 );
                 addSummaryItem("TABLA", "pleno-point-badge-tabla", description);
                 closeModal("modalPuntoTabla");
+            });
+        }
+
+        if (createSessionForm) {
+            createSessionForm.addEventListener("reset", function () {
+                var rows = summaryBody.querySelectorAll("tr[data-summary-item='true']");
+                rows.forEach(function (row) {
+                    row.remove();
+                });
+
+                window.setTimeout(updateCount, 0);
             });
         }
 

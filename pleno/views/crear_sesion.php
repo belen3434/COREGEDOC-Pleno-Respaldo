@@ -13,7 +13,7 @@
 
     <div class="card shadow-sm pleno-session-card">
         <div class="card-body">
-            <form action="#" method="post">
+            <form id="plenoCrearSesionForm" action="#" method="post">
                 <div class="row g-3">
                     <div class="col-lg-3">
                         <label class="form-label fw-semibold pleno-meta-label">Tipo de Pleno</label>
@@ -116,11 +116,11 @@
                 <section class="card shadow-sm pleno-session-card pleno-summary-card" aria-labelledby="plenoSummaryTitle">
                     <div class="card-body">
                         <div class="pleno-summary-header">
-                            <div class="pleno-summary-title-wrap">
-                                <h3 id="plenoSummaryTitle" class="pleno-summary-title">Resumen de Puntos Agendados</h3>
+                            <h3 id="plenoSummaryTitle" class="pleno-summary-title">Resumen de Puntos Agendados</h3>
+                            <div class="pleno-summary-meta">
                                 <span id="plenoSummaryCount" class="pleno-summary-count">0 ACTIVOS</span>
+                                <p class="pleno-summary-updated mb-0">Última actualización: hoy, 09:12 AM</p>
                             </div>
-                            <p class="pleno-summary-updated mb-0">Última actualización: hoy, 09:12 AM</p>
                         </div>
 
                         <div class="table-responsive">
@@ -143,8 +143,8 @@
                 </section>
 
                 <div class="pleno-final-actions">
-                    <a href="index.php?vista=sesiones" class="btn pleno-btn-secondary">Cancelar y Limpiar</a>
-                    <button type="submit" class="btn pleno-btn-primary-save">
+                    <button type="reset" class="btn btn-pleno-cancelar">Cancelar y Limpiar</button>
+                    <button type="submit" class="btn btn-pleno-guardar-final">
                         <i class="fas fa-save me-1"></i>Finalizar y Guardar Sesión
                     </button>
                 </div>
