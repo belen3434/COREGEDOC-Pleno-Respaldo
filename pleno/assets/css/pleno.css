@@ -288,18 +288,19 @@
     margin-bottom: 0.95rem;
 }
 
-.pleno-summary-title-wrap {
-    display: inline-flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.55rem;
-}
-
 .pleno-summary-title {
     margin: 0;
     font-size: 1.04rem;
     font-weight: 700;
     color: #1f3240;
+}
+
+.pleno-summary-meta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    margin-left: auto;
 }
 
 .pleno-summary-count {
@@ -410,36 +411,52 @@
     gap: 0.7rem;
 }
 
-.pleno-btn-secondary {
-    border: 1px solid #0071bc;
-    border-radius: 11px;
+.btn-pleno-cancelar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 12px 24px;
+    border: 1px solid #b9cddb;
+    border-radius: 14px;
     background-color: #ffffff;
-    color: #0071bc;
+    color: #3f5d70;
     font-weight: 600;
-    padding: 0.62rem 1rem;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(63, 93, 112, 0.08);
+    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.pleno-btn-secondary:hover,
-.pleno-btn-secondary:focus {
-    color: #005b97;
-    border-color: #005b97;
-    background-color: #eef7ff;
+.btn-pleno-cancelar:hover,
+.btn-pleno-cancelar:focus {
+    color: #2b4d61;
+    border-color: #8eaec2;
+    background-color: #f3f8fc;
+    transform: translateY(-1px);
+    box-shadow: 0 7px 14px rgba(63, 93, 112, 0.14);
 }
 
-.pleno-btn-primary-save {
+.btn-pleno-guardar-final {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 12px 24px;
     border: 1px solid #00659f;
-    border-radius: 11px;
+    border-radius: 14px;
     background: linear-gradient(135deg, #0071bc 0%, #00a650 100%);
     color: #ffffff;
     font-weight: 600;
-    padding: 0.62rem 1.05rem;
-    box-shadow: 0 8px 18px rgba(0, 113, 188, 0.28);
+    box-shadow: 0 9px 18px rgba(0, 113, 188, 0.28);
+    transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
 }
 
-.pleno-btn-primary-save:hover,
-.pleno-btn-primary-save:focus {
+.btn-pleno-guardar-final:hover,
+.btn-pleno-guardar-final:focus {
     color: #ffffff;
     filter: brightness(1.04);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 22px rgba(0, 113, 188, 0.34);
 }
 
 @media (max-width: 768px) {
@@ -485,6 +502,12 @@
     .pleno-summary-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .pleno-summary-meta {
+        width: 100%;
+        justify-content: flex-start;
+        margin-left: 0;
     }
 
     .pleno-final-actions {
