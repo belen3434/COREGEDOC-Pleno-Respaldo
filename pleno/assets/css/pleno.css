@@ -271,6 +271,177 @@
     border-top: 1px solid #eef2f5;
 }
 
+.pleno-summary-card {
+    width: 100%;
+    margin-top: 2.5rem;
+}
+
+.pleno-summary-card .card-body {
+    padding: 1.3rem 1.4rem 0.45rem;
+}
+
+.pleno-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.95rem;
+}
+
+.pleno-summary-title-wrap {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.pleno-summary-title {
+    margin: 0;
+    font-size: 1.04rem;
+    font-weight: 700;
+    color: #1f3240;
+}
+
+.pleno-summary-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background-color: #dff8ec;
+    color: #0f8f5f;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.pleno-summary-updated {
+    margin: 0;
+    color: #7a8c9a;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.pleno-summary-table thead th {
+    padding: 0.72rem 0.75rem;
+    border-bottom: 1px solid #e4ebf1;
+    color: #627787;
+    background-color: #f9fbfd;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+
+.pleno-summary-table tbody td {
+    padding: 0.9rem 0.75rem;
+    border-bottom: 1px solid #ecf1f6;
+    color: #2d3f4c;
+    font-size: 0.93rem;
+    vertical-align: middle;
+}
+
+.pleno-summary-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.pleno-summary-empty {
+    text-align: center;
+    color: #7a8c9a;
+    font-style: italic;
+    background-color: #fbfdff;
+}
+
+.pleno-point-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.24rem 0.62rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pleno-point-badge-permanente {
+    background-color: #eaf4ff;
+    color: #0d6efd;
+}
+
+.pleno-point-badge-tabla {
+    background-color: #e8f8ef;
+    color: #198754;
+}
+
+.pleno-point-badge-imprevista {
+    background-color: #fff4d6;
+    color: #b06b05;
+}
+
+.pleno-delete-btn {
+    border: 0;
+    background: #fdecef;
+    color: #dc3545;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.pleno-delete-btn:hover,
+.pleno-delete-btn:focus {
+    background-color: #fbdde3;
+    color: #ba2d3a;
+    transform: translateY(-1px);
+}
+
+.pleno-final-actions {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9eef3;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+}
+
+.pleno-btn-secondary {
+    border: 1px solid #0071bc;
+    border-radius: 11px;
+    background-color: #ffffff;
+    color: #0071bc;
+    font-weight: 600;
+    padding: 0.62rem 1rem;
+}
+
+.pleno-btn-secondary:hover,
+.pleno-btn-secondary:focus {
+    color: #005b97;
+    border-color: #005b97;
+    background-color: #eef7ff;
+}
+
+.pleno-btn-primary-save {
+    border: 1px solid #00659f;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #0071bc 0%, #00a650 100%);
+    color: #ffffff;
+    font-weight: 600;
+    padding: 0.62rem 1.05rem;
+    box-shadow: 0 8px 18px rgba(0, 113, 188, 0.28);
+}
+
+.pleno-btn-primary-save:hover,
+.pleno-btn-primary-save:focus {
+    color: #ffffff;
+    filter: brightness(1.04);
+}
+
 @media (max-width: 768px) {
     #sidebar-wrapper .pleno-sidebar-heading {
         padding-top: 2rem !important;
@@ -305,6 +476,20 @@
 
     .pleno-session-tool-buttons .btn {
         width: 100%;
+    }
+
+    .pleno-summary-card .card-body {
+        padding: 1rem 0.85rem 0.35rem;
+    }
+
+    .pleno-summary-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pleno-final-actions {
+        width: 100%;
+        justify-content: flex-end;
     }
 }
 

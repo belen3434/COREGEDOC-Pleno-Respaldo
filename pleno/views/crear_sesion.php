@@ -85,41 +85,68 @@
                 </div>
 
                 <div class="pleno-session-tools mt-4 pt-3">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                        <div class="pleno-session-tool-buttons">
-                            <button
-                                type="button"
-                                class="btn pleno-tool-btn pleno-tool-btn-outline"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalAgregarComision"
-                            >
-                                <i class="fas fa-plus me-2"></i>Agregar Comisión
-                            </button>
-                            <button
-                                type="button"
-                                class="btn pleno-tool-btn pleno-tool-btn-warning"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalComisionImprevista"
-                            >
-                                <i class="fas fa-exclamation-circle me-2"></i>Comisión Imprevista
-                            </button>
-                            <button
-                                type="button"
-                                class="btn pleno-tool-btn pleno-tool-btn-primary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalPuntoTabla"
-                            >
-                                <i class="fas fa-plus me-2"></i>Punto de Tabla
-                            </button>
+                    <div class="pleno-session-tool-buttons">
+                        <button
+                            type="button"
+                            class="btn pleno-tool-btn pleno-tool-btn-outline"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalAgregarComision"
+                        >
+                            <i class="fas fa-plus me-2"></i>Agregar Comisión
+                        </button>
+                        <button
+                            type="button"
+                            class="btn pleno-tool-btn pleno-tool-btn-warning"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalComisionImprevista"
+                        >
+                            <i class="fas fa-exclamation-circle me-2"></i>Comisión Imprevista
+                        </button>
+                        <button
+                            type="button"
+                            class="btn pleno-tool-btn pleno-tool-btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalPuntoTabla"
+                        >
+                            <i class="fas fa-plus me-2"></i>Punto de Tabla
+                        </button>
+                    </div>
+                </div>
+
+                <section class="card shadow-sm pleno-session-card pleno-summary-card" aria-labelledby="plenoSummaryTitle">
+                    <div class="card-body">
+                        <div class="pleno-summary-header">
+                            <div class="pleno-summary-title-wrap">
+                                <h3 id="plenoSummaryTitle" class="pleno-summary-title">Resumen de Puntos Agendados</h3>
+                                <span id="plenoSummaryCount" class="pleno-summary-count">0 ACTIVOS</span>
+                            </div>
+                            <p class="pleno-summary-updated mb-0">Última actualización: hoy, 09:12 AM</p>
                         </div>
 
-                        <div class="d-flex flex-wrap justify-content-end gap-2">
-                            <a href="index.php?vista=sesiones" class="btn btn-outline-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save me-1"></i>Guardar sesión
-                            </button>
+                        <div class="table-responsive">
+                            <table class="table pleno-summary-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Tipo de Punto</th>
+                                        <th scope="col">Descripción Detallada</th>
+                                        <th scope="col" class="text-center">Gestión</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="plenoSummaryBody">
+                                    <tr id="plenoSummaryEmptyRow">
+                                        <td colspan="3" class="pleno-summary-empty">Aún no hay puntos agendados.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                </section>
+
+                <div class="pleno-final-actions">
+                    <a href="index.php?vista=sesiones" class="btn pleno-btn-secondary">Cancelar y Limpiar</a>
+                    <button type="submit" class="btn pleno-btn-primary-save">
+                        <i class="fas fa-save me-1"></i>Finalizar y Guardar Sesión
+                    </button>
                 </div>
             </form>
         </div>
@@ -157,7 +184,7 @@
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-sm btn-success">
+                <button type="button" id="btnAgregarComisionResumen" class="btn btn-sm btn-success">
                     <i class="fas fa-plus me-1"></i>Agregar
                 </button>
             </div>
@@ -186,7 +213,7 @@
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-sm btn-warning text-dark">
+                <button type="button" id="btnAgregarImprevistaResumen" class="btn btn-sm btn-warning text-dark">
                     <i class="fas fa-plus me-1"></i>Agregar
                 </button>
             </div>
@@ -219,7 +246,7 @@
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-sm btn-primary">
+                <button type="button" id="btnAgregarTablaResumen" class="btn btn-sm btn-primary">
                     <i class="fas fa-plus me-1"></i>Agregar
                 </button>
             </div>
