@@ -1,5 +1,6 @@
 ﻿<?php
 // Vista principal del módulo de pleno.
+require __DIR__ . '/partials/sidebar_pleno.php';
 $perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
 ?>
 <div class="container-fluid mt-4">

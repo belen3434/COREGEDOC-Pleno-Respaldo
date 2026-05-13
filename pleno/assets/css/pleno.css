@@ -38,6 +38,109 @@
     transform: translateY(0);
 }
 
+.pleno-sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 260px);
+    padding: 0 1rem 1rem;
+}
+
+.pleno-sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid #e7edf1;
+}
+
+.pleno-sidebar-section-bottom {
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.pleno-sidebar-label {
+    padding: 0 0.5rem;
+    color: #758894;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pleno-sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 42px;
+    padding: 0.66rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #394f5e;
+    font-size: 0.94rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.pleno-sidebar-link i {
+    width: 1.15rem;
+    color: #718692;
+    font-size: 0.96rem;
+    text-align: center;
+    transition: color 0.18s ease;
+}
+
+.pleno-sidebar-link:hover,
+.pleno-sidebar-link:focus {
+    border-color: #d7e7de;
+    background-color: #f3f8f5;
+    color: #1d6541;
+    text-decoration: none;
+}
+
+.pleno-sidebar-link:hover i,
+.pleno-sidebar-link:focus i {
+    color: #1f7a4d;
+}
+
+.pleno-sidebar-link.active {
+    border-color: #b9ddc8;
+    background-color: #eaf7ef;
+    color: #12633d;
+    box-shadow: inset 3px 0 0 #198754;
+}
+
+.pleno-sidebar-link.active i {
+    color: #198754;
+}
+
+.pleno-sidebar-link-danger {
+    color: #b02a37;
+}
+
+.pleno-sidebar-link-danger i {
+    color: #c2414d;
+}
+
+.pleno-sidebar-link-danger:hover,
+.pleno-sidebar-link-danger:focus {
+    border-color: #f0c4ca;
+    background-color: #fff4f5;
+    color: #96202b;
+}
+
+.pleno-sidebar-link-danger:hover i,
+.pleno-sidebar-link-danger:focus i {
+    color: #96202b;
+}
+
+.pleno-placeholder-card {
+    border: 1px solid rgba(0, 113, 188, 0.08);
+    border-radius: 12px;
+}
+
 .btn-pleno-back {
     display: inline-flex;
     align-items: center;
@@ -467,6 +570,16 @@
     #sidebar-wrapper .btn-pleno-volver {
         min-height: 48px;
         font-size: 0.95rem;
+    }
+
+    .pleno-sidebar-menu {
+        min-height: 0;
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+    }
+
+    .pleno-sidebar-section-bottom {
+        margin-top: 1rem;
     }
 
     .btn-pleno-back {

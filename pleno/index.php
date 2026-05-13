@@ -14,6 +14,12 @@ $vistasPermitidas = [
     'crear_sesion' => __DIR__ . '/views/crear_sesion.php',
     'editar_sesion' => __DIR__ . '/views/editar_sesion.php',
     'tabla' => __DIR__ . '/views/tabla.php',
+    'configuracion' => __DIR__ . '/views/index.php',
+    'comisiones' => __DIR__ . '/views/comisiones.php',
+    'pleno_vivo' => __DIR__ . '/views/pleno_vivo.php',
+    'votacion' => __DIR__ . '/views/votacion.php',
+    'resumen' => __DIR__ . '/views/resumen.php',
+    'ayuda' => __DIR__ . '/views/ayuda.php',
 ];
 
 $childView = $vistasPermitidas[$vista] ?? $vistasPermitidas['index'];
