@@ -151,3 +151,28 @@
         updateCount();
     });
 })();
+
+/*
+ * Inserta el menú visual interno de Pleno bajo el botón "Volver al inicio"
+ * sin modificar el sidebar general del sistema.
+ */
+(function () {
+    "use strict";
+
+    function mountPlenoSidebarMenu() {
+        var template = document.getElementById("plenoSidebarMenuTemplate");
+        var sidebarBody = document.querySelector("#sidebar-wrapper .custom-scrollbar");
+
+        if (!template || !sidebarBody || sidebarBody.querySelector(".pleno-sidebar-menu")) {
+            return;
+        }
+
+        sidebarBody.appendChild(template.content.cloneNode(true));
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", mountPlenoSidebarMenu);
+    } else {
+        mountPlenoSidebarMenu();
+    }
+})();

@@ -1,5 +1,6 @@
 ﻿<?php
 // Vista base para crear una sesión plenaria.
+require __DIR__ . '/partials/sidebar_pleno.php';
 ?>
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
