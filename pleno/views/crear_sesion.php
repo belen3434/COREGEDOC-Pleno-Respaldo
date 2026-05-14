@@ -1,6 +1,10 @@
 ﻿<?php
 // Vista base para crear una sesión plenaria.
 require __DIR__ . '/partials/sidebar_pleno.php';
+$puedeGestionar = (bool)($data['pleno_puede_gestionar'] ?? false);
+$flash = $data['pleno_flash'] ?? null;
+$crudError = $data['pleno_crud_error'] ?? null;
+$numeroSesion = $data['pleno_numero_sugerido'] ?: '#PL-2024-042';
 ?>
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -14,26 +18,30 @@ require __DIR__ . '/partials/sidebar_pleno.php';
 
     <div class="card shadow-sm pleno-session-card">
         <div class="card-body">
-            <form id="plenoCrearSesionForm" action="#" method="post" novalidate>
+            <?php if ($flash): ?>
+                <div class="alert alert-<?php echo htmlspecialchars($flash['tipo'], ENT_QUOTES, 'UTF-8'); ?>" role="alert">
+                    <?php echo htmlspecialchars($flash['mensaje'], ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($crudError): ?>
+                <div class="alert alert-danger" role="alert">
+                    <?php echo htmlspecialchars($crudError, ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!$puedeGestionar): ?>
+                <div class="alert alert-warning" role="alert">
+                    No tiene permisos para realizar esta acción.
+                </div>
+            <?php endif; ?>
+
+            <form id="plenoCrearSesionForm" action="index.php?action=guardar_sesion" method="post" novalidate>
                 <div id="plenoFormAlert" class="alert alert-danger d-none" role="alert">
                     Complete los campos obligatorios
                 </div>
 
                 <div class="row g-3">
-                    <div class="col-12">
-                        <label class="form-label fw-semibold" for="plenoTituloSesion">Título de sesión</label>
-                        <input
-                            type="text"
-                            name="titulo_sesion"
-                            id="plenoTituloSesion"
-                            class="form-control"
-                            aria-describedby="plenoTituloSesionFeedback"
-                        >
-                        <div id="plenoTituloSesionFeedback" class="invalid-feedback">
-                            Debe ingresar un título de sesión
-                        </div>
-                    </div>
-
                     <div class="col-lg-3">
                         <label class="form-label fw-semibold pleno-meta-label">Tipo de Pleno</label>
                         <div class="pleno-pill-toggle" role="group" aria-label="Tipo de pleno">
@@ -73,11 +81,16 @@ require __DIR__ . '/partials/sidebar_pleno.php';
                         </label>
                         <input
                             type="text"
+                            name="numero_sesion"
                             id="numeroSesionVisual"
                             class="form-control pleno-session-code"
-                            value="#PL-2024-042"
+                            value="<?php echo htmlspecialchars($numeroSesion, ENT_QUOTES, 'UTF-8'); ?>"
+                            aria-describedby="numeroSesionVisualFeedback"
                             readonly
                         >
+                        <div id="numeroSesionVisualFeedback" class="invalid-feedback">
+                            Debe ingresar un número de sesión
+                        </div>
                     </div>
 
                     <div class="col-lg-4">
@@ -189,7 +202,7 @@ require __DIR__ . '/partials/sidebar_pleno.php';
 
                 <div class="pleno-final-actions">
                     <button type="reset" class="btn btn-pleno-cancelar">Cancelar y Limpiar</button>
-                    <button type="submit" class="btn btn-pleno-guardar-final">
+                    <button type="submit" class="btn btn-pleno-guardar-final" <?php echo !$puedeGestionar ? 'disabled' : ''; ?>>
                         <i class="fas fa-save me-1"></i>Finalizar y Guardar Sesión
                     </button>
                 </div>

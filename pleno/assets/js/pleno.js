@@ -166,7 +166,7 @@
         }
 
         var formAlert = document.getElementById("plenoFormAlert");
-        var titleInput = document.getElementById("plenoTituloSesion");
+        var sessionNumberInput = document.getElementById("numeroSesionVisual");
         var dateInput = document.getElementById("plenoFechaSesion");
         var timeInput = document.getElementById("plenoHoraSesion");
         var statusSelect = document.getElementById("plenoEstadoSesion");
@@ -235,7 +235,7 @@
 
         function validateForm() {
             var validations = [
-                validateRequired(titleInput, "Debe ingresar un título de sesión"),
+                validateRequired(sessionNumberInput, "Debe ingresar un número de sesión"),
                 validateDate(),
                 validateRequired(timeInput, "La hora es obligatoria"),
                 validateRequired(statusSelect, "Seleccione un estado de sesión")
@@ -252,7 +252,7 @@
         }
 
         function clearValidation() {
-            [titleInput, dateInput, timeInput, statusSelect].forEach(function (field) {
+            [sessionNumberInput, dateInput, timeInput, statusSelect].forEach(function (field) {
                 if (field) {
                     field.classList.remove("is-invalid", "is-valid");
                 }
@@ -268,7 +268,7 @@
         }
 
         [
-            { field: titleInput, eventName: "input", validate: function () { return validateRequired(titleInput, "Debe ingresar un título de sesión"); } },
+            { field: sessionNumberInput, eventName: "input", validate: function () { return validateRequired(sessionNumberInput, "Debe ingresar un número de sesión"); } },
             { field: dateInput, eventName: "change", validate: validateDate },
             { field: timeInput, eventName: "change", validate: function () { return validateRequired(timeInput, "La hora es obligatoria"); } },
             { field: statusSelect, eventName: "change", validate: function () { return validateRequired(statusSelect, "Seleccione un estado de sesión"); } }

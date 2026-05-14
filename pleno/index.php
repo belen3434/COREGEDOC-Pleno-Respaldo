@@ -3,10 +3,13 @@
 require_once dirname(__DIR__) . '/app/config/Constants.php';
 require_once dirname(__DIR__) . '/app/config/Database.php';
 require_once __DIR__ . '/helpers/auth.php';
+require_once __DIR__ . '/models/SesionPlenaria.php';
+require_once __DIR__ . '/controllers/PlenoController.php';
 
 $plenoAuth = plenoRequireAuthorizedUser();
 
 $vista = $_GET['vista'] ?? 'index';
+$action = $_GET['action'] ?? null;
 
 $vistasPermitidas = [
     'index' => __DIR__ . '/views/index.php',
@@ -23,6 +26,31 @@ $vistasPermitidas = [
 ];
 
 $childView = $vistasPermitidas[$vista] ?? $vistasPermitidas['index'];
+$plenoController = null;
+$plenoFlash = null;
+$plenoSesiones = [];
+$plenoSesionActual = null;
+$plenoNumeroSugerido = '';
+$plenoCrudError = null;
+
+if ($plenoAuth['authorized']) {
+    try {
+        $plenoController = new PlenoController(new SesionPlenaria(), $plenoAuth);
+        $plenoController->manejarAccion($action);
+        $plenoFlash = $plenoController->consumirFlash();
+        $plenoNumeroSugerido = $plenoController->numeroSesionSugerido();
+
+        if ($vista === 'sesiones') {
+            $plenoSesiones = $plenoController->listarSesiones();
+        }
+
+        if ($vista === 'editar_sesion') {
+            $plenoSesionActual = $plenoController->obtenerSesion((int)($_GET['id'] ?? 0));
+        }
+    } catch (Throwable $e) {
+        $plenoCrudError = 'No fue posible cargar los datos de sesiones plenarias. Verifique que la tabla exista.';
+    }
+}
 
 $data = [
     'usuario' => [
@@ -32,6 +60,12 @@ $data = [
     ],
     'pagina_actual' => 'pleno',
     'pleno_auth' => $plenoAuth,
+    'pleno_puede_gestionar' => $plenoController ? $plenoController->puedeGestionar() : false,
+    'pleno_flash' => $plenoFlash,
+    'pleno_sesiones' => $plenoSesiones,
+    'pleno_sesion_actual' => $plenoSesionActual,
+    'pleno_numero_sugerido' => $plenoNumeroSugerido,
+    'pleno_crud_error' => $plenoCrudError,
 ];
 
 if (!$plenoAuth['authorized']) {
