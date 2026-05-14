@@ -18,10 +18,10 @@ $perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
         <div class="col-md-6 col-xl-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Sesiones plenarias</h5>
-                    <p class="card-text text-muted">Consulta y administra las sesiones del pleno.</p>
-                    <a href="index.php?vista=sesiones" class="btn btn-primary btn-sm">
-                        <i class="fas fa-list me-1"></i>Ver sesiones
+                    <h5 class="card-title">Crear sesión</h5>
+                    <p class="card-text text-muted">Registra una nueva sesión plenaria.</p>
+                    <a href="index.php?vista=crear_sesion" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus me-1"></i>Nueva sesión
                     </a>
                 </div>
             </div>
@@ -30,10 +30,10 @@ $perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
         <div class="col-md-6 col-xl-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Crear sesión</h5>
-                    <p class="card-text text-muted">Registra una nueva sesión plenaria.</p>
-                    <a href="index.php?vista=crear_sesion" class="btn btn-success btn-sm">
-                        <i class="fas fa-plus me-1"></i>Nueva sesión
+                    <h5 class="card-title">Sesiones plenarias</h5>
+                    <p class="card-text text-muted">Consulta y administra las sesiones del pleno.</p>
+                    <a href="index.php?vista=sesiones" class="btn btn-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>Ver sesiones
                     </a>
                 </div>
             </div>
