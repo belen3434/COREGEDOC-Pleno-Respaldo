@@ -170,9 +170,71 @@
         sidebarBody.appendChild(template.content.cloneNode(true));
     }
 
+    function isMobileSidebar() {
+        return window.matchMedia("(max-width: 768px)").matches;
+    }
+
+    function isSidebarHidden() {
+        var isToggled = document.body.classList.contains("sb-sidenav-toggled");
+        return isMobileSidebar() ? !isToggled : isToggled;
+    }
+
+    function syncPlenoSidebarClasses(plenoSidebar, plenoContent) {
+        var hidden = isSidebarHidden();
+
+        plenoSidebar.classList.toggle("pleno-sidebar-hidden", hidden);
+
+        if (plenoContent) {
+            plenoContent.classList.toggle("pleno-content-full", hidden);
+        }
+    }
+
+    function setupPlenoSidebarToggle() {
+        var toggle = document.getElementById("sidebarToggle");
+        var plenoSidebar = document.getElementById("sidebar-wrapper");
+        var plenoContent = document.getElementById("page-content-wrapper");
+
+        if (!toggle || !plenoSidebar || toggle.dataset.plenoSidebarReady === "true") {
+            return;
+        }
+
+        toggle.dataset.plenoSidebarReady = "true";
+        plenoSidebar.setAttribute("data-pleno-sidebar", "true");
+
+        if (plenoContent) {
+            plenoContent.setAttribute("data-pleno-content", "true");
+        }
+
+        syncPlenoSidebarClasses(plenoSidebar, plenoContent);
+
+        toggle.addEventListener("click", function (e) {
+            var wasToggled = document.body.classList.contains("sb-sidenav-toggled");
+
+            e.preventDefault();
+
+            window.setTimeout(function () {
+                var isToggled = document.body.classList.contains("sb-sidenav-toggled");
+
+                if (isToggled === wasToggled) {
+                    document.body.classList.toggle("sb-sidenav-toggled");
+                }
+
+                syncPlenoSidebarClasses(plenoSidebar, plenoContent);
+            }, 0);
+        });
+
+        window.addEventListener("resize", function () {
+            syncPlenoSidebarClasses(plenoSidebar, plenoContent);
+        });
+    }
+
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", mountPlenoSidebarMenu);
+        document.addEventListener("DOMContentLoaded", function () {
+            mountPlenoSidebarMenu();
+            setupPlenoSidebarToggle();
+        });
     } else {
         mountPlenoSidebarMenu();
+        setupPlenoSidebarToggle();
     }
 })();
