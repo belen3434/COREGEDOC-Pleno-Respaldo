@@ -153,6 +153,153 @@
 })();
 
 /*
+ * Validaciones visuales del formulario Crear sesion plenaria.
+ */
+(function () {
+    "use strict";
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var form = document.getElementById("plenoCrearSesionForm");
+
+        if (!form) {
+            return;
+        }
+
+        var formAlert = document.getElementById("plenoFormAlert");
+        var titleInput = document.getElementById("plenoTituloSesion");
+        var dateInput = document.getElementById("plenoFechaSesion");
+        var timeInput = document.getElementById("plenoHoraSesion");
+        var statusSelect = document.getElementById("plenoEstadoSesion");
+
+        function getTodayValue() {
+            var today = new Date();
+            var year = today.getFullYear();
+            var month = String(today.getMonth() + 1).padStart(2, "0");
+            var day = String(today.getDate()).padStart(2, "0");
+
+            return year + "-" + month + "-" + day;
+        }
+
+        function setFeedback(field, message) {
+            var feedbackId = field.getAttribute("aria-describedby");
+            var feedback = feedbackId ? document.getElementById(feedbackId) : null;
+
+            if (feedback && message) {
+                feedback.textContent = message;
+            }
+        }
+
+        function markField(field, isValid, message) {
+            if (!field) {
+                return;
+            }
+
+            field.classList.toggle("is-invalid", !isValid);
+            field.classList.toggle("is-valid", isValid);
+            setFeedback(field, message);
+        }
+
+        function hasValue(field) {
+            return field && field.value.trim() !== "";
+        }
+
+        function validateRequired(field, message) {
+            var isValid = hasValue(field);
+            markField(field, isValid, message);
+
+            return isValid;
+        }
+
+        function validateDate() {
+            var todayValue = getTodayValue();
+
+            if (!dateInput) {
+                return true;
+            }
+
+            dateInput.min = todayValue;
+
+            if (!hasValue(dateInput)) {
+                markField(dateInput, false, "Seleccione una fecha");
+                return false;
+            }
+
+            if (dateInput.value < todayValue) {
+                markField(dateInput, false, "No puede seleccionar una fecha anterior a hoy");
+                return false;
+            }
+
+            markField(dateInput, true, "");
+            return true;
+        }
+
+        function validateForm() {
+            var validations = [
+                validateRequired(titleInput, "Debe ingresar un título de sesión"),
+                validateDate(),
+                validateRequired(timeInput, "La hora es obligatoria"),
+                validateRequired(statusSelect, "Seleccione un estado de sesión")
+            ];
+            var isValid = validations.every(function (result) {
+                return result;
+            });
+
+            if (formAlert) {
+                formAlert.classList.toggle("d-none", isValid);
+            }
+
+            return isValid;
+        }
+
+        function clearValidation() {
+            [titleInput, dateInput, timeInput, statusSelect].forEach(function (field) {
+                if (field) {
+                    field.classList.remove("is-invalid", "is-valid");
+                }
+            });
+
+            if (formAlert) {
+                formAlert.classList.add("d-none");
+            }
+        }
+
+        if (dateInput) {
+            dateInput.min = getTodayValue();
+        }
+
+        [
+            { field: titleInput, eventName: "input", validate: function () { return validateRequired(titleInput, "Debe ingresar un título de sesión"); } },
+            { field: dateInput, eventName: "change", validate: validateDate },
+            { field: timeInput, eventName: "change", validate: function () { return validateRequired(timeInput, "La hora es obligatoria"); } },
+            { field: statusSelect, eventName: "change", validate: function () { return validateRequired(statusSelect, "Seleccione un estado de sesión"); } }
+        ].forEach(function (item) {
+            if (!item.field) {
+                return;
+            }
+
+            item.field.addEventListener(item.eventName, function () {
+                item.validate();
+
+                if (form.querySelectorAll(".is-invalid").length === 0 && formAlert) {
+                    formAlert.classList.add("d-none");
+                }
+            });
+        });
+
+        form.addEventListener("submit", function (event) {
+            if (!validateForm()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        });
+
+        form.addEventListener("reset", function () {
+            window.setTimeout(clearValidation, 0);
+        });
+    });
+})();
+
+/*
  * Inserta el menú visual interno de Pleno bajo el botón "Volver al inicio"
  * sin modificar el sidebar general del sistema.
  */
