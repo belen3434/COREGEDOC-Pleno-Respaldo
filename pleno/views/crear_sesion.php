@@ -14,8 +14,26 @@ require __DIR__ . '/partials/sidebar_pleno.php';
 
     <div class="card shadow-sm pleno-session-card">
         <div class="card-body">
-            <form id="plenoCrearSesionForm" action="#" method="post">
+            <form id="plenoCrearSesionForm" action="#" method="post" novalidate>
+                <div id="plenoFormAlert" class="alert alert-danger d-none" role="alert">
+                    Complete los campos obligatorios
+                </div>
+
                 <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold" for="plenoTituloSesion">Título de sesión</label>
+                        <input
+                            type="text"
+                            name="titulo_sesion"
+                            id="plenoTituloSesion"
+                            class="form-control"
+                            aria-describedby="plenoTituloSesionFeedback"
+                        >
+                        <div id="plenoTituloSesionFeedback" class="invalid-feedback">
+                            Debe ingresar un título de sesión
+                        </div>
+                    </div>
+
                     <div class="col-lg-3">
                         <label class="form-label fw-semibold pleno-meta-label">Tipo de Pleno</label>
                         <div class="pleno-pill-toggle" role="group" aria-label="Tipo de pleno">
@@ -63,21 +81,47 @@ require __DIR__ . '/partials/sidebar_pleno.php';
                     </div>
 
                     <div class="col-lg-4">
-                        <label class="form-label fw-semibold">Estado</label>
-                        <select name="estado" class="form-select">
+                        <label class="form-label fw-semibold" for="plenoEstadoSesion">Estado</label>
+                        <select
+                            name="estado"
+                            id="plenoEstadoSesion"
+                            class="form-select"
+                            aria-describedby="plenoEstadoSesionFeedback"
+                        >
                             <option value="">Seleccionar</option>
                             <option value="programada">Programada</option>
                             <option value="en_curso">En curso</option>
                             <option value="cerrada">Cerrada</option>
                         </select>
+                        <div id="plenoEstadoSesionFeedback" class="invalid-feedback">
+                            Seleccione un estado de sesión
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Fecha</label>
-                        <input type="date" name="fecha" class="form-control">
+                        <label class="form-label fw-semibold" for="plenoFechaSesion">Fecha</label>
+                        <input
+                            type="date"
+                            name="fecha"
+                            id="plenoFechaSesion"
+                            class="form-control"
+                            aria-describedby="plenoFechaSesionFeedback"
+                        >
+                        <div id="plenoFechaSesionFeedback" class="invalid-feedback">
+                            Seleccione una fecha
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Hora</label>
-                        <input type="time" name="hora" class="form-control">
+                        <label class="form-label fw-semibold" for="plenoHoraSesion">Hora</label>
+                        <input
+                            type="time"
+                            name="hora"
+                            id="plenoHoraSesion"
+                            class="form-control"
+                            aria-describedby="plenoHoraSesionFeedback"
+                        >
+                        <div id="plenoHoraSesionFeedback" class="invalid-feedback">
+                            La hora es obligatoria
+                        </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-semibold">Observaciones</label>
