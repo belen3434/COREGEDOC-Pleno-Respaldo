@@ -2,8 +2,24 @@
 // Vista base de sesiones plenarias.
 require __DIR__ . '/partials/sidebar_pleno.php';
 $perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
+$sesiones = $data['pleno_sesiones'] ?? [];
+$puedeGestionar = (bool)($data['pleno_puede_gestionar'] ?? false);
+$flash = $data['pleno_flash'] ?? null;
+$crudError = $data['pleno_crud_error'] ?? null;
 ?>
 <div class="container-fluid mt-4">
+    <?php if ($flash): ?>
+        <div class="alert alert-<?php echo htmlspecialchars($flash['tipo'], ENT_QUOTES, 'UTF-8'); ?>" role="alert">
+            <?php echo htmlspecialchars($flash['mensaje'], ENT_QUOTES, 'UTF-8'); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($crudError): ?>
+        <div class="alert alert-danger" role="alert">
+            <?php echo htmlspecialchars($crudError, ENT_QUOTES, 'UTF-8'); ?>
+        </div>
+    <?php endif; ?>
+
     <div class="alert alert-info py-2" role="alert">
         <strong>Perfil activo:</strong> <?php echo htmlspecialchars($perfilActivo, ENT_QUOTES, 'UTF-8'); ?>
     </div>
@@ -24,27 +40,70 @@ $perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
-                            <th>Sesión</th>
+                            <th>Número de sesión</th>
+                            <th>Tipo de pleno</th>
                             <th>Fecha</th>
                             <th>Hora</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
+                            <?php if ($puedeGestionar): ?>
+                                <th>Acciones</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">Sin registros por mostrar.</td>
-                        </tr>
+                        <?php if (empty($sesiones)): ?>
+                            <tr>
+                                <td colspan="<?php echo $puedeGestionar ? '7' : '6'; ?>" class="text-center text-muted py-4">
+                                    Sin registros por mostrar.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($sesiones as $sesion): ?>
+                                <tr>
+                                    <td><?php echo (int)$sesion['id_sesion']; ?></td>
+                                    <td><?php echo htmlspecialchars($sesion['numero_sesion'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><?php echo htmlspecialchars(ucfirst($sesion['tipo_pleno']), ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><?php echo htmlspecialchars($sesion['fecha'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><?php echo htmlspecialchars(substr((string)$sesion['hora'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $sesion['estado'])), ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                    </td>
+                                    <?php if ($puedeGestionar): ?>
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <a
+                                                    href="index.php?vista=editar_sesion&id=<?php echo (int)$sesion['id_sesion']; ?>"
+                                                    class="btn btn-outline-primary btn-sm"
+                                                >
+                                                    <i class="fas fa-pen me-1"></i>Editar
+                                                </a>
+                                                <a
+                                                    href="index.php?action=eliminar_sesion&id=<?php echo (int)$sesion['id_sesion']; ?>"
+                                                    class="btn btn-outline-danger btn-sm"
+                                                    onclick="return confirm('¿Desea eliminar esta sesión plenaria?');"
+                                                >
+                                                    <i class="fas fa-trash-alt me-1"></i>Eliminar
+                                                </a>
+                                            </div>
+                                        </td>
+                                    <?php endif; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div class="d-flex justify-content-end mt-3">
-        <a href="index.php?vista=crear_sesion" class="btn btn-success btn-sm">
-            <i class="fas fa-plus me-1"></i>Administrar sesión
-        </a>
-    </div>
+    <?php if ($puedeGestionar): ?>
+        <div class="d-flex justify-content-end mt-3">
+            <a href="index.php?vista=crear_sesion" class="btn btn-success btn-sm">
+                <i class="fas fa-plus me-1"></i>Administrar sesión
+            </a>
+        </div>
+    <?php endif; ?>
 </div>
 
