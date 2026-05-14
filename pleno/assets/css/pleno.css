@@ -38,6 +38,30 @@
     transform: translateY(0);
 }
 
+#sidebar-wrapper[data-pleno-sidebar="true"] {
+    transition: margin-left 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#sidebar-wrapper.pleno-sidebar-hidden {
+    margin-left: calc(-1 * var(--sidebar-width, 260px)) !important;
+    opacity: 0;
+    visibility: hidden;
+}
+
+#page-content-wrapper[data-pleno-content="true"] {
+    transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+#page-content-wrapper.pleno-content-full {
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+body.sb-sidenav-toggled .navbar.fixed-top {
+    left: 0 !important;
+    width: 100% !important;
+}
+
 .pleno-sidebar-menu {
     display: flex;
     flex-direction: column;
