@@ -11,7 +11,7 @@ $numeroSesion = $data['pleno_numero_sugerido'] ?: '#PL-2024-042';
         <h2 class="mb-0">
             <i class="fas fa-plus-circle me-2 text-success"></i>Crear sesión plenaria
         </h2>
-        <a href="index.php" class="btn btn-pleno-back">
+        <a href="index.php" id="plenoCrearSesionBackLink" class="btn btn-pleno-back">
             <i class="fas fa-arrow-left me-2"></i>Atrás
         </a>
     </div>
@@ -307,6 +307,25 @@ $numeroSesion = $data['pleno_numero_sugerido'] ?: '#PL-2024-042';
                 <button type="button" id="btnAgregarTablaResumen" class="btn btn-sm btn-primary">
                     <i class="fas fa-plus me-1"></i>Agregar
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="plenoConfirmarSalidaModal" tabindex="-1" aria-labelledby="plenoConfirmarSalidaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content pleno-modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="plenoConfirmarSalidaLabel">Confirmar salida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">¿Está seguro de volver atrás?</p>
+                <p class="mb-0 text-muted">Los cambios no guardados se perderán.</p>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="plenoConfirmarSalidaAceptar" class="btn btn-sm btn-success">Sí, volver</button>
             </div>
         </div>
     </div>
