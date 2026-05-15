@@ -12,7 +12,7 @@ $numeroSesion = $data['pleno_numero_sugerido'] ?: '#PL-2024-042';
             <i class="fas fa-plus-circle me-2 text-success"></i>Crear sesión plenaria
         </h2>
         <a href="index.php" class="btn btn-pleno-back">
-            <i class="fas fa-arrow-left me-2"></i>Volver
+            <i class="fas fa-arrow-left me-2"></i>Atrás
         </a>
     </div>
 

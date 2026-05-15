@@ -13,7 +13,7 @@ $crudError = $data['pleno_crud_error'] ?? null;
             <i class="fas fa-pen-to-square me-2 text-primary"></i>Editar sesión plenaria
         </h2>
         <a href="index.php?vista=sesiones" class="btn btn-pleno-back">
-            <i class="fas fa-arrow-left me-2"></i>Volver
+            <i class="fas fa-arrow-left me-2"></i>Atrás
         </a>
     </div>
 
