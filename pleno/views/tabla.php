@@ -17,14 +17,27 @@ $perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
         </a>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h6 class="text-muted mb-3">Orden del día</h6>
-            <ol class="mb-0">
-                <li class="mb-2">Lectura y aprobación del acta anterior</li>
-                <li class="mb-2">Temas de comisiones</li>
-                <li class="mb-2">Puntos varios</li>
-            </ol>
+    <div class="orden-dia-card">
+        <div class="orden-dia-titulo">Orden del día</div>
+
+        <div class="orden-dia-lista" id="ordenDiaLista">
+            <div class="orden-dia-item" draggable="true">
+                <span class="orden-dia-handle">⠿</span>
+                <span class="orden-dia-numero">1.</span>
+                <span class="orden-dia-texto">Lectura y aprobación del acta anterior</span>
+            </div>
+
+            <div class="orden-dia-item" draggable="true">
+                <span class="orden-dia-handle">⠿</span>
+                <span class="orden-dia-numero">2.</span>
+                <span class="orden-dia-texto">Temas de comisiones</span>
+            </div>
+
+            <div class="orden-dia-item" draggable="true">
+                <span class="orden-dia-handle">⠿</span>
+                <span class="orden-dia-numero">3.</span>
+                <span class="orden-dia-texto">Puntos varios</span>
+            </div>
         </div>
     </div>
 </div>
