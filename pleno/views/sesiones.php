@@ -98,12 +98,5 @@ $crudError = $data['pleno_crud_error'] ?? null;
         </div>
     </div>
 
-    <?php if ($puedeGestionar): ?>
-        <div class="d-flex justify-content-end mt-3">
-            <a href="index.php?vista=crear_sesion" class="btn btn-success btn-sm">
-                <i class="fas fa-plus me-1"></i>Administrar sesión
-            </a>
-        </div>
-    <?php endif; ?>
 </div>
 
