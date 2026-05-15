@@ -29,7 +29,7 @@ $crudError = $data['pleno_crud_error'] ?? null;
             <i class="fas fa-calendar-check me-2 text-primary"></i>Sesiones plenarias
         </h2>
         <a href="index.php" class="btn btn-pleno-back">
-            <i class="fas fa-arrow-left me-2"></i>Volver
+            <i class="fas fa-arrow-left me-2"></i>Atrás
         </a>
     </div>
 

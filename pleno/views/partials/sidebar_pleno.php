@@ -1,5 +1,5 @@
 <?php
-$plenoVistaActual = $_GET['vista'] ?? 'resumen';
+$plenoVistaActual = $_GET['vista'] ?? 'index';
 
 $plenoMenuPrincipal = [
     'configuracion' => [
@@ -49,7 +49,7 @@ $plenoMenuInferior = [
         <div class="pleno-sidebar-section">
             <p class="pleno-sidebar-label mb-2">Módulo Pleno</p>
             <?php foreach ($plenoMenuPrincipal as $key => $item) : ?>
-                <?php $isActive = $plenoVistaActual === $key || ($key === 'resumen' && $plenoVistaActual === 'index'); ?>
+                <?php $isActive = $plenoVistaActual === $key; ?>
                 <a
                     class="pleno-sidebar-link<?php echo $isActive ? ' active' : ''; ?>"
                     href="<?php echo htmlspecialchars($item['href'], ENT_QUOTES, 'UTF-8'); ?>"
