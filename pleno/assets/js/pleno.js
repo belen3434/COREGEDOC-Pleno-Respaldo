@@ -300,6 +300,72 @@
 })();
 
 /*
+ * Solicita confirmacion antes de salir de Crear sesion plenaria.
+ */
+(function () {
+    "use strict";
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var backLink = document.getElementById("plenoCrearSesionBackLink");
+        var modalElement = document.getElementById("plenoConfirmarSalidaModal");
+        var confirmButton = document.getElementById("plenoConfirmarSalidaAceptar");
+        var redirectUrl;
+
+        if (!backLink) {
+            return;
+        }
+
+        redirectUrl = backLink.getAttribute("href") || "index.php";
+
+        function redirectToBackUrl() {
+            window.location.href = redirectUrl;
+        }
+
+        function showBootstrapFallback() {
+            var modalInstance;
+
+            if (!window.bootstrap || !modalElement || !confirmButton) {
+                return;
+            }
+
+            modalInstance = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+            modalInstance.show();
+        }
+
+        backLink.addEventListener("click", function (event) {
+            event.preventDefault();
+
+            if (window.Swal && typeof window.Swal.fire === "function") {
+                window.Swal.fire({
+                    title: "¿Está seguro de volver atrás?",
+                    text: "Los cambios no guardados se perderán.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, volver",
+                    cancelButtonText: "Cancelar",
+                    reverseButtons: true,
+                    focusCancel: true
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        redirectToBackUrl();
+                    }
+                });
+
+                return;
+            }
+
+            showBootstrapFallback();
+        });
+
+        if (confirmButton) {
+            confirmButton.addEventListener("click", function () {
+                redirectToBackUrl();
+            });
+        }
+    });
+})();
+
+/*
  * Inserta el menú visual interno de Pleno bajo el botón "Volver al inicio"
  * sin modificar el sidebar general del sistema.
  */
