@@ -366,6 +366,115 @@
 })();
 
 /*
+ * Permite reordenar visualmente los puntos del orden del dia.
+ */
+(function () {
+    "use strict";
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var orderList = document.getElementById("ordenDiaLista");
+        var draggedItem = null;
+
+        if (!orderList) {
+            return;
+        }
+
+        function getOrderItems() {
+            return Array.prototype.slice.call(orderList.querySelectorAll(".orden-dia-item"));
+        }
+
+        function updateOrderNumbers() {
+            getOrderItems().forEach(function (item, index) {
+                var number = item.querySelector(".orden-dia-numero");
+
+                if (number) {
+                    number.textContent = (index + 1) + ".";
+                }
+            });
+        }
+
+        function clearDragOverState() {
+            getOrderItems().forEach(function (item) {
+                item.classList.remove("drag-over");
+            });
+        }
+
+        function getDragAfterElement(container, clientY) {
+            var items = getOrderItems().filter(function (item) {
+                return item !== draggedItem;
+            });
+            var closest = {
+                offset: Number.NEGATIVE_INFINITY,
+                element: null
+            };
+
+            items.forEach(function (item) {
+                var box = item.getBoundingClientRect();
+                var offset = clientY - box.top - (box.height / 2);
+
+                if (offset < 0 && offset > closest.offset) {
+                    closest = {
+                        offset: offset,
+                        element: item
+                    };
+                }
+            });
+
+            return closest.element;
+        }
+
+        getOrderItems().forEach(function (item) {
+            item.addEventListener("dragstart", function (event) {
+                draggedItem = item;
+                item.classList.add("dragging");
+
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", item.textContent.trim());
+                }
+            });
+
+            item.addEventListener("dragend", function () {
+                item.classList.remove("dragging");
+                clearDragOverState();
+                updateOrderNumbers();
+                draggedItem = null;
+            });
+        });
+
+        orderList.addEventListener("dragover", function (event) {
+            var nextItem;
+
+            if (!draggedItem) {
+                return;
+            }
+
+            event.preventDefault();
+            clearDragOverState();
+
+            nextItem = getDragAfterElement(orderList, event.clientY);
+
+            if (nextItem) {
+                nextItem.classList.add("drag-over");
+                orderList.insertBefore(draggedItem, nextItem);
+            } else {
+                orderList.appendChild(draggedItem);
+            }
+
+            updateOrderNumbers();
+        });
+
+        orderList.addEventListener("drop", function (event) {
+            event.preventDefault();
+            clearDragOverState();
+            updateOrderNumbers();
+        });
+
+        updateOrderNumbers();
+    });
+})();
+
+/*
  * Inserta el menú visual interno de Pleno bajo el botón "Volver al inicio"
  * sin modificar el sidebar general del sistema.
  */
