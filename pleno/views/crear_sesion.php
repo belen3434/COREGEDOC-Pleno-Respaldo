@@ -6,6 +6,7 @@ $flash = $data['pleno_flash'] ?? null;
 $crudError = $data['pleno_crud_error'] ?? null;
 $numeroSesion = $data['pleno_numero_sugerido'] ?: '#PL-2024-042';
 $comisionesActivas = $data['pleno_comisiones_activas'] ?? [];
+$puntosSesion = $data['pleno_puntos_sesion'] ?? [];
 ?>
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -38,6 +39,7 @@ $comisionesActivas = $data['pleno_comisiones_activas'] ?? [];
             <?php endif; ?>
 
             <form id="plenoCrearSesionForm" action="index.php?action=guardar_sesion" method="post" novalidate>
+                <input type="hidden" id="plenoPuntosResumenJson" name="puntos_resumen_json" value="[]">
                 <div id="plenoFormAlert" class="alert alert-danger d-none" role="alert">
                     Complete los campos obligatorios
                 </div>
@@ -211,6 +213,8 @@ $comisionesActivas = $data['pleno_comisiones_activas'] ?? [];
         </div>
     </div>
 </div>
+
+<script id="plenoPuntosInicialesData" type="application/json"><?php echo json_encode($puntosSesion, JSON_UNESCAPED_UNICODE); ?></script>
 
 <div class="modal fade" id="modalAgregarComision" tabindex="-1" aria-labelledby="modalAgregarComisionLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

@@ -1,14 +1,16 @@
-<?php
+﻿<?php
 
 class PlenoController
 {
     private $sesiones;
+    private $temas;
     private $auth;
     private $rolesGestion = [6, 20];
 
-    public function __construct(SesionPlenaria $sesiones, array $auth)
+    public function __construct(SesionPlenaria $sesiones, TemaPleno $temas, array $auth)
     {
         $this->sesiones = $sesiones;
+        $this->temas = $temas;
         $this->auth = $auth;
     }
 
@@ -44,6 +46,15 @@ class PlenoController
         }
 
         return $this->sesiones->listarTemasPorComision($idComision);
+    }
+
+    public function listarPuntosSesion(int $idSesion): array
+    {
+        if ($idSesion <= 0) {
+            return [];
+        }
+
+        return $this->temas->listarPuntosSesion($idSesion);
     }
 
     public function manejarAccion(?string $action): void
@@ -86,7 +97,11 @@ class PlenoController
         }
 
         $data['usuario_creador'] = isset($_SESSION['idUsuario']) ? (int)$_SESSION['idUsuario'] : null;
-        $this->sesiones->crear($data);
+
+        $idSesion = $this->sesiones->crear($data);
+        $puntos = $this->normalizarPuntos($_POST['puntos_resumen_json'] ?? '[]');
+        $this->temas->guardarPuntosSesion($idSesion, $puntos);
+
         $this->flash('success', 'Sesión creada correctamente.');
         $this->redirigir('index.php?vista=sesiones');
     }
@@ -119,6 +134,13 @@ class PlenoController
         }
 
         $this->sesiones->actualizar($id, $data);
+        $puntos = $this->normalizarPuntos($_POST['puntos_resumen_json'] ?? '[]');
+        $this->temas->guardarPuntosSesion($id, $puntos);
+        $puntosEliminados = $this->normalizarPuntosEliminados($_POST['puntos_eliminados_json'] ?? '[]');
+        foreach ($puntosEliminados as $idPuntoEliminado) {
+            $this->temas->eliminarLogicoPunto($idPuntoEliminado, $id);
+        }
+
         $this->flash('success', 'Sesión actualizada correctamente.');
         $this->redirigir('index.php?vista=sesiones');
     }
@@ -151,6 +173,62 @@ class PlenoController
             'estado' => trim((string)($input['estado'] ?? '')),
             'observaciones' => trim((string)($input['observaciones'] ?? '')),
         ];
+    }
+
+    private function normalizarPuntos($json): array
+    {
+        if (!is_string($json) || trim($json) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($json, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        $puntos = [];
+        foreach ($decoded as $punto) {
+            if (!is_array($punto)) {
+                continue;
+            }
+
+            $idComision = (int)($punto['id_comision'] ?? 0);
+            if ($idComision <= 0) {
+                continue;
+            }
+
+            $idTema = isset($punto['id_tema']) && $punto['id_tema'] !== '' ? (int)$punto['id_tema'] : null;
+            $puntos[] = [
+                'id' => (int)($punto['id'] ?? 0),
+                'id_comision' => $idComision,
+                'id_tema' => $idTema,
+                'tipo_punto' => strtoupper(trim((string)($punto['tipo_punto'] ?? 'COMISION'))),
+            ];
+        }
+
+        return $puntos;
+    }
+
+    private function normalizarPuntosEliminados($json): array
+    {
+        if (!is_string($json) || trim($json) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($json, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($decoded as $id) {
+            $idPunto = (int)$id;
+            if ($idPunto > 0) {
+                $ids[] = $idPunto;
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 
     private function validarSesion(array $data): array
