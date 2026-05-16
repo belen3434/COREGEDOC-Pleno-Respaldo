@@ -53,6 +53,8 @@
                     tipo_punto: row.getAttribute("data-tipo-punto") || "",
                     nombre_imprevista: row.getAttribute("data-nombre-imprevista") || "",
                     observacion_imprevista: row.getAttribute("data-observacion-imprevista") || "",
+                    titulo_punto: row.getAttribute("data-titulo-punto") || "",
+                    descripcion_punto: row.getAttribute("data-descripcion-punto") || "",
                     orden: index + 1
                 });
             });
@@ -285,6 +287,34 @@
                     return;
                 }
 
+                if (tipoPunto === "TABLA") {
+                    var tituloPunto = (point.titulo_punto || "").trim();
+                    var descripcionPunto = (point.descripcion_punto || "").trim();
+                    var descripcionTabla = tituloPunto || "Punto de Tabla";
+
+                    if (descripcionPunto) {
+                        descripcionTabla += " — " + descripcionPunto;
+                    }
+
+                    addSummaryItem(
+                        "Tabla",
+                        "pleno-point-badge-tabla",
+                        descripcionTabla,
+                        {
+                            "data-id-punto": point.id || "",
+                            "data-tipo-punto": "tabla",
+                            "data-id-comision": "",
+                            "data-id-tema": "",
+                            "data-nombre-imprevista": "",
+                            "data-observacion-imprevista": "",
+                            "data-titulo-punto": tituloPunto,
+                            "data-descripcion-punto": descripcionPunto,
+                            "data-vigente": "1"
+                        }
+                    );
+                    return;
+                }
+
                 var nombreComision = (point.nombreComision || "").trim();
                 var nombreTema = (point.nombreTema || "").trim();
                 var description = nombreComision;
@@ -304,6 +334,8 @@
                         "data-id-tema": point.id_tema || "",
                         "data-nombre-imprevista": "",
                         "data-observacion-imprevista": "",
+                        "data-titulo-punto": "",
+                        "data-descripcion-punto": "",
                         "data-vigente": "1"
                     }
                 );
@@ -354,6 +386,10 @@
                         "data-tipo-punto": "comision",
                         "data-id-comision": idComision,
                         "data-id-tema": idTema,
+                        "data-nombre-imprevista": "",
+                        "data-observacion-imprevista": "",
+                        "data-titulo-punto": "",
+                        "data-descripcion-punto": "",
                         "data-vigente": "1"
                     }
                 );
@@ -404,6 +440,8 @@
                     "data-id-tema": "",
                     "data-nombre-imprevista": nombreImprevista,
                     "data-observacion-imprevista": observacionImprevista,
+                    "data-titulo-punto": "",
+                    "data-descripcion-punto": "",
                     "data-vigente": "1"
                 });
                 closeModal("modalComisionImprevista");
@@ -419,12 +457,60 @@
 
         if (btnAgregarTabla) {
             btnAgregarTabla.addEventListener("click", function () {
-                var description = buildDescription(
-                    "Aprobación Proyecto Pavimentación Rodelillo Etapa 3",
-                    ["plenoDescripcionPunto", "plenoTituloPunto"]
-                );
-                addSummaryItem("TABLA", "pleno-point-badge-tabla", description);
+                var tituloInput = document.getElementById("plenoTituloPunto");
+                var descripcionInput = document.getElementById("plenoDescripcionPunto");
+                var ordenInput = document.getElementById("plenoOrdenPunto");
+                var tituloPunto = tituloInput ? tituloInput.value.trim() : "";
+                var descripcionPunto = descripcionInput ? descripcionInput.value.trim() : "";
+                var description = tituloPunto;
+
+                if (!tituloPunto) {
+                    if (tituloInput) {
+                        tituloInput.classList.add("is-invalid");
+                        tituloInput.focus();
+                    }
+
+                    if (window.Swal && typeof window.Swal.fire === "function") {
+                        window.Swal.fire({
+                            icon: "warning",
+                            title: "Título obligatorio",
+                            text: "Debe ingresar el título del punto de tabla."
+                        });
+                    }
+                    return;
+                }
+
+                if (tituloInput) {
+                    tituloInput.classList.remove("is-invalid");
+                }
+
+                if (descripcionPunto) {
+                    description += " — " + descripcionPunto;
+                }
+
+                addSummaryItem("Tabla", "pleno-point-badge-tabla", description, {
+                    "data-id-punto": "",
+                    "data-tipo-punto": "tabla",
+                    "data-id-comision": "",
+                    "data-id-tema": "",
+                    "data-nombre-imprevista": "",
+                    "data-observacion-imprevista": "",
+                    "data-titulo-punto": tituloPunto,
+                    "data-descripcion-punto": descripcionPunto,
+                    "data-vigente": "1",
+                    "data-orden-tabla": ordenInput && ordenInput.value ? ordenInput.value.trim() : ""
+                });
                 closeModal("modalPuntoTabla");
+                if (tituloInput) {
+                    tituloInput.value = "";
+                    tituloInput.classList.remove("is-invalid");
+                }
+                if (descripcionInput) {
+                    descripcionInput.value = "";
+                }
+                if (ordenInput) {
+                    ordenInput.value = "";
+                }
             });
         }
 
