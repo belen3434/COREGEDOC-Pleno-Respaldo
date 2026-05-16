@@ -22,6 +22,7 @@ class SesionPlenaria
         $stmt = $this->conn->prepare(
             'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, estado, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
+             WHERE vigencia = 1
              ORDER BY fecha DESC, hora DESC, id_sesion DESC'
         );
         $stmt->execute();
@@ -92,7 +93,12 @@ class SesionPlenaria
 
     public function eliminar(int $id): bool
     {
-        $stmt = $this->conn->prepare('DELETE FROM sesiones_plenarias WHERE id_sesion = :id');
+        $stmt = $this->conn->prepare(
+            'UPDATE sesiones_plenarias
+             SET vigencia = 0,
+                 fecha_actualizacion = NOW()
+             WHERE id_sesion = :id'
+        );
 
         return $stmt->execute([':id' => $id]);
     }
