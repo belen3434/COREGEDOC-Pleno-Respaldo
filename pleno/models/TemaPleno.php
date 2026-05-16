@@ -31,12 +31,18 @@ class TemaPleno
 
         foreach ($puntos as $punto) {
             $idPunto = (int)($punto['id'] ?? 0);
-            $idComision = (int)($punto['id_comision'] ?? 0);
+            $idComision = isset($punto['id_comision']) && $punto['id_comision'] !== '' ? (int)$punto['id_comision'] : null;
             $idTema = isset($punto['id_tema']) && $punto['id_tema'] !== '' ? (int)$punto['id_tema'] : null;
             $tipoPunto = strtoupper(trim((string)($punto['tipo_punto'] ?? 'COMISION')));
             $tipoPunto = $tipoPunto !== '' ? $tipoPunto : 'COMISION';
+            $nombreImprevista = trim((string)($punto['nombre_imprevista'] ?? ''));
+            $observacionImprevista = trim((string)($punto['observacion_imprevista'] ?? ''));
 
-            if ($idComision <= 0) {
+            if ($tipoPunto === 'IMPREVISTA' && $nombreImprevista === '') {
+                continue;
+            }
+
+            if ($tipoPunto !== 'IMPREVISTA' && (($idComision ?? 0) <= 0)) {
                 continue;
             }
 
@@ -46,6 +52,8 @@ class TemaPleno
                      SET id_comision = :id_comision,
                          id_tema = :id_tema,
                          tipo_punto = :tipo_punto,
+                         nombre_imprevista = :nombre_imprevista,
+                         observacion_imprevista = :observacion_imprevista,
                          orden = :orden,
                          vigente = 1,
                          fecha_actualizacion = NOW()
@@ -57,18 +65,24 @@ class TemaPleno
                     ':id_comision' => $idComision,
                     ':id_tema' => $idTema,
                     ':tipo_punto' => $tipoPunto,
+                    ':nombre_imprevista' => $nombreImprevista !== '' ? $nombreImprevista : null,
+                    ':observacion_imprevista' => $observacionImprevista !== '' ? $observacionImprevista : null,
                     ':orden' => $orden,
                 ]);
             } else {
                 $stmt = $this->conn->prepare(
-                    'INSERT INTO sesion_plenaria_temas (id_sesion, id_comision, id_tema, tipo_punto, orden, vigente)
-                     VALUES (:id_sesion, :id_comision, :id_tema, :tipo_punto, :orden, 1)'
+                    'INSERT INTO sesion_plenaria_temas
+                        (id_sesion, id_comision, id_tema, tipo_punto, nombre_imprevista, observacion_imprevista, orden, vigente)
+                     VALUES
+                        (:id_sesion, :id_comision, :id_tema, :tipo_punto, :nombre_imprevista, :observacion_imprevista, :orden, 1)'
                 );
                 $stmt->execute([
                     ':id_sesion' => $idSesion,
                     ':id_comision' => $idComision,
                     ':id_tema' => $idTema,
                     ':tipo_punto' => $tipoPunto,
+                    ':nombre_imprevista' => $nombreImprevista !== '' ? $nombreImprevista : null,
+                    ':observacion_imprevista' => $observacionImprevista !== '' ? $observacionImprevista : null,
                     ':orden' => $orden,
                 ]);
             }
@@ -86,11 +100,13 @@ class TemaPleno
                 spt.id_comision,
                 spt.id_tema,
                 spt.tipo_punto,
+                spt.nombre_imprevista,
+                spt.observacion_imprevista,
                 spt.orden,
                 c.nombreComision,
                 t.nombreTema
              FROM sesion_plenaria_temas spt
-             INNER JOIN t_comision c ON c.idComision = spt.id_comision
+             LEFT JOIN t_comision c ON c.idComision = spt.id_comision
              LEFT JOIN t_tema t ON t.idTema = spt.id_tema
              WHERE spt.id_sesion = :id_sesion
                AND spt.vigente = 1
