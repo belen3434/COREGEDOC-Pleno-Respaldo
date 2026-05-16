@@ -32,6 +32,20 @@ class PlenoController
         return $this->sesiones->generarNumeroSesion();
     }
 
+    public function listarComisionesActivas(): array
+    {
+        return $this->sesiones->listarComisionesActivas();
+    }
+
+    public function listarTemasPorComision(int $idComision): array
+    {
+        if ($idComision <= 0) {
+            return [];
+        }
+
+        return $this->sesiones->listarTemasPorComision($idComision);
+    }
+
     public function manejarAccion(?string $action): void
     {
         if ($action === null || $action === '') {

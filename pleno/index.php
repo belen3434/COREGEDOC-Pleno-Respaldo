@@ -32,10 +32,25 @@ $plenoSesiones = [];
 $plenoSesionActual = null;
 $plenoNumeroSugerido = '';
 $plenoCrudError = null;
+$plenoComisionesActivas = [];
 
 if ($plenoAuth['authorized']) {
     try {
         $plenoController = new PlenoController(new SesionPlenaria(), $plenoAuth);
+
+        if ($action === 'listar_temas_comision') {
+            header('Content-Type: application/json; charset=utf-8');
+
+            $idComision = (int)($_GET['idComision'] ?? 0);
+            $temas = $plenoController->listarTemasPorComision($idComision);
+
+            echo json_encode([
+                'success' => true,
+                'temas' => $temas,
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
         $plenoController->manejarAccion($action);
         $plenoFlash = $plenoController->consumirFlash();
         $plenoNumeroSugerido = $plenoController->numeroSesionSugerido();
@@ -46,6 +61,10 @@ if ($plenoAuth['authorized']) {
 
         if ($vista === 'editar_sesion') {
             $plenoSesionActual = $plenoController->obtenerSesion((int)($_GET['id'] ?? 0));
+        }
+
+        if ($vista === 'crear_sesion' || $vista === 'editar_sesion') {
+            $plenoComisionesActivas = $plenoController->listarComisionesActivas();
         }
     } catch (Throwable $e) {
         $plenoCrudError = 'No fue posible cargar los datos de sesiones plenarias. Verifique que la tabla exista.';
@@ -65,6 +84,7 @@ $data = [
     'pleno_sesiones' => $plenoSesiones,
     'pleno_sesion_actual' => $plenoSesionActual,
     'pleno_numero_sugerido' => $plenoNumeroSugerido,
+    'pleno_comisiones_activas' => $plenoComisionesActivas,
     'pleno_crud_error' => $plenoCrudError,
 ];
 

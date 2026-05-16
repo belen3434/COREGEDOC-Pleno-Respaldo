@@ -5,6 +5,7 @@ $puedeGestionar = (bool)($data['pleno_puede_gestionar'] ?? false);
 $flash = $data['pleno_flash'] ?? null;
 $crudError = $data['pleno_crud_error'] ?? null;
 $numeroSesion = $data['pleno_numero_sugerido'] ?: '#PL-2024-042';
+$comisionesActivas = $data['pleno_comisiones_activas'] ?? [];
 ?>
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -225,18 +226,17 @@ $numeroSesion = $data['pleno_numero_sugerido'] ?: '#PL-2024-042';
                     <label for="plenoComision" class="form-label text-muted small fw-bold">COMISIÓN</label>
                     <select id="plenoComision" class="form-select">
                         <option value="">Seleccionar comisión</option>
-                        <option>Comisión de Régimen Interno</option>
-                        <option>Comisión de Inversiones</option>
-                        <option>Comisión de Ordenamiento Territorial</option>
+                        <?php foreach ($comisionesActivas as $comision): ?>
+                            <option value="<?php echo (int)($comision['idComision'] ?? 0); ?>">
+                                <?php echo htmlspecialchars((string)($comision['nombreComision'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="mb-0">
                     <label for="plenoTemaComision" class="form-label text-muted small fw-bold">TEMA</label>
-                    <select id="plenoTemaComision" class="form-select">
-                        <option value="">Seleccionar tema</option>
-                        <option>Presentación de propuesta</option>
-                        <option>Revisión de antecedentes</option>
-                        <option>Votación en tabla</option>
+                    <select id="plenoTemaComision" class="form-select" disabled>
+                        <option value="">Seleccione primero una comisión</option>
                     </select>
                 </div>
             </div>
