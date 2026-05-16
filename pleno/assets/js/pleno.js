@@ -17,6 +17,8 @@
         var btnAgregarImprevista = document.getElementById("btnAgregarImprevistaResumen");
         var btnAgregarTabla = document.getElementById("btnAgregarTablaResumen");
         var createSessionForm = document.getElementById("plenoCrearSesionForm");
+        var comisionSelect = document.getElementById("plenoComision");
+        var temaComisionSelect = document.getElementById("plenoTemaComision");
 
         function getItemsCount() {
             return summaryBody.querySelectorAll("tr[data-summary-item='true']").length;
@@ -49,12 +51,93 @@
                 var field = document.getElementById(inputIds[i]);
                 if (field && typeof field.value === "string") {
                     var value = field.value.trim();
+
+                    if (field.tagName === "SELECT") {
+                        var selectedOption = field.options[field.selectedIndex];
+                        if (selectedOption) {
+                            value = selectedOption.text.trim();
+                        }
+                    }
+
                     if (value) {
                         return value;
                     }
                 }
             }
             return defaultText;
+        }
+
+        function clearTemaSelect(message) {
+            if (!temaComisionSelect) {
+                return;
+            }
+
+            temaComisionSelect.innerHTML = "";
+            var option = document.createElement("option");
+            option.value = "";
+            option.textContent = message;
+            temaComisionSelect.appendChild(option);
+        }
+
+        function setTemaLoading(isLoading) {
+            if (!temaComisionSelect) {
+                return;
+            }
+
+            temaComisionSelect.disabled = isLoading;
+        }
+
+        function loadTemasByComision(comisionId) {
+            if (!temaComisionSelect) {
+                return;
+            }
+
+            if (!comisionId) {
+                clearTemaSelect("Seleccione primero una comisión");
+                temaComisionSelect.disabled = true;
+                return;
+            }
+
+            clearTemaSelect("Cargando temas...");
+            setTemaLoading(true);
+
+            fetch("index.php?action=listar_temas_comision&idComision=" + encodeURIComponent(comisionId), {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                }
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("No fue posible cargar temas.");
+                    }
+
+                    return response.json();
+                })
+                .then(function (payload) {
+                    var temas = Array.isArray(payload.temas) ? payload.temas : [];
+
+                    clearTemaSelect(
+                        temas.length > 0
+                            ? "Seleccionar tema"
+                            : "No existen temas asociados"
+                    );
+
+                    if (temas.length > 0) {
+                        temas.forEach(function (tema) {
+                            var option = document.createElement("option");
+                            option.value = String(tema.idTema || "");
+                            option.textContent = String(tema.nombreTema || "");
+                            temaComisionSelect.appendChild(option);
+                        });
+                    }
+
+                    temaComisionSelect.disabled = false;
+                })
+                .catch(function () {
+                    clearTemaSelect("No fue posible cargar los temas");
+                    temaComisionSelect.disabled = true;
+                });
         }
 
         function createDeleteButton() {
@@ -144,8 +227,16 @@
                     row.remove();
                 });
 
+                loadTemasByComision("");
                 window.setTimeout(updateCount, 0);
             });
+        }
+
+        if (comisionSelect) {
+            comisionSelect.addEventListener("change", function () {
+                loadTemasByComision(comisionSelect.value);
+            });
+            loadTemasByComision(comisionSelect.value);
         }
 
         updateCount();

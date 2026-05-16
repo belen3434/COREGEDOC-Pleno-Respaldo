@@ -106,4 +106,38 @@ class SesionPlenaria
 
         return 'PL-' . date('Y') . '-' . str_pad((string)$siguienteId, 3, '0', STR_PAD_LEFT);
     }
+
+    public function listarComisionesActivas(): array
+    {
+        $stmt = $this->conn->prepare(
+            'SELECT idComision, nombreComision
+             FROM t_comision
+             WHERE vigencia = 1
+             ORDER BY nombreComision ASC'
+        );
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public function listarTemasPorComision(int $idComision): array
+    {
+        $stmt = $this->conn->prepare(
+            'SELECT
+                t.idTema,
+                t.nombreTema,
+                m.idMinuta,
+                c.idComision,
+                c.nombreComision
+             FROM t_tema t
+             INNER JOIN t_minuta m ON t.t_minuta_idMinuta = m.idMinuta
+             INNER JOIN t_comision c ON m.t_comision_idComision = c.idComision
+             WHERE c.idComision = :idComision
+               AND c.vigencia = 1
+             ORDER BY t.idTema DESC'
+        );
+        $stmt->execute([':idComision' => $idComision]);
+
+        return $stmt->fetchAll();
+    }
 }
