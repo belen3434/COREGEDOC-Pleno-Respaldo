@@ -37,12 +37,18 @@ class TemaPleno
             $tipoPunto = $tipoPunto !== '' ? $tipoPunto : 'COMISION';
             $nombreImprevista = trim((string)($punto['nombre_imprevista'] ?? ''));
             $observacionImprevista = trim((string)($punto['observacion_imprevista'] ?? ''));
+            $tituloPunto = trim((string)($punto['titulo_punto'] ?? ''));
+            $descripcionPunto = trim((string)($punto['descripcion_punto'] ?? ''));
 
             if ($tipoPunto === 'IMPREVISTA' && $nombreImprevista === '') {
                 continue;
             }
 
-            if ($tipoPunto !== 'IMPREVISTA' && (($idComision ?? 0) <= 0)) {
+            if ($tipoPunto === 'TABLA' && $tituloPunto === '') {
+                continue;
+            }
+
+            if (!in_array($tipoPunto, ['IMPREVISTA', 'TABLA'], true) && (($idComision ?? 0) <= 0)) {
                 continue;
             }
 
@@ -54,6 +60,8 @@ class TemaPleno
                          tipo_punto = :tipo_punto,
                          nombre_imprevista = :nombre_imprevista,
                          observacion_imprevista = :observacion_imprevista,
+                         titulo_punto = :titulo_punto,
+                         descripcion_punto = :descripcion_punto,
                          orden = :orden,
                          vigente = 1,
                          fecha_actualizacion = NOW()
@@ -67,14 +75,16 @@ class TemaPleno
                     ':tipo_punto' => $tipoPunto,
                     ':nombre_imprevista' => $nombreImprevista !== '' ? $nombreImprevista : null,
                     ':observacion_imprevista' => $observacionImprevista !== '' ? $observacionImprevista : null,
+                    ':titulo_punto' => $tituloPunto !== '' ? $tituloPunto : null,
+                    ':descripcion_punto' => $descripcionPunto !== '' ? $descripcionPunto : null,
                     ':orden' => $orden,
                 ]);
             } else {
                 $stmt = $this->conn->prepare(
                     'INSERT INTO sesion_plenaria_temas
-                        (id_sesion, id_comision, id_tema, tipo_punto, nombre_imprevista, observacion_imprevista, orden, vigente)
+                        (id_sesion, id_comision, id_tema, tipo_punto, nombre_imprevista, observacion_imprevista, titulo_punto, descripcion_punto, orden, vigente)
                      VALUES
-                        (:id_sesion, :id_comision, :id_tema, :tipo_punto, :nombre_imprevista, :observacion_imprevista, :orden, 1)'
+                        (:id_sesion, :id_comision, :id_tema, :tipo_punto, :nombre_imprevista, :observacion_imprevista, :titulo_punto, :descripcion_punto, :orden, 1)'
                 );
                 $stmt->execute([
                     ':id_sesion' => $idSesion,
@@ -83,6 +93,8 @@ class TemaPleno
                     ':tipo_punto' => $tipoPunto,
                     ':nombre_imprevista' => $nombreImprevista !== '' ? $nombreImprevista : null,
                     ':observacion_imprevista' => $observacionImprevista !== '' ? $observacionImprevista : null,
+                    ':titulo_punto' => $tituloPunto !== '' ? $tituloPunto : null,
+                    ':descripcion_punto' => $descripcionPunto !== '' ? $descripcionPunto : null,
                     ':orden' => $orden,
                 ]);
             }
@@ -102,6 +114,8 @@ class TemaPleno
                 spt.tipo_punto,
                 spt.nombre_imprevista,
                 spt.observacion_imprevista,
+                spt.titulo_punto,
+                spt.descripcion_punto,
                 spt.orden,
                 c.nombreComision,
                 t.nombreTema

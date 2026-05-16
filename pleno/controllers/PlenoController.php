@@ -197,12 +197,18 @@ class PlenoController
             $idTema = isset($punto['id_tema']) && $punto['id_tema'] !== '' ? (int)$punto['id_tema'] : null;
             $nombreImprevista = trim((string)($punto['nombre_imprevista'] ?? ''));
             $observacionImprevista = trim((string)($punto['observacion_imprevista'] ?? ''));
+            $tituloPunto = trim((string)($punto['titulo_punto'] ?? ''));
+            $descripcionPunto = trim((string)($punto['descripcion_punto'] ?? ''));
 
             if ($tipoPunto === 'IMPREVISTA' && $nombreImprevista === '') {
                 continue;
             }
 
-            if ($tipoPunto !== 'IMPREVISTA' && (($idComision ?? 0) <= 0)) {
+            if ($tipoPunto === 'TABLA' && $tituloPunto === '') {
+                continue;
+            }
+
+            if (!in_array($tipoPunto, ['IMPREVISTA', 'TABLA'], true) && (($idComision ?? 0) <= 0)) {
                 continue;
             }
 
@@ -213,6 +219,8 @@ class PlenoController
                 'tipo_punto' => $tipoPunto !== '' ? $tipoPunto : 'COMISION',
                 'nombre_imprevista' => $nombreImprevista,
                 'observacion_imprevista' => $observacionImprevista,
+                'titulo_punto' => $tituloPunto,
+                'descripcion_punto' => $descripcionPunto,
             ];
         }
 
