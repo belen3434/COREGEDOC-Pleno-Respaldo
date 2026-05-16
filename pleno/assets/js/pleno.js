@@ -51,6 +51,8 @@
                     id_comision: row.getAttribute("data-id-comision") || "",
                     id_tema: row.getAttribute("data-id-tema") || "",
                     tipo_punto: row.getAttribute("data-tipo-punto") || "",
+                    nombre_imprevista: row.getAttribute("data-nombre-imprevista") || "",
+                    observacion_imprevista: row.getAttribute("data-observacion-imprevista") || "",
                     orden: index + 1
                 });
             });
@@ -232,6 +234,10 @@
             updateCount();
         }
 
+        function normalizeTipoPunto(tipoPunto) {
+            return String(tipoPunto || "").trim().toUpperCase();
+        }
+
         function hydrateSummaryFromStoredPoints() {
             if (!puntosInicialesData) {
                 return;
@@ -252,6 +258,33 @@
             }
 
             points.forEach(function (point) {
+                var tipoPunto = normalizeTipoPunto(point.tipo_punto || "COMISION");
+                if (tipoPunto === "IMPREVISTA") {
+                    var nombreImprevista = (point.nombre_imprevista || "").trim();
+                    var observacionImprevista = (point.observacion_imprevista || "").trim();
+                    var descripcionImprevista = nombreImprevista || "Comisión Imprevista";
+
+                    if (observacionImprevista) {
+                        descripcionImprevista += " — " + observacionImprevista;
+                    }
+
+                    addSummaryItem(
+                        "Imprevista",
+                        "pleno-point-badge-imprevista",
+                        descripcionImprevista,
+                        {
+                            "data-id-punto": point.id || "",
+                            "data-tipo-punto": "imprevista",
+                            "data-id-comision": "",
+                            "data-id-tema": "",
+                            "data-nombre-imprevista": nombreImprevista,
+                            "data-observacion-imprevista": observacionImprevista,
+                            "data-vigente": "1"
+                        }
+                    );
+                    return;
+                }
+
                 var nombreComision = (point.nombreComision || "").trim();
                 var nombreTema = (point.nombreTema || "").trim();
                 var description = nombreComision;
@@ -266,9 +299,11 @@
                     description || "Comisión",
                     {
                         "data-id-punto": point.id || "",
-                        "data-tipo-punto": String(point.tipo_punto || "COMISION").toLowerCase(),
+                        "data-tipo-punto": "comision",
                         "data-id-comision": point.id_comision || "",
                         "data-id-tema": point.id_tema || "",
+                        "data-nombre-imprevista": "",
+                        "data-observacion-imprevista": "",
                         "data-vigente": "1"
                     }
                 );
@@ -332,12 +367,53 @@
 
         if (btnAgregarImprevista) {
             btnAgregarImprevista.addEventListener("click", function () {
-                var description = buildDescription(
-                    "Situación de Emergencia: Incendios Forestales Quilpué",
-                    ["plenoObservacionImprevista", "plenoNombreImprevista"]
-                );
-                addSummaryItem("IMPREVISTA", "pleno-point-badge-imprevista", description);
+                var nombreInput = document.getElementById("plenoNombreImprevista");
+                var observacionInput = document.getElementById("plenoObservacionImprevista");
+                var nombreImprevista = nombreInput ? nombreInput.value.trim() : "";
+                var observacionImprevista = observacionInput ? observacionInput.value.trim() : "";
+                var description = nombreImprevista;
+
+                if (!nombreImprevista) {
+                    if (nombreInput) {
+                        nombreInput.classList.add("is-invalid");
+                        nombreInput.focus();
+                    }
+
+                    if (window.Swal && typeof window.Swal.fire === "function") {
+                        window.Swal.fire({
+                            icon: "warning",
+                            title: "Nombre obligatorio",
+                            text: "Debe ingresar el nombre de la comisión imprevista."
+                        });
+                    }
+                    return;
+                }
+
+                if (nombreInput) {
+                    nombreInput.classList.remove("is-invalid");
+                }
+
+                if (observacionImprevista) {
+                    description += " — " + observacionImprevista;
+                }
+
+                addSummaryItem("Imprevista", "pleno-point-badge-imprevista", description, {
+                    "data-id-punto": "",
+                    "data-tipo-punto": "imprevista",
+                    "data-id-comision": "",
+                    "data-id-tema": "",
+                    "data-nombre-imprevista": nombreImprevista,
+                    "data-observacion-imprevista": observacionImprevista,
+                    "data-vigente": "1"
+                });
                 closeModal("modalComisionImprevista");
+                if (nombreInput) {
+                    nombreInput.value = "";
+                    nombreInput.classList.remove("is-invalid");
+                }
+                if (observacionInput) {
+                    observacionInput.value = "";
+                }
             });
         }
 
