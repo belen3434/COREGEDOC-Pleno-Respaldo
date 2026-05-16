@@ -1,0 +1,2 @@
+ALTER TABLE sesiones_plenarias
+ADD COLUMN vigencia TINYINT(1) NOT NULL DEFAULT 1;

@@ -82,7 +82,7 @@ $crudError = $data['pleno_crud_error'] ?? null;
                                                 <a
                                                     href="index.php?action=eliminar_sesion&id=<?php echo (int)$sesion['id_sesion']; ?>"
                                                     class="btn btn-outline-danger btn-sm"
-                                                    onclick="return confirm('¿Desea eliminar esta sesión plenaria?');"
+                                                    onclick="return confirm('¿Está seguro que desea eliminar esta sesión plenaria?');"
                                                 >
                                                     <i class="fas fa-trash-alt me-1"></i>Eliminar
                                                 </a>
