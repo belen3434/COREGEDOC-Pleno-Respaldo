@@ -17,8 +17,14 @@
         var btnAgregarImprevista = document.getElementById("btnAgregarImprevistaResumen");
         var btnAgregarTabla = document.getElementById("btnAgregarTablaResumen");
         var createSessionForm = document.getElementById("plenoCrearSesionForm");
+        var editSessionForm = document.getElementById("plenoEditarSesionForm");
+        var summaryForm = createSessionForm || editSessionForm;
         var comisionSelect = document.getElementById("plenoComision");
         var temaComisionSelect = document.getElementById("plenoTemaComision");
+        var puntosJsonInput = document.getElementById("plenoPuntosResumenJson");
+        var puntosEliminadosJsonInput = document.getElementById("plenoPuntosEliminadosJson");
+        var puntosInicialesData = document.getElementById("plenoPuntosInicialesData");
+        var puntosEliminados = [];
 
         function getItemsCount() {
             return summaryBody.querySelectorAll("tr[data-summary-item='true']").length;
@@ -28,6 +34,36 @@
             var total = getItemsCount();
             summaryCount.textContent = total + " ACTIVOS";
             emptyRow.hidden = total > 0;
+            syncPuntosJsonInput();
+        }
+
+        function syncPuntosJsonInput() {
+            if (!puntosJsonInput) {
+                return;
+            }
+
+            var rows = summaryBody.querySelectorAll("tr[data-summary-item='true']");
+            var puntos = [];
+
+            rows.forEach(function (row, index) {
+                puntos.push({
+                    id: row.getAttribute("data-id-punto") || "",
+                    id_comision: row.getAttribute("data-id-comision") || "",
+                    id_tema: row.getAttribute("data-id-tema") || "",
+                    tipo_punto: row.getAttribute("data-tipo-punto") || "",
+                    orden: index + 1
+                });
+            });
+
+            puntosJsonInput.value = JSON.stringify(puntos);
+        }
+
+        function syncPuntosEliminadosInput() {
+            if (!puntosEliminadosJsonInput) {
+                return;
+            }
+
+            puntosEliminadosJsonInput.value = JSON.stringify(puntosEliminados);
         }
 
         function closeModal(modalId) {
@@ -143,17 +179,18 @@
         function createDeleteButton() {
             var button = document.createElement("button");
             button.type = "button";
-            button.className = "pleno-delete-btn";
-            button.setAttribute("aria-label", "Eliminar punto (solo visual)");
-
-            var icon = document.createElement("i");
-            icon.className = "fas fa-trash-alt";
-            icon.setAttribute("aria-hidden", "true");
-            button.appendChild(icon);
+            button.className = "btn btn-sm btn-outline-danger";
+            button.textContent = "Quitar";
+            button.setAttribute("aria-label", "Quitar punto (solo visual)");
 
             button.addEventListener("click", function () {
                 var row = button.closest("tr");
                 if (row) {
+                    var idPunto = parseInt(row.getAttribute("data-id-punto") || "0", 10);
+                    if (idPunto > 0 && puntosEliminados.indexOf(idPunto) === -1) {
+                        puntosEliminados.push(idPunto);
+                        syncPuntosEliminadosInput();
+                    }
                     row.remove();
                     updateCount();
                 }
@@ -162,9 +199,17 @@
             return button;
         }
 
-        function addSummaryItem(typeText, typeClass, description) {
+        function addSummaryItem(typeText, typeClass, description, metadata) {
             var row = document.createElement("tr");
             row.setAttribute("data-summary-item", "true");
+
+            if (metadata && typeof metadata === "object") {
+                Object.keys(metadata).forEach(function (key) {
+                    if (metadata[key] !== null && metadata[key] !== undefined) {
+                        row.setAttribute(key, String(metadata[key]));
+                    }
+                });
+            }
 
             var typeCell = document.createElement("td");
             var badge = document.createElement("span");
@@ -187,14 +232,101 @@
             updateCount();
         }
 
+        function hydrateSummaryFromStoredPoints() {
+            if (!puntosInicialesData) {
+                return;
+            }
+
+            var raw = puntosInicialesData.textContent || "[]";
+            var points;
+
+            try {
+                points = JSON.parse(raw);
+            } catch (error) {
+                points = [];
+            }
+
+            if (!Array.isArray(points) || points.length === 0) {
+                updateCount();
+                return;
+            }
+
+            points.forEach(function (point) {
+                var nombreComision = (point.nombreComision || "").trim();
+                var nombreTema = (point.nombreTema || "").trim();
+                var description = nombreComision;
+
+                if (nombreTema) {
+                    description += " — Tema: " + nombreTema;
+                }
+
+                addSummaryItem(
+                    "Comisión",
+                    "pleno-point-badge-permanente",
+                    description || "Comisión",
+                    {
+                        "data-id-punto": point.id || "",
+                        "data-tipo-punto": String(point.tipo_punto || "COMISION").toLowerCase(),
+                        "data-id-comision": point.id_comision || "",
+                        "data-id-tema": point.id_tema || "",
+                        "data-vigente": "1"
+                    }
+                );
+            });
+        }
+
         if (btnAgregarComision) {
             btnAgregarComision.addEventListener("click", function () {
-                var description = buildDescription(
-                    "Comisión de Finanzas y Presupuesto Regional",
-                    ["plenoTemaComision", "plenoComision"]
+                var selectedComision = comisionSelect && comisionSelect.selectedIndex >= 0
+                    ? comisionSelect.options[comisionSelect.selectedIndex]
+                    : null;
+                var selectedTema = temaComisionSelect && temaComisionSelect.selectedIndex >= 0
+                    ? temaComisionSelect.options[temaComisionSelect.selectedIndex]
+                    : null;
+                var idComision = selectedComision ? (selectedComision.value || "").trim() : "";
+                var nombreComision = selectedComision ? selectedComision.text.trim() : "";
+                var idTema = selectedTema ? (selectedTema.value || "").trim() : "";
+                var nombreTema = selectedTema ? selectedTema.text.trim() : "";
+
+                if (!idComision) {
+                    if (window.Swal && typeof window.Swal.fire === "function") {
+                        window.Swal.fire({
+                            icon: "warning",
+                            title: "Seleccione una comisión",
+                            text: "Debe seleccionar una comisión antes de agregar."
+                        });
+                    }
+                    return;
+                }
+
+                if (!idTema) {
+                    if (window.Swal && typeof window.Swal.fire === "function") {
+                        window.Swal.fire({
+                            icon: "warning",
+                            title: "Seleccione un tema",
+                            text: "Debe seleccionar un tema asociado a la comisión."
+                        });
+                    }
+                    return;
+                }
+
+                addSummaryItem(
+                    "Comisión",
+                    "pleno-point-badge-permanente",
+                    nombreComision + " — Tema: " + nombreTema,
+                    {
+                        "data-id-punto": "",
+                        "data-tipo-punto": "comision",
+                        "data-id-comision": idComision,
+                        "data-id-tema": idTema,
+                        "data-vigente": "1"
+                    }
                 );
-                addSummaryItem("PERMANENTE", "pleno-point-badge-permanente", description);
                 closeModal("modalAgregarComision");
+                if (comisionSelect) {
+                    comisionSelect.value = "";
+                }
+                loadTemasByComision("");
             });
         }
 
@@ -220,13 +352,15 @@
             });
         }
 
-        if (createSessionForm) {
-            createSessionForm.addEventListener("reset", function () {
+        if (summaryForm) {
+            summaryForm.addEventListener("reset", function () {
                 var rows = summaryBody.querySelectorAll("tr[data-summary-item='true']");
                 rows.forEach(function (row) {
                     row.remove();
                 });
 
+                puntosEliminados = [];
+                syncPuntosEliminadosInput();
                 loadTemasByComision("");
                 window.setTimeout(updateCount, 0);
             });
@@ -239,6 +373,8 @@
             loadTemasByComision(comisionSelect.value);
         }
 
+        hydrateSummaryFromStoredPoints();
+        syncPuntosEliminadosInput();
         updateCount();
     });
 })();

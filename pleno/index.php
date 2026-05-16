@@ -4,6 +4,7 @@ require_once dirname(__DIR__) . '/app/config/Constants.php';
 require_once dirname(__DIR__) . '/app/config/Database.php';
 require_once __DIR__ . '/helpers/auth.php';
 require_once __DIR__ . '/models/SesionPlenaria.php';
+require_once __DIR__ . '/models/TemaPleno.php';
 require_once __DIR__ . '/controllers/PlenoController.php';
 
 $plenoAuth = plenoRequireAuthorizedUser();
@@ -33,10 +34,11 @@ $plenoSesionActual = null;
 $plenoNumeroSugerido = '';
 $plenoCrudError = null;
 $plenoComisionesActivas = [];
+$plenoPuntosSesion = [];
 
 if ($plenoAuth['authorized']) {
     try {
-        $plenoController = new PlenoController(new SesionPlenaria(), $plenoAuth);
+        $plenoController = new PlenoController(new SesionPlenaria(), new TemaPleno(), $plenoAuth);
 
         if ($action === 'listar_temas_comision') {
             header('Content-Type: application/json; charset=utf-8');
@@ -61,6 +63,9 @@ if ($plenoAuth['authorized']) {
 
         if ($vista === 'editar_sesion') {
             $plenoSesionActual = $plenoController->obtenerSesion((int)($_GET['id'] ?? 0));
+            if ($plenoSesionActual) {
+                $plenoPuntosSesion = $plenoController->listarPuntosSesion((int)$plenoSesionActual['id_sesion']);
+            }
         }
 
         if ($vista === 'crear_sesion' || $vista === 'editar_sesion') {
@@ -85,6 +90,7 @@ $data = [
     'pleno_sesion_actual' => $plenoSesionActual,
     'pleno_numero_sugerido' => $plenoNumeroSugerido,
     'pleno_comisiones_activas' => $plenoComisionesActivas,
+    'pleno_puntos_sesion' => $plenoPuntosSesion,
     'pleno_crud_error' => $plenoCrudError,
 ];
 
