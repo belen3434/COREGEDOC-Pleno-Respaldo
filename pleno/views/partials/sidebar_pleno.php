@@ -1,17 +1,25 @@
 <?php
 $plenoVistaActual = $_GET['vista'] ?? 'index';
+$rol = (int)($_SESSION['usuario']['tipoUsuario_id'] ?? $_SESSION['tipoUsuario_id'] ?? 0);
+$puedeVerMenuCompleto = in_array($rol, [6, 20], true);
 
-$plenoMenuPrincipal = [
-    'configuracion' => [
+$plenoMenuPrincipal = [];
+
+if ($puedeVerMenuCompleto) {
+    $plenoMenuPrincipal['configuracion'] = [
         'label' => 'Configuración',
         'icon' => 'fas fa-cog',
         'href' => 'index.php?vista=configuracion',
-    ],
-    'comisiones' => [
+    ];
+
+    $plenoMenuPrincipal['comisiones'] = [
         'label' => 'Comisiones',
         'icon' => 'fas fa-sitemap',
         'href' => 'index.php?vista=comisiones',
-    ],
+    ];
+}
+
+$plenoMenuPrincipal += [
     'pleno_vivo' => [
         'label' => 'Pleno en Vivo',
         'icon' => 'fas fa-broadcast-tower',

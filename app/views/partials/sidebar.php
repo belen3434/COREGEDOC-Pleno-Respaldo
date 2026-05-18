@@ -49,6 +49,7 @@
             <?php
             $rolesGestion = [ROL_ADMINISTRADOR, ROL_SECRETARIO_TECNICO, ROL_PRESIDENTE_COMISION, 20, 21, 22];
             $rolesAvanzados = [ROL_ADMINISTRADOR, 20, 21, 22];
+            $rolesPleno = [1, 6, 20, 21, 22];
             ?>
 
             <?php if (in_array($tipoUsuario, $rolesGestion)): ?>
@@ -88,18 +89,20 @@
                     </li>
 
                     <li class="nav-item">
-                        <a href="pleno/index.php" class="nav-link <?php echo ($paginaActual == 'pleno') ? 'active' : ''; ?>">
-                            <i class="fas fa-landmark fa-fw me-2"></i> Pleno
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
                         <a class="nav-link <?php echo ($paginaActual == 'reporte_asistencia') ? 'active' : ''; ?>" href="index.php?action=reporte_asistencia">
                             <i class="fas fa-file-contract fa-fw me-2"></i> Reportes de Asistencia
                         </a>
                     </li>
                 <?php endif; ?>
 
+            <?php endif; ?>
+
+            <?php if (in_array($tipoUsuario, $rolesPleno, true)): ?>
+                <li class="nav-item">
+                    <a href="pleno/index.php" class="nav-link <?php echo ($paginaActual == 'pleno') ? 'active' : ''; ?>">
+                        <i class="fas fa-landmark fa-fw me-2"></i> Pleno
+                    </a>
+                </li>
             <?php endif; ?>
 
             <?php if (in_array($tipoUsuario, [1, 3, 7])): ?>
