@@ -29,6 +29,11 @@ class PlenoController
         return $this->sesiones->obtenerPorId($id);
     }
 
+    public function obtenerSesionVigenteHoy(): ?array
+    {
+        return $this->sesiones->obtenerSesionVigenteHoy();
+    }
+
     public function numeroSesionSugerido(): string
     {
         return $this->sesiones->generarNumeroSesion();

@@ -61,6 +61,13 @@ if ($plenoAuth['authorized']) {
             $plenoSesiones = $plenoController->listarSesiones();
         }
 
+        if ($vista === 'tabla') {
+            $plenoSesionActual = $plenoController->obtenerSesionVigenteHoy();
+            if ($plenoSesionActual) {
+                $plenoPuntosSesion = $plenoController->listarPuntosSesion((int)$plenoSesionActual['id_sesion']);
+            }
+        }
+
         if ($vista === 'editar_sesion') {
             $plenoSesionActual = $plenoController->obtenerSesion((int)($_GET['id'] ?? 0));
             if ($plenoSesionActual) {
