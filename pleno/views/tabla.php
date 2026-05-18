@@ -104,12 +104,11 @@ $resolverPunto = static function (array $punto): array {
         </a>
     </div>
 
-    <?php if ($crudError): ?>
-    <?php elseif (!$sesion): ?>
+    <?php if (!$crudError && !$sesion): ?>
         <div class="alert alert-warning" role="alert">
             No existe una sesión plenaria programada para hoy.
         </div>
-    <?php else: ?>
+    <?php elseif ($sesion): ?>
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="row g-3">
@@ -151,10 +150,19 @@ $resolverPunto = static function (array $punto): array {
                     La sesión plenaria de hoy aún no tiene puntos cargados.
                 </div>
             <?php else: ?>
-                <div class="orden-dia-lista" id="ordenDiaLista">
+                <div
+                    class="orden-dia-lista"
+                    id="ordenDiaLista"
+                    data-sesion-id="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>"
+                    data-update-url="<?php echo htmlspecialchars('index.php?action=actualizar_orden_tabla&id_sesion=' . (int)($sesion['id_sesion'] ?? 0), ENT_QUOTES, 'UTF-8'); ?>"
+                >
                     <?php foreach ($puntosSesion as $indice => $punto): ?>
                         <?php $puntoRender = $resolverPunto($punto); ?>
-                        <div class="orden-dia-item" draggable="true">
+                        <div
+                            class="orden-dia-item"
+                            draggable="true"
+                            data-id="<?php echo (int)($punto['id'] ?? 0); ?>"
+                        >
                             <span class="orden-dia-handle">⠿</span>
                             <span class="orden-dia-numero"><?php echo (int)$indice + 1; ?>.</span>
                             <span class="orden-dia-texto">
@@ -166,6 +174,7 @@ $resolverPunto = static function (array $punto): array {
                         </div>
                     <?php endforeach; ?>
                 </div>
+                <div id="ordenDiaSyncStatus" class="small text-muted mt-3" aria-live="polite"></div>
             <?php endif; ?>
         </div>
     <?php endif; ?>

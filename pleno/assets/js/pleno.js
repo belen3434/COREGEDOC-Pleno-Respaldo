@@ -762,7 +762,14 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         var orderList = document.getElementById("ordenDiaLista");
+        var syncStatus = document.getElementById("ordenDiaSyncStatus");
+        var sessionId = orderList ? parseInt(orderList.getAttribute("data-sesion-id") || "0", 10) : 0;
+        var updateUrl = orderList ? String(orderList.getAttribute("data-update-url") || "").trim() : "";
         var draggedItem = null;
+        var isSaving = false;
+        var dragStartSignature = "";
+        var lastCommittedOrder = [];
+        var hasPendingDrop = false;
 
         if (!orderList) {
             return;
@@ -780,6 +787,138 @@
                     number.textContent = (index + 1) + ".";
                 }
             });
+        }
+
+        function setSyncStatus(message, isError) {
+            if (!syncStatus) {
+                return;
+            }
+
+            syncStatus.textContent = message || "";
+            syncStatus.classList.toggle("text-danger", Boolean(isError));
+            syncStatus.classList.toggle("text-muted", !isError);
+        }
+
+        function getPointId(item) {
+            return parseInt(item.getAttribute("data-id") || "0", 10);
+        }
+
+        function getCurrentOrderPayload() {
+            return getOrderItems().map(function (item, index) {
+                return {
+                    id: getPointId(item),
+                    orden: index + 1
+                };
+            });
+        }
+
+        function getCurrentOrderSignature() {
+            return getCurrentOrderPayload().map(function (item) {
+                return item.id;
+            }).join(",");
+        }
+
+        function isValidOrderPayload(payload) {
+            if (sessionId <= 0 || !updateUrl || !Array.isArray(payload) || payload.length === 0) {
+                return false;
+            }
+
+            return payload.every(function (item) {
+                return Number.isInteger(item.id) && item.id > 0 && Number.isInteger(item.orden) && item.orden > 0;
+            });
+        }
+
+        function applyOrderByIds(ids) {
+            var itemsById = {};
+
+            getOrderItems().forEach(function (item) {
+                itemsById[String(getPointId(item))] = item;
+            });
+
+            ids.forEach(function (id) {
+                var item = itemsById[String(id)];
+
+                if (item) {
+                    orderList.appendChild(item);
+                }
+            });
+
+            updateOrderNumbers();
+        }
+
+        function captureCommittedOrder() {
+            lastCommittedOrder = getCurrentOrderPayload().map(function (item) {
+                return item.id;
+            });
+        }
+
+        function revertToCommittedOrder() {
+            if (!Array.isArray(lastCommittedOrder) || lastCommittedOrder.length === 0) {
+                return;
+            }
+
+            applyOrderByIds(lastCommittedOrder);
+        }
+
+        function persistOrder() {
+            var payload = getCurrentOrderPayload();
+
+            if (!isValidOrderPayload(payload) || isSaving) {
+                return;
+            }
+
+            isSaving = true;
+            orderList.setAttribute("aria-busy", "true");
+            setSyncStatus("Guardando nuevo orden...", false);
+
+            fetch(updateUrl, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(function (response) {
+                    return response.json()
+                        .catch(function () {
+                            return {
+                                success: false,
+                                message: "La respuesta del servidor no es válida."
+                            };
+                        })
+                        .then(function (data) {
+                            return {
+                                ok: response.ok,
+                                data: data
+                            };
+                        });
+                })
+                .then(function (result) {
+                    if (!result.ok || !result.data || result.data.success !== true) {
+                        throw new Error(result.data && result.data.message ? result.data.message : "No fue posible guardar el nuevo orden.");
+                    }
+
+                    captureCommittedOrder();
+                    setSyncStatus("Orden actualizado correctamente.", false);
+                })
+                .catch(function (error) {
+                    revertToCommittedOrder();
+                    setSyncStatus(error && error.message ? error.message : "No fue posible guardar el nuevo orden.", true);
+
+                    if (window.Swal && typeof window.Swal.fire === "function") {
+                        window.Swal.fire({
+                            icon: "error",
+                            title: "No fue posible guardar el orden",
+                            text: error && error.message ? error.message : "Intente nuevamente."
+                        });
+                    }
+                })
+                .finally(function () {
+                    isSaving = false;
+                    orderList.removeAttribute("aria-busy");
+                });
         }
 
         function clearDragOverState() {
@@ -814,7 +953,14 @@
 
         getOrderItems().forEach(function (item) {
             item.addEventListener("dragstart", function (event) {
+                if (isSaving) {
+                    event.preventDefault();
+                    return;
+                }
+
                 draggedItem = item;
+                hasPendingDrop = false;
+                dragStartSignature = getCurrentOrderSignature();
                 item.classList.add("dragging");
 
                 if (event.dataTransfer) {
@@ -824,17 +970,25 @@
             });
 
             item.addEventListener("dragend", function () {
+                var orderChanged = dragStartSignature && getCurrentOrderSignature() !== dragStartSignature;
+
                 item.classList.remove("dragging");
                 clearDragOverState();
                 updateOrderNumbers();
                 draggedItem = null;
+
+                if (orderChanged && !hasPendingDrop) {
+                    persistOrder();
+                }
+
+                hasPendingDrop = false;
             });
         });
 
         orderList.addEventListener("dragover", function (event) {
             var nextItem;
 
-            if (!draggedItem) {
+            if (!draggedItem || isSaving) {
                 return;
             }
 
@@ -855,10 +1009,16 @@
 
         orderList.addEventListener("drop", function (event) {
             event.preventDefault();
+            hasPendingDrop = true;
             clearDragOverState();
             updateOrderNumbers();
+
+            if (dragStartSignature && getCurrentOrderSignature() !== dragStartSignature) {
+                persistOrder();
+            }
         });
 
+        captureCommittedOrder();
         updateOrderNumbers();
     });
 })();

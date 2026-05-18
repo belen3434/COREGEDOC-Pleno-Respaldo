@@ -131,6 +131,104 @@ class TemaPleno
         return $stmt->fetchAll();
     }
 
+    public function actualizarOrdenPuntosSesion(int $idSesion, array $ordenPuntos): bool
+    {
+        if ($idSesion <= 0 || empty($ordenPuntos)) {
+            return false;
+        }
+
+        $itemsNormalizados = [];
+        $idsRecibidos = [];
+        $ordenesRecibidos = [];
+
+        foreach ($ordenPuntos as $item) {
+            if (!is_array($item)) {
+                return false;
+            }
+
+            $idPunto = (int)($item['id'] ?? 0);
+            $orden = (int)($item['orden'] ?? 0);
+
+            if ($idPunto <= 0 || $orden <= 0) {
+                return false;
+            }
+
+            if (isset($idsRecibidos[$idPunto]) || isset($ordenesRecibidos[$orden])) {
+                return false;
+            }
+
+            $idsRecibidos[$idPunto] = true;
+            $ordenesRecibidos[$orden] = true;
+            $itemsNormalizados[] = [
+                'id' => $idPunto,
+                'orden' => $orden,
+            ];
+        }
+
+        $idPlaceholders = [];
+        $params = [
+            ':id_sesion' => $idSesion,
+        ];
+
+        foreach ($itemsNormalizados as $index => $itemNormalizado) {
+            $placeholder = ':id_' . $index;
+            $idPlaceholders[] = $placeholder;
+            $params[$placeholder] = $itemNormalizado['id'];
+        }
+
+        $stmt = $this->conn->prepare(
+            'SELECT id
+             FROM sesion_plenaria_temas
+             WHERE id_sesion = :id_sesion
+               AND vigente = 1
+               AND id IN (' . implode(', ', $idPlaceholders) . ')'
+        );
+        $stmt->execute($params);
+        $puntosActivos = $stmt->fetchAll();
+
+        if (count($puntosActivos) !== count($itemsNormalizados)) {
+            return false;
+        }
+
+        $ordenesEsperados = range(1, count($itemsNormalizados));
+        $ordenesNormalizados = array_map('intval', array_keys($ordenesRecibidos));
+        sort($ordenesNormalizados);
+
+        if ($ordenesNormalizados !== $ordenesEsperados) {
+            return false;
+        }
+
+        $stmtActualizar = $this->conn->prepare(
+            'UPDATE sesion_plenaria_temas
+             SET orden = :orden,
+                 fecha_actualizacion = NOW()
+             WHERE id = :id
+               AND id_sesion = :id_sesion
+               AND vigente = 1'
+        );
+
+        try {
+            $this->conn->beginTransaction();
+
+            foreach ($itemsNormalizados as $itemNormalizado) {
+                $stmtActualizar->execute([
+                    ':orden' => $itemNormalizado['orden'],
+                    ':id' => $itemNormalizado['id'],
+                    ':id_sesion' => $idSesion,
+                ]);
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (\Throwable $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+
+            return false;
+        }
+    }
+
     public function eliminarLogicoPunto(int $idPunto, int $idSesion): bool
     {
         $stmt = $this->conn->prepare(
