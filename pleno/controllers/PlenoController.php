@@ -78,6 +78,9 @@ class PlenoController
             case 'eliminar_sesion':
                 $this->eliminarSesion((int)($_GET['id'] ?? 0));
                 break;
+            case 'actualizar_orden_tabla':
+                $this->actualizarOrdenTabla();
+                break;
             default:
                 return;
         }
@@ -164,6 +167,47 @@ class PlenoController
         $this->sesiones->eliminar($id);
         $this->flash('success', 'Sesión eliminada correctamente.');
         $this->redirigir('index.php?vista=sesiones');
+    }
+
+    private function actualizarOrdenTabla(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->responderJson([
+                'success' => false,
+                'message' => 'Método no permitido.',
+            ], 405);
+        }
+
+        $idSesion = (int)($_GET['id_sesion'] ?? 0);
+        $rawBody = file_get_contents('php://input');
+        $ordenPuntos = json_decode($rawBody, true);
+
+        if ($idSesion <= 0) {
+            $this->responderJson([
+                'success' => false,
+                'message' => 'Debe indicar una sesión válida.',
+            ], 400);
+        }
+
+        if (!is_array($ordenPuntos) || empty($ordenPuntos)) {
+            $this->responderJson([
+                'success' => false,
+                'message' => 'Debe enviar un orden válido.',
+            ], 400);
+        }
+
+        $actualizado = $this->temas->actualizarOrdenPuntosSesion($idSesion, $ordenPuntos);
+
+        if (!$actualizado) {
+            $this->responderJson([
+                'success' => false,
+                'message' => 'No fue posible actualizar el orden de la tabla.',
+            ], 400);
+        }
+
+        $this->responderJson([
+            'success' => true,
+        ]);
     }
 
     private function normalizarSesion(array $input): array
@@ -297,6 +341,14 @@ class PlenoController
     private function redirigir(string $url): void
     {
         header('Location: ' . $url);
+        exit();
+    }
+
+    private function responderJson(array $payload, int $statusCode = 200): void
+    {
+        http_response_code($statusCode);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE);
         exit();
     }
 }
