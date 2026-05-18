@@ -10,7 +10,7 @@ $perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
-            <i class="fas fa-table me-2 text-primary"></i>Tabla del Pleno
+            <i class="fas fa-table me-2 text-primary"></i>Tabla del Día
         </h2>
         <a href="index.php" class="btn btn-pleno-back">
             <i class="fas fa-arrow-left me-2"></i>Atrás

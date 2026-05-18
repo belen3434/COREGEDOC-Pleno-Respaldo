@@ -42,7 +42,7 @@ $perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
         <div class="col-md-6 col-xl-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Tabla del pleno</h5>
+                    <h5 class="card-title">Tabla del Día</h5>
                     <p class="card-text text-muted">Visualiza el orden del día de la sesión.</p>
                     <a href="index.php?vista=tabla" class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-table me-1"></i>Ver tabla
