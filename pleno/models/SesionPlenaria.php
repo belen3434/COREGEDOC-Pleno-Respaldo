@@ -44,6 +44,22 @@ class SesionPlenaria
         return is_array($sesion) ? $sesion : null;
     }
 
+    public function obtenerSesionVigenteHoy(): ?array
+    {
+        $stmt = $this->conn->prepare(
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, estado, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
+             FROM sesiones_plenarias
+             WHERE fecha = CURDATE()
+               AND vigencia = 1
+             ORDER BY hora ASC, id_sesion ASC
+             LIMIT 1'
+        );
+        $stmt->execute();
+        $sesion = $stmt->fetch();
+
+        return is_array($sesion) ? $sesion : null;
+    }
+
     public function crear(array $data): int
     {
         $stmt = $this->conn->prepare(
