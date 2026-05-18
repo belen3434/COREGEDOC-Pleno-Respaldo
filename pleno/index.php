@@ -11,6 +11,8 @@ $plenoAuth = plenoRequireAuthorizedUser();
 
 $vista = $_GET['vista'] ?? 'index';
 $action = $_GET['action'] ?? null;
+$tipoUsuarioId = (int)($plenoAuth['tipoUsuarioId'] ?? 0);
+$rolesSoloVisualizacion = [1, 21, 22];
 
 $vistasPermitidas = [
     'index' => __DIR__ . '/views/index.php',
@@ -25,6 +27,13 @@ $vistasPermitidas = [
     'resumen' => __DIR__ . '/views/resumen.php',
     'ayuda' => __DIR__ . '/views/ayuda.php',
 ];
+
+$vistasSoloVisualizacion = ['tabla', 'pleno_vivo', 'votacion', 'resumen'];
+
+if (in_array($tipoUsuarioId, $rolesSoloVisualizacion, true) && !in_array($vista, $vistasSoloVisualizacion, true)) {
+    header('Location: index.php?vista=tabla');
+    exit();
+}
 
 $childView = $vistasPermitidas[$vista] ?? $vistasPermitidas['index'];
 $plenoController = null;
