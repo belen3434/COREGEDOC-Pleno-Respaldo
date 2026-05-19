@@ -660,6 +660,196 @@ body.sb-sidenav-toggled .navbar.fixed-top {
     padding-right: 14px;
 }
 
+.pleno-comisiones-view {
+    color: #1f3240;
+}
+
+.pleno-comisiones-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 0.25rem 0 0.5rem;
+}
+
+.pleno-eyebrow {
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.pleno-page-title {
+    color: #1f3240;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.pleno-comisiones-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.65rem;
+}
+
+.pleno-btn-soft,
+.pleno-btn-success {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    box-shadow: 0 6px 14px rgba(15, 38, 56, 0.07);
+}
+
+.pleno-btn-soft {
+    color: #415463;
+    border-color: #d9e4e8 !important;
+    background-color: #ffffff;
+}
+
+.pleno-btn-success {
+    border-color: #157347;
+    background-color: #198754;
+}
+
+.pleno-kpi-card,
+.pleno-panel {
+    border: 1px solid rgba(28, 60, 82, 0.08);
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 8px 20px rgba(15, 38, 56, 0.07);
+}
+
+.pleno-kpi-card {
+    padding: 1.2rem 1.25rem;
+}
+
+.pleno-kpi-label {
+    margin-bottom: 0.55rem;
+    color: #657987;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+}
+
+.pleno-kpi-number {
+    font-size: 2.15rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.pleno-badge-warning {
+    background-color: #fff0c2;
+    color: #8a6400;
+    border: 1px solid #f3d67a;
+}
+
+.pleno-panel-body {
+    padding: 1.25rem;
+}
+
+.pleno-section-title {
+    color: #203949;
+    font-weight: 750;
+    letter-spacing: 0;
+}
+
+.pleno-topic-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #e1e9ee;
+    border-radius: 10px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(15, 38, 56, 0.05);
+}
+
+.pleno-topic-card h3 {
+    color: #213747;
+    font-weight: 700;
+}
+
+.pleno-agreement-textarea {
+    border-color: #dce7ed;
+    border-radius: 10px;
+    resize: vertical;
+}
+
+.pleno-attendance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.pleno-attendance-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.72rem 0;
+    border-bottom: 1px solid #eef3f6;
+}
+
+.pleno-attendance-row:last-child {
+    border-bottom: 0;
+}
+
+.pleno-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: #e7f6ed;
+    color: #157347;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.pleno-avatar-muted {
+    background-color: #f1f3f5;
+    color: #6c757d;
+}
+
+.pleno-progress {
+    height: 9px;
+    border-radius: 999px;
+    background-color: #edf3f6;
+}
+
+.pleno-progress .progress-bar {
+    border-radius: 999px;
+}
+
+.pleno-budget-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #dfeaf0;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #f9fcfb 0%, #eef8f2 100%);
+}
+
+.pleno-budget-number {
+    color: #1f3240;
+    font-size: 1.45rem;
+    font-weight: 800;
+}
+
+.pleno-budget-btn {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+}
+
 @media (max-width: 768px) {
     #sidebar-wrapper .pleno-sidebar-heading {
         padding-top: 2rem !important;
@@ -740,6 +930,29 @@ body.sb-sidenav-toggled .navbar.fixed-top {
 
     .orden-dia-handle {
         margin-right: 10px;
+    }
+
+    .pleno-comisiones-header {
+        flex-direction: column;
+    }
+
+    .pleno-comisiones-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .pleno-comisiones-actions .btn {
+        width: 100%;
+    }
+
+    .pleno-panel-body,
+    .pleno-kpi-card {
+        padding: 1rem;
+    }
+
+    .pleno-topic-card {
+        align-items: flex-start;
+        padding: 0.95rem;
     }
 }
 
