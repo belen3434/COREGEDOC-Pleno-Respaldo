@@ -14,7 +14,7 @@ if (!isset($error_message)) {
     <title>COREGEDOC - Iniciar sesión</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/coregedoc/public/css/login_style.css">
+    <link rel="stylesheet" href="public/css/login_style.css">
 </head>
 
 <body>
@@ -25,7 +25,7 @@ if (!isset($error_message)) {
         <div class="login-box">
 
             <div class="text-center mb-3">
-                <img src="/coregedoc/public/img/logoCore1.png" alt="Logo CORE Valparaíso" class="login-logo">
+                <img src="public/img/logoCore1.png" alt="Logo CORE Valparaíso" class="login-logo">
             </div>
 
             <h5 class="text-center fw-bold mb-1">Plataforma Gestión Documental</h5>
