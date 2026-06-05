@@ -122,6 +122,29 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                             >
                         </div>
 
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="plenoLugarSesionVisual">Lugar</label>
+                            <select id="plenoLugarSesionVisual" class="form-select">
+                                <option value="salon_plenario_3" selected>Salón Plenario 3</option>
+                                <option value="otra">Otra dependencia</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 d-none" id="plenoLugarOtroVisualWrapper">
+                            <label class="form-label fw-semibold" for="plenoLugarOtroVisual">Otra dependencia</label>
+                            <input
+                                type="text"
+                                id="plenoLugarOtroVisual"
+                                class="form-control"
+                                maxlength="150"
+                                placeholder="Escriba la dependencia"
+                                aria-describedby="plenoLugarOtroVisualFeedback"
+                            >
+                            <div id="plenoLugarOtroVisualFeedback" class="invalid-feedback">
+                                Debe ingresar el nombre de la dependencia.
+                            </div>
+                        </div>
+
                         <div class="col-12">
                             <label class="form-label fw-semibold" for="editarObservacionesSesion">Observaciones</label>
                             <textarea
