@@ -132,6 +132,12 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                     <div class="pleno-session-tool-buttons">
                         <button
                             type="button"
+                            class="btn pleno-tool-btn pleno-tool-btn-governador"
+                        >
+                            <i class="fas fa-landmark me-2"></i>Cuenta Gobernador
+                        </button>
+                        <button
+                            type="button"
                             class="btn pleno-tool-btn pleno-tool-btn-outline"
                             data-bs-toggle="modal"
                             data-bs-target="#modalAgregarComision"

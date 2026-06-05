@@ -354,6 +354,19 @@ body.sb-sidenav-toggled .navbar.fixed-top {
     background: linear-gradient(180deg, #fff9ec 0%, #ffedbf 100%);
 }
 
+.pleno-tool-btn-governador {
+    color: #7a3d00;
+    border-color: #d88b3d;
+    background: linear-gradient(180deg, #fff5ea 0%, #f1b066 100%);
+}
+
+.pleno-tool-btn-governador:hover,
+.pleno-tool-btn-governador:focus {
+    color: #5f2f00;
+    border-color: #bb7127;
+    background: linear-gradient(180deg, #ffedd8 0%, #e99a45 100%);
+}
+
 .pleno-tool-btn-primary {
     color: #ffffff;
     border-color: #007a9d;
