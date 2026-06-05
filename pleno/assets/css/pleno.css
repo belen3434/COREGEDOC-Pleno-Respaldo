@@ -602,8 +602,44 @@ body.sb-sidenav-toggled .navbar.fixed-top {
 .orden-dia-lista {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     max-width: 620px;
+}
+
+.orden-dia-seccion {
+    border: 1px solid #d9e2ec;
+    border-radius: 6px;
+    background: #f8fafc;
+    overflow: hidden;
+}
+
+.orden-dia-seccion-titulo {
+    padding: 11px 14px;
+    font-weight: 600;
+    color: #1f2937;
+    background: #eef4f8;
+    border-bottom: 1px solid #d9e2ec;
+}
+
+.orden-dia-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 72px;
+    padding: 12px;
+}
+
+.orden-dia-items:empty::before {
+    content: "Arrastre puntos a esta sección";
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #bfc9d4;
+    border-radius: 6px;
+    color: #6b7280;
+    font-size: 13px;
+    background: #ffffff;
 }
 
 .orden-dia-item {
@@ -922,6 +958,10 @@ body.sb-sidenav-toggled .navbar.fixed-top {
 
     .orden-dia-lista {
         max-width: 100%;
+    }
+
+    .orden-dia-items {
+        padding: 10px;
     }
 
     .orden-dia-item {

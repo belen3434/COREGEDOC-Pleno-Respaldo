@@ -83,6 +83,24 @@ $resolverPunto = static function (array $punto): array {
         'texto' => $texto,
     ];
 };
+
+$seccionesOrdenDia = [
+    'cuenta_gobernador' => 'Cuenta Gobernador',
+    'cuenta_comisiones' => 'Cuenta de Comisiones',
+    'varios' => 'Varios',
+];
+
+$puntosPorSeccion = array_fill_keys(array_keys($seccionesOrdenDia), []);
+
+foreach ($puntosSesion as $punto) {
+    $seccionOrden = trim((string)($punto['seccion_orden'] ?? ''));
+
+    if (!isset($puntosPorSeccion[$seccionOrden])) {
+        $seccionOrden = 'varios';
+    }
+
+    $puntosPorSeccion[$seccionOrden][] = $punto;
+}
 ?>
 <div class="container-fluid mt-4">
     <?php if ($crudError): ?>
@@ -149,33 +167,39 @@ $resolverPunto = static function (array $punto): array {
                 <div class="alert alert-light border mb-0" role="alert">
                     La sesión plenaria de hoy aún no tiene puntos cargados.
                 </div>
-            <?php else: ?>
-                <div
-                    class="orden-dia-lista"
-                    id="ordenDiaLista"
-                    data-sesion-id="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>"
-                    data-update-url="<?php echo htmlspecialchars('index.php?action=actualizar_orden_tabla&id_sesion=' . (int)($sesion['id_sesion'] ?? 0), ENT_QUOTES, 'UTF-8'); ?>"
-                >
-                    <?php foreach ($puntosSesion as $indice => $punto): ?>
-                        <?php $puntoRender = $resolverPunto($punto); ?>
-                        <div
-                            class="orden-dia-item"
-                            draggable="true"
-                            data-id="<?php echo (int)($punto['id'] ?? 0); ?>"
-                        >
-                            <span class="orden-dia-handle">⠿</span>
-                            <span class="orden-dia-numero"><?php echo (int)$indice + 1; ?>.</span>
-                            <span class="orden-dia-texto">
-                                <span class="pleno-point-badge <?php echo htmlspecialchars($puntoRender['badge_class'], ENT_QUOTES, 'UTF-8'); ?> me-2">
-                                    <?php echo htmlspecialchars($puntoRender['badge'], ENT_QUOTES, 'UTF-8'); ?>
-                                </span>
-                                <?php echo htmlspecialchars($puntoRender['texto'], ENT_QUOTES, 'UTF-8'); ?>
-                            </span>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <div id="ordenDiaSyncStatus" class="small text-muted mt-3" aria-live="polite"></div>
             <?php endif; ?>
+            <div
+                class="orden-dia-lista"
+                id="ordenDiaLista"
+                data-sesion-id="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>"
+                data-update-url="<?php echo htmlspecialchars('index.php?action=actualizar_orden_tabla&id_sesion=' . (int)($sesion['id_sesion'] ?? 0), ENT_QUOTES, 'UTF-8'); ?>"
+            >
+                <?php foreach ($seccionesOrdenDia as $seccionKey => $seccionTitulo): ?>
+                    <section class="orden-dia-seccion" data-seccion="<?php echo htmlspecialchars($seccionKey, ENT_QUOTES, 'UTF-8'); ?>">
+                        <div class="orden-dia-seccion-titulo"><?php echo htmlspecialchars($seccionTitulo, ENT_QUOTES, 'UTF-8'); ?></div>
+                        <div class="orden-dia-items" data-drop-zone="true" aria-label="<?php echo htmlspecialchars($seccionTitulo, ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php foreach ($puntosPorSeccion[$seccionKey] as $indiceSeccion => $punto): ?>
+                                <?php $puntoRender = $resolverPunto($punto); ?>
+                                <div
+                                    class="orden-dia-item"
+                                    draggable="true"
+                                    data-id="<?php echo (int)($punto['id'] ?? 0); ?>"
+                                >
+                                    <span class="orden-dia-handle">⠿</span>
+                                    <span class="orden-dia-numero"><?php echo (int)$indiceSeccion + 1; ?>.</span>
+                                    <span class="orden-dia-texto">
+                                        <span class="pleno-point-badge <?php echo htmlspecialchars($puntoRender['badge_class'], ENT_QUOTES, 'UTF-8'); ?> me-2">
+                                            <?php echo htmlspecialchars($puntoRender['badge'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                        <?php echo htmlspecialchars($puntoRender['texto'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
+                <?php endforeach; ?>
+            </div>
+            <div id="ordenDiaSyncStatus" class="small text-muted mt-3" aria-live="polite"></div>
         </div>
     <?php endif; ?>
 </div>

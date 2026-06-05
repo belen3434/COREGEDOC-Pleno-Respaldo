@@ -5,6 +5,7 @@ use App\Config\Database;
 class TemaPleno
 {
     private $conn;
+    private $tieneColumnaSeccionOrden = null;
 
     public function __construct($conn = null)
     {
@@ -27,7 +28,11 @@ class TemaPleno
             $existentesPorId[$id] = true;
         }
 
-        $orden = 1;
+        $ordenPorSeccion = [
+            'cuenta_gobernador' => 1,
+            'cuenta_comisiones' => 1,
+            'varios' => 1,
+        ];
 
         foreach ($puntos as $punto) {
             $idPunto = (int)($punto['id'] ?? 0);
@@ -39,6 +44,8 @@ class TemaPleno
             $observacionImprevista = trim((string)($punto['observacion_imprevista'] ?? ''));
             $tituloPunto = trim((string)($punto['titulo_punto'] ?? ''));
             $descripcionPunto = trim((string)($punto['descripcion_punto'] ?? ''));
+            $seccionOrden = $this->normalizarSeccionOrden($punto['seccion_orden'] ?? 'varios');
+            $orden = $ordenPorSeccion[$seccionOrden];
 
             if ($tipoPunto === 'IMPREVISTA' && $nombreImprevista === '') {
                 continue;
@@ -53,6 +60,7 @@ class TemaPleno
             }
 
             if ($idPunto > 0 && isset($existentesPorId[$idPunto])) {
+                $asignacionSeccion = $this->tieneColumnaSeccionOrden() ? 'seccion_orden = :seccion_orden,' : '';
                 $stmt = $this->conn->prepare(
                     'UPDATE sesion_plenaria_temas
                      SET id_comision = :id_comision,
@@ -62,12 +70,13 @@ class TemaPleno
                          observacion_imprevista = :observacion_imprevista,
                          titulo_punto = :titulo_punto,
                          descripcion_punto = :descripcion_punto,
+                         ' . $asignacionSeccion . '
                          orden = :orden,
                          vigente = 1,
                          fecha_actualizacion = NOW()
                      WHERE id = :id AND id_sesion = :id_sesion'
                 );
-                $stmt->execute([
+                $params = [
                     ':id' => $idPunto,
                     ':id_sesion' => $idSesion,
                     ':id_comision' => $idComision,
@@ -78,15 +87,23 @@ class TemaPleno
                     ':titulo_punto' => $tituloPunto !== '' ? $tituloPunto : null,
                     ':descripcion_punto' => $descripcionPunto !== '' ? $descripcionPunto : null,
                     ':orden' => $orden,
-                ]);
+                ];
+
+                if ($this->tieneColumnaSeccionOrden()) {
+                    $params[':seccion_orden'] = $seccionOrden;
+                }
+
+                $stmt->execute($params);
             } else {
+                $columnasSeccion = $this->tieneColumnaSeccionOrden() ? ', seccion_orden' : '';
+                $valoresSeccion = $this->tieneColumnaSeccionOrden() ? ', :seccion_orden' : '';
                 $stmt = $this->conn->prepare(
                     'INSERT INTO sesion_plenaria_temas
-                        (id_sesion, id_comision, id_tema, tipo_punto, nombre_imprevista, observacion_imprevista, titulo_punto, descripcion_punto, orden, vigente)
+                        (id_sesion, id_comision, id_tema, tipo_punto, nombre_imprevista, observacion_imprevista, titulo_punto, descripcion_punto, orden' . $columnasSeccion . ', vigente)
                      VALUES
-                        (:id_sesion, :id_comision, :id_tema, :tipo_punto, :nombre_imprevista, :observacion_imprevista, :titulo_punto, :descripcion_punto, :orden, 1)'
+                        (:id_sesion, :id_comision, :id_tema, :tipo_punto, :nombre_imprevista, :observacion_imprevista, :titulo_punto, :descripcion_punto, :orden' . $valoresSeccion . ', 1)'
                 );
-                $stmt->execute([
+                $params = [
                     ':id_sesion' => $idSesion,
                     ':id_comision' => $idComision,
                     ':id_tema' => $idTema,
@@ -96,15 +113,24 @@ class TemaPleno
                     ':titulo_punto' => $tituloPunto !== '' ? $tituloPunto : null,
                     ':descripcion_punto' => $descripcionPunto !== '' ? $descripcionPunto : null,
                     ':orden' => $orden,
-                ]);
+                ];
+
+                if ($this->tieneColumnaSeccionOrden()) {
+                    $params[':seccion_orden'] = $seccionOrden;
+                }
+
+                $stmt->execute($params);
             }
 
-            $orden += 1;
+            $ordenPorSeccion[$seccionOrden] += 1;
         }
     }
 
     public function listarPuntosSesion(int $idSesion): array
     {
+        $selectSeccion = $this->tieneColumnaSeccionOrden() ? "COALESCE(NULLIF(TRIM(spt.seccion_orden), ''), 'varios') AS seccion_orden," : "'varios' AS seccion_orden,";
+        $orderBySeccion = $this->tieneColumnaSeccionOrden() ? "COALESCE(NULLIF(TRIM(spt.seccion_orden), ''), 'varios')," : '';
+
         $stmt = $this->conn->prepare(
             'SELECT
                 spt.id,
@@ -117,6 +143,7 @@ class TemaPleno
                 spt.titulo_punto,
                 spt.descripcion_punto,
                 spt.orden,
+                ' . $selectSeccion . '
                 c.nombreComision,
                 t.nombreTema
              FROM sesion_plenaria_temas spt
@@ -124,7 +151,7 @@ class TemaPleno
              LEFT JOIN t_tema t ON t.idTema = spt.id_tema
              WHERE spt.id_sesion = :id_sesion
                AND spt.vigente = 1
-             ORDER BY spt.orden ASC, spt.id ASC'
+             ORDER BY ' . $orderBySeccion . ' spt.orden ASC, spt.id ASC'
         );
         $stmt->execute([':id_sesion' => $idSesion]);
 
@@ -133,13 +160,17 @@ class TemaPleno
 
     public function actualizarOrdenPuntosSesion(int $idSesion, array $ordenPuntos): bool
     {
-        if ($idSesion <= 0 || empty($ordenPuntos)) {
+        if ($idSesion <= 0 || empty($ordenPuntos) || !$this->tieneColumnaSeccionOrden()) {
             return false;
         }
 
         $itemsNormalizados = [];
         $idsRecibidos = [];
-        $ordenesRecibidos = [];
+        $ordenesPorSeccion = [
+            'cuenta_gobernador' => [],
+            'cuenta_comisiones' => [],
+            'varios' => [],
+        ];
 
         foreach ($ordenPuntos as $item) {
             if (!is_array($item)) {
@@ -148,20 +179,22 @@ class TemaPleno
 
             $idPunto = (int)($item['id'] ?? 0);
             $orden = (int)($item['orden'] ?? 0);
+            $seccionOrden = $this->normalizarSeccionOrden($item['seccion_orden'] ?? 'varios');
 
             if ($idPunto <= 0 || $orden <= 0) {
                 return false;
             }
 
-            if (isset($idsRecibidos[$idPunto]) || isset($ordenesRecibidos[$orden])) {
+            if (isset($idsRecibidos[$idPunto]) || isset($ordenesPorSeccion[$seccionOrden][$orden])) {
                 return false;
             }
 
             $idsRecibidos[$idPunto] = true;
-            $ordenesRecibidos[$orden] = true;
+            $ordenesPorSeccion[$seccionOrden][$orden] = true;
             $itemsNormalizados[] = [
                 'id' => $idPunto,
                 'orden' => $orden,
+                'seccion_orden' => $seccionOrden,
             ];
         }
 
@@ -190,17 +223,24 @@ class TemaPleno
             return false;
         }
 
-        $ordenesEsperados = range(1, count($itemsNormalizados));
-        $ordenesNormalizados = array_map('intval', array_keys($ordenesRecibidos));
-        sort($ordenesNormalizados);
+        foreach ($ordenesPorSeccion as $ordenesRecibidos) {
+            if (empty($ordenesRecibidos)) {
+                continue;
+            }
 
-        if ($ordenesNormalizados !== $ordenesEsperados) {
-            return false;
+            $ordenesEsperados = range(1, count($ordenesRecibidos));
+            $ordenesNormalizados = array_map('intval', array_keys($ordenesRecibidos));
+            sort($ordenesNormalizados);
+
+            if ($ordenesNormalizados !== $ordenesEsperados) {
+                return false;
+            }
         }
 
         $stmtActualizar = $this->conn->prepare(
             'UPDATE sesion_plenaria_temas
              SET orden = :orden,
+                 seccion_orden = :seccion_orden,
                  fecha_actualizacion = NOW()
              WHERE id = :id
                AND id_sesion = :id_sesion
@@ -211,11 +251,15 @@ class TemaPleno
             $this->conn->beginTransaction();
 
             foreach ($itemsNormalizados as $itemNormalizado) {
-                $stmtActualizar->execute([
+                $params = [
                     ':orden' => $itemNormalizado['orden'],
                     ':id' => $itemNormalizado['id'],
                     ':id_sesion' => $idSesion,
-                ]);
+                ];
+
+                $params[':seccion_orden'] = $itemNormalizado['seccion_orden'];
+
+                $stmtActualizar->execute($params);
             }
 
             $this->conn->commit();
@@ -243,5 +287,33 @@ class TemaPleno
             ':id' => $idPunto,
             ':id_sesion' => $idSesion,
         ]);
+    }
+
+    private function normalizarSeccionOrden($seccion): string
+    {
+        $seccion = trim((string)$seccion);
+        $seccionesPermitidas = ['cuenta_gobernador', 'cuenta_comisiones', 'varios'];
+
+        if ($seccion === 'cuenta_intendente') {
+            return 'cuenta_gobernador';
+        }
+
+        return in_array($seccion, $seccionesPermitidas, true) ? $seccion : 'varios';
+    }
+
+    private function tieneColumnaSeccionOrden(): bool
+    {
+        if ($this->tieneColumnaSeccionOrden !== null) {
+            return $this->tieneColumnaSeccionOrden;
+        }
+
+        try {
+            $stmt = $this->conn->query("SHOW COLUMNS FROM sesion_plenaria_temas LIKE 'seccion_orden'");
+            $this->tieneColumnaSeccionOrden = $stmt && $stmt->fetch() ? true : false;
+        } catch (\Throwable $e) {
+            $this->tieneColumnaSeccionOrden = false;
+        }
+
+        return $this->tieneColumnaSeccionOrden;
     }
 }

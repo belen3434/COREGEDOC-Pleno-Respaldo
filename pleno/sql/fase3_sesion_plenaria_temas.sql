@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS sesion_plenaria_temas (
     id_comision INT NOT NULL,
     id_tema INT NULL,
     tipo_punto VARCHAR(30) NOT NULL DEFAULT 'COMISION',
+    seccion_orden VARCHAR(50) NOT NULL DEFAULT 'varios',
     orden INT NOT NULL DEFAULT 1,
     vigente TINYINT(1) NOT NULL DEFAULT 1,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
