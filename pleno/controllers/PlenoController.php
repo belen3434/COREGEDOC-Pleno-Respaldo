@@ -2,6 +2,7 @@
 
 class PlenoController
 {
+    private const ESTADO_SESION_POR_DEFECTO = 'programada';
     private $sesiones;
     private $temas;
     private $auth;
@@ -132,7 +133,7 @@ class PlenoController
             $this->redirigir('index.php?vista=sesiones');
         }
 
-        $data = $this->normalizarSesion($_POST);
+        $data = $this->normalizarSesion($_POST, (string)($sesionActual['estado'] ?? ''));
         $data['numero_sesion'] = $sesionActual['numero_sesion'];
         $errores = $this->validarSesion($data);
 
@@ -210,16 +211,21 @@ class PlenoController
         ]);
     }
 
-    private function normalizarSesion(array $input): array
+    private function normalizarSesion(array $input, ?string $estadoActual = null): array
     {
         $numeroSesion = trim((string)($input['numero_sesion'] ?? ''));
+        $estadoPersistido = trim((string)$estadoActual);
+
+        if ($estadoPersistido === '') {
+            $estadoPersistido = self::ESTADO_SESION_POR_DEFECTO;
+        }
 
         return [
             'tipo_pleno' => trim((string)($input['tipo_pleno'] ?? '')),
             'numero_sesion' => $numeroSesion !== '' ? $numeroSesion : $this->numeroSesionSugerido(),
             'fecha' => trim((string)($input['fecha'] ?? '')),
             'hora' => trim((string)($input['hora'] ?? '')),
-            'estado' => trim((string)($input['estado'] ?? '')),
+            'estado' => $estadoPersistido,
             'observaciones' => trim((string)($input['observaciones'] ?? '')),
         ];
     }
@@ -307,7 +313,7 @@ class PlenoController
     {
         $errores = [];
 
-        foreach (['tipo_pleno', 'numero_sesion', 'fecha', 'hora', 'estado'] as $campo) {
+        foreach (['tipo_pleno', 'numero_sesion', 'fecha', 'hora'] as $campo) {
             if (($data[$campo] ?? '') === '') {
                 $errores[$campo] = true;
             }

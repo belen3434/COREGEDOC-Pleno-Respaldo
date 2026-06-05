@@ -24,11 +24,6 @@ $formatearHora = static function (?string $hora): string {
     return substr($hora, 0, 5);
 };
 
-$formatearEstado = static function (?string $estado): string {
-    $estado = trim((string)$estado);
-    return $estado !== '' ? ucfirst(str_replace('_', ' ', $estado)) : '';
-};
-
 $formatearTipo = static function (?string $tipo): string {
     $tipo = trim((string)$tipo);
     return $tipo !== '' ? ucfirst($tipo) : '';
@@ -124,7 +119,7 @@ foreach ($puntosSesion as $punto) {
 
     <?php if (!$crudError && !$sesion): ?>
         <div class="alert alert-warning" role="alert">
-            No existe una sesión plenaria programada para hoy.
+            No existe una sesión plenaria registrada para hoy.
         </div>
     <?php elseif ($sesion): ?>
         <div class="card shadow-sm mb-4">
@@ -145,10 +140,6 @@ foreach ($puntosSesion as $punto) {
                     <div class="col-md-3">
                         <div class="text-muted small text-uppercase">Hora</div>
                         <div class="fw-semibold"><?php echo htmlspecialchars($formatearHora($sesion['hora'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="text-muted small text-uppercase">Estado</div>
-                        <div class="fw-semibold"><?php echo htmlspecialchars($formatearEstado($sesion['estado'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                     <?php if (trim((string)($sesion['observaciones'] ?? '')) !== ''): ?>
                         <div class="col-12">
