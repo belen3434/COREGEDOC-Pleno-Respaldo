@@ -173,8 +173,8 @@ class PlenoController
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->responderJson([
-                'success' => false,
-                'message' => 'Método no permitido.',
+                'ok' => false,
+                'error' => 'Método no permitido.',
             ], 405);
         }
 
@@ -184,15 +184,15 @@ class PlenoController
 
         if ($idSesion <= 0) {
             $this->responderJson([
-                'success' => false,
-                'message' => 'Debe indicar una sesión válida.',
+                'ok' => false,
+                'error' => 'Debe indicar una sesión válida.',
             ], 400);
         }
 
         if (!is_array($ordenPuntos) || empty($ordenPuntos)) {
             $this->responderJson([
-                'success' => false,
-                'message' => 'Debe enviar un orden válido.',
+                'ok' => false,
+                'error' => 'Debe enviar un orden válido.',
             ], 400);
         }
 
@@ -200,13 +200,13 @@ class PlenoController
 
         if (!$actualizado) {
             $this->responderJson([
-                'success' => false,
-                'message' => 'No fue posible actualizar el orden de la tabla.',
+                'ok' => false,
+                'error' => 'No fue posible actualizar el orden de la tabla.',
             ], 400);
         }
 
         $this->responderJson([
-            'success' => true,
+            'ok' => true,
         ]);
     }
 
@@ -248,6 +248,10 @@ class PlenoController
             $observacionImprevista = trim((string)($punto['observacion_imprevista'] ?? ''));
             $tituloPunto = trim((string)($punto['titulo_punto'] ?? ''));
             $descripcionPunto = trim((string)($punto['descripcion_punto'] ?? ''));
+            $seccionOrden = trim((string)($punto['seccion_orden'] ?? 'varios'));
+            $seccionesPermitidas = ['cuenta_gobernador', 'cuenta_comisiones', 'varios'];
+            $seccionOrden = $seccionOrden === 'cuenta_intendente' ? 'cuenta_gobernador' : $seccionOrden;
+            $seccionOrden = in_array($seccionOrden, $seccionesPermitidas, true) ? $seccionOrden : 'varios';
 
             if ($tipoPunto === 'IMPREVISTA' && $nombreImprevista === '') {
                 continue;
@@ -270,6 +274,7 @@ class PlenoController
                 'observacion_imprevista' => $observacionImprevista,
                 'titulo_punto' => $tituloPunto,
                 'descripcion_punto' => $descripcionPunto,
+                'seccion_orden' => $seccionOrden,
             ];
         }
 

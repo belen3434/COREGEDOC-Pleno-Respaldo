@@ -55,6 +55,7 @@
                     observacion_imprevista: row.getAttribute("data-observacion-imprevista") || "",
                     titulo_punto: row.getAttribute("data-titulo-punto") || "",
                     descripcion_punto: row.getAttribute("data-descripcion-punto") || "",
+                    seccion_orden: row.getAttribute("data-seccion-orden") || "varios",
                     orden: index + 1
                 });
             });
@@ -281,6 +282,7 @@
                             "data-id-tema": "",
                             "data-nombre-imprevista": nombreImprevista,
                             "data-observacion-imprevista": observacionImprevista,
+                            "data-seccion-orden": point.seccion_orden || "varios",
                             "data-vigente": "1"
                         }
                     );
@@ -309,6 +311,7 @@
                             "data-observacion-imprevista": "",
                             "data-titulo-punto": tituloPunto,
                             "data-descripcion-punto": descripcionPunto,
+                            "data-seccion-orden": point.seccion_orden || "varios",
                             "data-vigente": "1"
                         }
                     );
@@ -336,6 +339,7 @@
                         "data-observacion-imprevista": "",
                         "data-titulo-punto": "",
                         "data-descripcion-punto": "",
+                        "data-seccion-orden": point.seccion_orden || "varios",
                         "data-vigente": "1"
                     }
                 );
@@ -775,17 +779,33 @@
             return;
         }
 
-        function getOrderItems() {
-            return Array.prototype.slice.call(orderList.querySelectorAll(".orden-dia-item"));
+        function getDropZones() {
+            return Array.prototype.slice.call(orderList.querySelectorAll(".orden-dia-items"));
+        }
+
+        function getOrderItems(container) {
+            return Array.prototype.slice.call((container || orderList).querySelectorAll(".orden-dia-item"));
+        }
+
+        function getItemSection(item) {
+            var section = item.closest(".orden-dia-seccion");
+
+            return section ? String(section.getAttribute("data-seccion") || "varios").trim() : "varios";
+        }
+
+        function closestDropZone(target) {
+            return target && typeof target.closest === "function" ? target.closest(".orden-dia-items") : null;
         }
 
         function updateOrderNumbers() {
-            getOrderItems().forEach(function (item, index) {
-                var number = item.querySelector(".orden-dia-numero");
+            getDropZones().forEach(function (dropZone) {
+                getOrderItems(dropZone).forEach(function (item, index) {
+                    var number = item.querySelector(".orden-dia-numero");
 
-                if (number) {
-                    number.textContent = (index + 1) + ".";
-                }
+                    if (number) {
+                        number.textContent = (index + 1) + ".";
+                    }
+                });
             });
         }
 
@@ -804,17 +824,24 @@
         }
 
         function getCurrentOrderPayload() {
-            return getOrderItems().map(function (item, index) {
-                return {
-                    id: getPointId(item),
-                    orden: index + 1
-                };
+            var payload = [];
+
+            getDropZones().forEach(function (dropZone) {
+                getOrderItems(dropZone).forEach(function (item, index) {
+                    payload.push({
+                        id: getPointId(item),
+                        orden: index + 1,
+                        seccion_orden: getItemSection(item)
+                    });
+                });
             });
+
+            return payload;
         }
 
         function getCurrentOrderSignature() {
             return getCurrentOrderPayload().map(function (item) {
-                return item.id;
+                return item.id + ":" + item.seccion_orden + ":" + item.orden;
             }).join(",");
         }
 
@@ -824,22 +851,31 @@
             }
 
             return payload.every(function (item) {
-                return Number.isInteger(item.id) && item.id > 0 && Number.isInteger(item.orden) && item.orden > 0;
+                return Number.isInteger(item.id) && item.id > 0 && Number.isInteger(item.orden) && item.orden > 0 && typeof item.seccion_orden === "string" && item.seccion_orden.trim() !== "";
             });
         }
 
-        function applyOrderByIds(ids) {
+        function applyOrderSnapshot(snapshot) {
             var itemsById = {};
+            var zonesBySection = {};
 
             getOrderItems().forEach(function (item) {
                 itemsById[String(getPointId(item))] = item;
             });
 
-            ids.forEach(function (id) {
-                var item = itemsById[String(id)];
+            getDropZones().forEach(function (zone) {
+                var section = zone.closest(".orden-dia-seccion");
+                var sectionKey = section ? String(section.getAttribute("data-seccion") || "varios") : "varios";
 
-                if (item) {
-                    orderList.appendChild(item);
+                zonesBySection[sectionKey] = zone;
+            });
+
+            snapshot.forEach(function (entry) {
+                var item = itemsById[String(entry.id)];
+                var zone = zonesBySection[String(entry.seccion_orden || "varios")];
+
+                if (item && zone) {
+                    zone.appendChild(item);
                 }
             });
 
@@ -848,7 +884,10 @@
 
         function captureCommittedOrder() {
             lastCommittedOrder = getCurrentOrderPayload().map(function (item) {
-                return item.id;
+                return {
+                    id: item.id,
+                    seccion_orden: item.seccion_orden
+                };
             });
         }
 
@@ -857,7 +896,7 @@
                 return;
             }
 
-            applyOrderByIds(lastCommittedOrder);
+            applyOrderSnapshot(lastCommittedOrder);
         }
 
         function persistOrder() {
@@ -884,8 +923,8 @@
                     return response.json()
                         .catch(function () {
                             return {
-                                success: false,
-                                message: "La respuesta del servidor no es válida."
+                                ok: false,
+                                error: "La respuesta del servidor no es válida."
                             };
                         })
                         .then(function (data) {
@@ -896,8 +935,8 @@
                         });
                 })
                 .then(function (result) {
-                    if (!result.ok || !result.data || result.data.success !== true) {
-                        throw new Error(result.data && result.data.message ? result.data.message : "No fue posible guardar el nuevo orden.");
+                    if (!result.ok || !result.data || result.data.ok !== true) {
+                        throw new Error(result.data && result.data.error ? result.data.error : "No fue posible guardar el nuevo orden.");
                     }
 
                     captureCommittedOrder();
@@ -928,7 +967,7 @@
         }
 
         function getDragAfterElement(container, clientY) {
-            var items = getOrderItems().filter(function (item) {
+            var items = getOrderItems(container).filter(function (item) {
                 return item !== draggedItem;
             });
             var closest = {
@@ -985,10 +1024,46 @@
             });
         });
 
+        getDropZones().forEach(function (dropZone) {
+            dropZone.addEventListener("dragover", function (event) {
+                var nextItem;
+
+                if (!draggedItem || isSaving) {
+                    return;
+                }
+
+                event.preventDefault();
+                clearDragOverState();
+
+                nextItem = getDragAfterElement(dropZone, event.clientY);
+
+                if (nextItem) {
+                    nextItem.classList.add("drag-over");
+                    dropZone.insertBefore(draggedItem, nextItem);
+                } else {
+                    dropZone.appendChild(draggedItem);
+                }
+
+                updateOrderNumbers();
+            });
+
+            dropZone.addEventListener("drop", function (event) {
+                event.preventDefault();
+                hasPendingDrop = true;
+                clearDragOverState();
+                updateOrderNumbers();
+
+                if (dragStartSignature && getCurrentOrderSignature() !== dragStartSignature) {
+                    persistOrder();
+                }
+            });
+        });
+
         orderList.addEventListener("dragover", function (event) {
             var nextItem;
+            var targetDropZone = closestDropZone(event.target);
 
-            if (!draggedItem || isSaving) {
+            if (!draggedItem || isSaving || targetDropZone) {
                 return;
             }
 
@@ -999,15 +1074,19 @@
 
             if (nextItem) {
                 nextItem.classList.add("drag-over");
-                orderList.insertBefore(draggedItem, nextItem);
+                nextItem.parentNode.insertBefore(draggedItem, nextItem);
             } else {
-                orderList.appendChild(draggedItem);
+                getDropZones()[0].appendChild(draggedItem);
             }
 
             updateOrderNumbers();
         });
 
         orderList.addEventListener("drop", function (event) {
+            if (closestDropZone(event.target)) {
+                return;
+            }
+
             event.preventDefault();
             hasPendingDrop = true;
             clearDragOverState();
