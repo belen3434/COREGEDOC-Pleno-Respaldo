@@ -546,6 +546,71 @@
 })();
 
 /*
+ * Campo visual de lugar en Crear/Editar sesion plenaria.
+ */
+(function () {
+    "use strict";
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var placeSelect = document.getElementById("plenoLugarSesionVisual");
+        var otherPlaceWrapper = document.getElementById("plenoLugarOtroVisualWrapper");
+        var otherPlaceInput = document.getElementById("plenoLugarOtroVisual");
+        var sessionForm = document.getElementById("plenoCrearSesionForm") || document.getElementById("plenoEditarSesionForm");
+
+        if (!placeSelect || !otherPlaceWrapper || !otherPlaceInput || !sessionForm) {
+            return;
+        }
+
+        function isOtherPlaceSelected() {
+            return placeSelect.value === "otra";
+        }
+
+        function clearOtherPlaceError() {
+            otherPlaceInput.classList.remove("is-invalid");
+        }
+
+        function syncOtherPlace() {
+            var showOtherPlace = isOtherPlaceSelected();
+
+            otherPlaceWrapper.classList.toggle("d-none", !showOtherPlace);
+
+            if (!showOtherPlace) {
+                otherPlaceInput.value = "";
+                clearOtherPlaceError();
+            }
+        }
+
+        function validateOtherPlace() {
+            var isValid = !isOtherPlaceSelected() || otherPlaceInput.value.trim() !== "";
+
+            otherPlaceInput.classList.toggle("is-invalid", !isValid);
+
+            if (!isValid) {
+                otherPlaceInput.focus();
+            }
+
+            return isValid;
+        }
+
+        placeSelect.addEventListener("change", syncOtherPlace);
+        otherPlaceInput.addEventListener("input", clearOtherPlaceError);
+
+        sessionForm.addEventListener("submit", function (event) {
+            if (!validateOtherPlace()) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        }, true);
+
+        sessionForm.addEventListener("reset", function () {
+            window.setTimeout(syncOtherPlace, 0);
+        });
+
+        syncOtherPlace();
+    });
+})();
+
+/*
  * Validaciones visuales del formulario Crear sesion plenaria.
  */
 (function () {
