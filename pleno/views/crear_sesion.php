@@ -59,7 +59,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                             >
                             <label class="btn pleno-pill-toggle-btn" for="tipoPlenoNormal">
                                 <span class="pleno-pill-indicator" aria-hidden="true"></span>
-                                <span>Normal</span>
+                                <span>Ordinario</span>
                             </label>
 
                             <input
