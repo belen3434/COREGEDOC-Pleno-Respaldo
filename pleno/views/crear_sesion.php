@@ -45,7 +45,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                 </div>
 
                 <div class="row g-3">
-                    <div class="col-lg-3">
+                    <div class="col-lg-4">
                         <label class="form-label fw-semibold pleno-meta-label">Tipo de Pleno</label>
                         <div class="pleno-pill-toggle" role="group" aria-label="Tipo de pleno">
                             <input
@@ -77,7 +77,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                         </div>
                     </div>
 
-                    <div class="col-lg-5">
+                    <div class="col-lg-8">
                         <label class="form-label fw-semibold pleno-meta-label" for="numeroSesionVisual">
                             Número de Sesión
                             <i class="fas fa-circle-info text-muted ms-1 small"></i>
@@ -96,23 +96,6 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                         </div>
                     </div>
 
-                    <div class="col-lg-4">
-                        <label class="form-label fw-semibold" for="plenoEstadoSesion">Estado</label>
-                        <select
-                            name="estado"
-                            id="plenoEstadoSesion"
-                            class="form-select"
-                            aria-describedby="plenoEstadoSesionFeedback"
-                        >
-                            <option value="">Seleccionar</option>
-                            <option value="programada">Programada</option>
-                            <option value="en_curso">En curso</option>
-                            <option value="cerrada">Cerrada</option>
-                        </select>
-                        <div id="plenoEstadoSesionFeedback" class="invalid-feedback">
-                            Seleccione un estado de sesión
-                        </div>
-                    </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold" for="plenoFechaSesion">Fecha</label>
                         <input

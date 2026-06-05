@@ -41,9 +41,9 @@ require __DIR__ . '/partials/sidebar_pleno.php';
         </div>
         <div class="col-md-4">
             <div class="pleno-kpi-card h-100">
-                <div class="pleno-kpi-label">ESTADO GENERAL</div>
-                <!-- Futuro: estado general desde BD -->
-                <span class="badge pleno-badge-warning">En Proceso</span>
+                <div class="pleno-kpi-label">PUNTOS ACTIVOS</div>
+                <!-- Futuro: total de puntos activos desde BD -->
+                <div class="pleno-kpi-number text-warning">03</div>
             </div>
         </div>
     </div>

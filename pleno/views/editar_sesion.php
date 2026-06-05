@@ -52,7 +52,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                     <input type="hidden" name="numero_sesion" value="<?php echo htmlspecialchars($sesion['numero_sesion'], ENT_QUOTES, 'UTF-8'); ?>">
 
                     <div class="row g-3">
-                        <div class="col-lg-3">
+                        <div class="col-lg-4">
                             <label class="form-label fw-semibold pleno-meta-label">Tipo de Pleno</label>
                             <div class="pleno-pill-toggle" role="group" aria-label="Tipo de pleno">
                                 <input
@@ -85,7 +85,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                             </div>
                         </div>
 
-                        <div class="col-lg-5">
+                        <div class="col-lg-8">
                             <label class="form-label fw-semibold pleno-meta-label" for="editarNumeroSesion">
                                 Número de Sesión
                             </label>
@@ -96,16 +96,6 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                                 value="<?php echo htmlspecialchars($sesion['numero_sesion'], ENT_QUOTES, 'UTF-8'); ?>"
                                 readonly
                             >
-                        </div>
-
-                        <div class="col-lg-4">
-                            <label class="form-label fw-semibold" for="editarEstadoSesion">Estado</label>
-                            <select name="estado" id="editarEstadoSesion" class="form-select" required>
-                                <option value="">Seleccionar</option>
-                                <option value="programada" <?php echo $sesion['estado'] === 'programada' ? 'selected' : ''; ?>>Programada</option>
-                                <option value="en_curso" <?php echo $sesion['estado'] === 'en_curso' ? 'selected' : ''; ?>>En curso</option>
-                                <option value="cerrada" <?php echo $sesion['estado'] === 'cerrada' ? 'selected' : ''; ?>>Cerrada</option>
-                            </select>
                         </div>
 
                         <div class="col-md-6">

@@ -562,7 +562,6 @@
         var sessionNumberInput = document.getElementById("numeroSesionVisual");
         var dateInput = document.getElementById("plenoFechaSesion");
         var timeInput = document.getElementById("plenoHoraSesion");
-        var statusSelect = document.getElementById("plenoEstadoSesion");
 
         function getTodayValue() {
             var today = new Date();
@@ -630,8 +629,7 @@
             var validations = [
                 validateRequired(sessionNumberInput, "Debe ingresar un número de sesión"),
                 validateDate(),
-                validateRequired(timeInput, "La hora es obligatoria"),
-                validateRequired(statusSelect, "Seleccione un estado de sesión")
+                validateRequired(timeInput, "La hora es obligatoria")
             ];
             var isValid = validations.every(function (result) {
                 return result;
@@ -645,7 +643,7 @@
         }
 
         function clearValidation() {
-            [sessionNumberInput, dateInput, timeInput, statusSelect].forEach(function (field) {
+            [sessionNumberInput, dateInput, timeInput].forEach(function (field) {
                 if (field) {
                     field.classList.remove("is-invalid", "is-valid");
                 }
@@ -663,8 +661,7 @@
         [
             { field: sessionNumberInput, eventName: "input", validate: function () { return validateRequired(sessionNumberInput, "Debe ingresar un número de sesión"); } },
             { field: dateInput, eventName: "change", validate: validateDate },
-            { field: timeInput, eventName: "change", validate: function () { return validateRequired(timeInput, "La hora es obligatoria"); } },
-            { field: statusSelect, eventName: "change", validate: function () { return validateRequired(statusSelect, "Seleccione un estado de sesión"); } }
+            { field: timeInput, eventName: "change", validate: function () { return validateRequired(timeInput, "La hora es obligatoria"); } }
         ].forEach(function (item) {
             if (!item.field) {
                 return;
