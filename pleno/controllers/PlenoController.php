@@ -3,6 +3,7 @@
 class PlenoController
 {
     private const ESTADO_SESION_POR_DEFECTO = 'programada';
+    private const LUGAR_SALON_PLENARIO = 'Salón Plenario 3';
     private $sesiones;
     private $temas;
     private $auth;
@@ -101,7 +102,7 @@ class PlenoController
         $errores = $this->validarSesion($data);
 
         if (!empty($errores)) {
-            $this->flash('danger', 'Debe completar los campos obligatorios.');
+            $this->flash('danger', isset($errores['lugar']) ? 'Debe ingresar el nombre de la dependencia.' : 'Debe completar los campos obligatorios.');
             $this->redirigir('index.php?vista=crear_sesion');
         }
 
@@ -138,7 +139,7 @@ class PlenoController
         $errores = $this->validarSesion($data);
 
         if (!empty($errores)) {
-            $this->flash('danger', 'Debe completar los campos obligatorios.');
+            $this->flash('danger', isset($errores['lugar']) ? 'Debe ingresar el nombre de la dependencia.' : 'Debe completar los campos obligatorios.');
             $this->redirigir('index.php?vista=editar_sesion&id=' . $id);
         }
 
@@ -215,6 +216,7 @@ class PlenoController
     {
         $numeroSesion = trim((string)($input['numero_sesion'] ?? ''));
         $estadoPersistido = trim((string)$estadoActual);
+        $lugar = $this->normalizarLugarSesion($input);
 
         if ($estadoPersistido === '') {
             $estadoPersistido = self::ESTADO_SESION_POR_DEFECTO;
@@ -225,9 +227,24 @@ class PlenoController
             'numero_sesion' => $numeroSesion !== '' ? $numeroSesion : $this->numeroSesionSugerido(),
             'fecha' => trim((string)($input['fecha'] ?? '')),
             'hora' => trim((string)($input['hora'] ?? '')),
+            'lugar' => $lugar,
             'estado' => $estadoPersistido,
             'observaciones' => trim((string)($input['observaciones'] ?? '')),
         ];
+    }
+
+    private function normalizarLugarSesion(array $input): string
+    {
+        $opcionLugar = trim((string)($input['lugar_opcion'] ?? 'salon_plenario_3'));
+        $lugar = $opcionLugar === 'otra'
+            ? trim((string)($input['lugar_otro'] ?? ''))
+            : self::LUGAR_SALON_PLENARIO;
+
+        if (function_exists('mb_substr')) {
+            return mb_substr($lugar, 0, 150, 'UTF-8');
+        }
+
+        return substr($lugar, 0, 150);
     }
 
     private function normalizarPuntos($json): array
@@ -313,7 +330,7 @@ class PlenoController
     {
         $errores = [];
 
-        foreach (['tipo_pleno', 'numero_sesion', 'fecha', 'hora'] as $campo) {
+        foreach (['tipo_pleno', 'numero_sesion', 'fecha', 'hora', 'lugar'] as $campo) {
             if (($data[$campo] ?? '') === '') {
                 $errores[$campo] = true;
             }

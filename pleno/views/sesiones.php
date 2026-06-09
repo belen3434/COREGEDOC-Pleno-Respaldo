@@ -44,6 +44,7 @@ $crudError = $data['pleno_crud_error'] ?? null;
                             <th>Tipo de pleno</th>
                             <th>Fecha</th>
                             <th>Hora</th>
+                            <th>Lugar</th>
                             <?php if ($puedeGestionar): ?>
                                 <th>Acciones</th>
                             <?php endif; ?>
@@ -52,7 +53,7 @@ $crudError = $data['pleno_crud_error'] ?? null;
                     <tbody>
                         <?php if (empty($sesiones)): ?>
                             <tr>
-                                <td colspan="<?php echo $puedeGestionar ? '6' : '5'; ?>" class="text-center text-muted py-4">
+                                <td colspan="<?php echo $puedeGestionar ? '7' : '6'; ?>" class="text-center text-muted py-4">
                                     Sin registros por mostrar.
                                 </td>
                             </tr>
@@ -64,6 +65,7 @@ $crudError = $data['pleno_crud_error'] ?? null;
                                     <td><?php echo htmlspecialchars(ucfirst($sesion['tipo_pleno']), ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td><?php echo htmlspecialchars($sesion['fecha'], ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td><?php echo htmlspecialchars(substr((string)$sesion['hora'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><?php echo htmlspecialchars((string)($sesion['lugar'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
                                     <?php if ($puedeGestionar): ?>
                                         <td>
                                             <div class="d-flex flex-wrap gap-2">

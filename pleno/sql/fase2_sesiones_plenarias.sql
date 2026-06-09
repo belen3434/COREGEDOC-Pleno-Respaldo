@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS sesiones_plenarias (
     numero_sesion VARCHAR(50) NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
+    lugar VARCHAR(150) NULL,
     estado VARCHAR(30) NOT NULL,
     observaciones TEXT NULL,
     usuario_creador INT NULL,

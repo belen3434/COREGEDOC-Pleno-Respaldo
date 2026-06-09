@@ -124,7 +124,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold" for="plenoLugarSesionVisual">Lugar</label>
-                        <select id="plenoLugarSesionVisual" class="form-select">
+                        <select id="plenoLugarSesionVisual" name="lugar_opcion" class="form-select">
                             <option value="salon_plenario_3" selected>Salón Plenario 3</option>
                             <option value="otra">Otra dependencia</option>
                         </select>
@@ -134,6 +134,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                         <input
                             type="text"
                             id="plenoLugarOtroVisual"
+                            name="lugar_otro"
                             class="form-control"
                             maxlength="150"
                             placeholder="Escriba la dependencia"
