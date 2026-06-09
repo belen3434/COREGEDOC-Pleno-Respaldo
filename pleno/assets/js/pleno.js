@@ -573,6 +573,8 @@
             var showOtherPlace = isOtherPlaceSelected();
 
             otherPlaceWrapper.classList.toggle("d-none", !showOtherPlace);
+            otherPlaceInput.disabled = !showOtherPlace;
+            otherPlaceInput.required = showOtherPlace;
 
             if (!showOtherPlace) {
                 otherPlaceInput.value = "";
@@ -586,6 +588,10 @@
             otherPlaceInput.classList.toggle("is-invalid", !isValid);
 
             if (!isValid) {
+                var feedback = document.getElementById("plenoLugarOtroVisualFeedback");
+                if (feedback) {
+                    feedback.textContent = "Debe ingresar el nombre de la dependencia.";
+                }
                 otherPlaceInput.focus();
             }
 

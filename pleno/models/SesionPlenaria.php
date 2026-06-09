@@ -20,7 +20,7 @@ class SesionPlenaria
     public function listar(): array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, estado, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE vigencia = 1
              ORDER BY fecha DESC, hora DESC, id_sesion DESC'
@@ -33,7 +33,7 @@ class SesionPlenaria
     public function obtenerPorId(int $id): ?array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, estado, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE id_sesion = :id
              LIMIT 1'
@@ -47,7 +47,7 @@ class SesionPlenaria
     public function obtenerSesionVigenteHoy(): ?array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, estado, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE fecha = CURDATE()
                AND vigencia = 1
@@ -64,9 +64,9 @@ class SesionPlenaria
     {
         $stmt = $this->conn->prepare(
             'INSERT INTO sesiones_plenarias
-                (tipo_pleno, numero_sesion, fecha, hora, estado, observaciones, usuario_creador)
+                (tipo_pleno, numero_sesion, fecha, hora, lugar, estado, observaciones, usuario_creador)
              VALUES
-                (:tipo_pleno, :numero_sesion, :fecha, :hora, :estado, :observaciones, :usuario_creador)'
+                (:tipo_pleno, :numero_sesion, :fecha, :hora, :lugar, :estado, :observaciones, :usuario_creador)'
         );
 
         $stmt->execute([
@@ -74,6 +74,7 @@ class SesionPlenaria
             ':numero_sesion' => $data['numero_sesion'],
             ':fecha' => $data['fecha'],
             ':hora' => $data['hora'],
+            ':lugar' => $data['lugar'] ?? null,
             ':estado' => $data['estado'],
             ':observaciones' => $data['observaciones'] ?? null,
             ':usuario_creador' => $data['usuario_creador'] ?? null,
@@ -90,6 +91,7 @@ class SesionPlenaria
                  numero_sesion = :numero_sesion,
                  fecha = :fecha,
                  hora = :hora,
+                 lugar = :lugar,
                  estado = :estado,
                  observaciones = :observaciones,
                  fecha_actualizacion = NOW()
@@ -102,6 +104,7 @@ class SesionPlenaria
             ':numero_sesion' => $data['numero_sesion'],
             ':fecha' => $data['fecha'],
             ':hora' => $data['hora'],
+            ':lugar' => $data['lugar'] ?? null,
             ':estado' => $data['estado'],
             ':observaciones' => $data['observaciones'] ?? null,
         ]);

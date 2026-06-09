@@ -125,21 +125,25 @@ foreach ($puntosSesion as $punto) {
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md">
                         <div class="text-muted small text-uppercase">Número de sesión</div>
                         <div class="fw-semibold"><?php echo htmlspecialchars((string)($sesion['numero_sesion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md">
                         <div class="text-muted small text-uppercase">Tipo de pleno</div>
                         <div class="fw-semibold"><?php echo htmlspecialchars($formatearTipo($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md">
                         <div class="text-muted small text-uppercase">Fecha</div>
                         <div class="fw-semibold"><?php echo htmlspecialchars($formatearFecha($sesion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md">
                         <div class="text-muted small text-uppercase">Hora</div>
                         <div class="fw-semibold"><?php echo htmlspecialchars($formatearHora($sesion['hora'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
+                    </div>
+                    <div class="col-md">
+                        <div class="text-muted small text-uppercase">Lugar</div>
+                        <div class="fw-semibold"><?php echo htmlspecialchars((string)($sesion['lugar'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                     <?php if (trim((string)($sesion['observaciones'] ?? '')) !== ''): ?>
                         <div class="col-12">

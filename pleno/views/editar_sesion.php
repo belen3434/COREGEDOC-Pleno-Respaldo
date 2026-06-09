@@ -8,6 +8,9 @@ $flash = $data['pleno_flash'] ?? null;
 $crudError = $data['pleno_crud_error'] ?? null;
 $comisionesActivas = $data['pleno_comisiones_activas'] ?? [];
 $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
+$lugarSesion = is_array($sesion) ? trim((string)($sesion['lugar'] ?? '')) : '';
+$lugarEsSalonPlenario = $lugarSesion === '' || $lugarSesion === 'Salón Plenario 3';
+$lugarOtro = $lugarEsSalonPlenario ? '' : $lugarSesion;
 ?>
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -124,19 +127,21 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
 
                         <div class="col-md-6">
                             <label class="form-label fw-semibold" for="plenoLugarSesionVisual">Lugar</label>
-                            <select id="plenoLugarSesionVisual" class="form-select">
-                                <option value="salon_plenario_3" selected>Salón Plenario 3</option>
-                                <option value="otra">Otra dependencia</option>
+                            <select id="plenoLugarSesionVisual" name="lugar_opcion" class="form-select">
+                                <option value="salon_plenario_3" <?php echo $lugarEsSalonPlenario ? 'selected' : ''; ?>>Salón Plenario 3</option>
+                                <option value="otra" <?php echo !$lugarEsSalonPlenario ? 'selected' : ''; ?>>Otra dependencia</option>
                             </select>
                         </div>
 
-                        <div class="col-md-6 d-none" id="plenoLugarOtroVisualWrapper">
+                        <div class="col-md-6 <?php echo $lugarEsSalonPlenario ? 'd-none' : ''; ?>" id="plenoLugarOtroVisualWrapper">
                             <label class="form-label fw-semibold" for="plenoLugarOtroVisual">Otra dependencia</label>
                             <input
                                 type="text"
                                 id="plenoLugarOtroVisual"
+                                name="lugar_otro"
                                 class="form-control"
                                 maxlength="150"
+                                value="<?php echo htmlspecialchars($lugarOtro, ENT_QUOTES, 'UTF-8'); ?>"
                                 placeholder="Escriba la dependencia"
                                 aria-describedby="plenoLugarOtroVisualFeedback"
                             >
