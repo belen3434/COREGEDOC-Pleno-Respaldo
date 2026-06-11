@@ -53,7 +53,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                                 class="btn-check"
                                 name="tipo_pleno"
                                 id="tipoPlenoNormal"
-                                value="normal"
+                                value="Ordinario"
                                 autocomplete="off"
                                 checked
                             >
@@ -67,7 +67,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                                 class="btn-check"
                                 name="tipo_pleno"
                                 id="tipoPlenoExtraordinario"
-                                value="extraordinario"
+                                value="Extraordinario"
                                 autocomplete="off"
                             >
                             <label class="btn pleno-pill-toggle-btn" for="tipoPlenoExtraordinario">

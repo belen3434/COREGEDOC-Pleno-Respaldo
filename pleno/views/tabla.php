@@ -26,7 +26,19 @@ $formatearHora = static function (?string $hora): string {
 
 $formatearTipo = static function (?string $tipo): string {
     $tipo = trim((string)$tipo);
-    return $tipo !== '' ? ucfirst($tipo) : '';
+    $tipoNormalizado = function_exists('mb_strtolower')
+        ? mb_strtolower($tipo, 'UTF-8')
+        : strtolower($tipo);
+
+    if ($tipoNormalizado === 'normal' || $tipoNormalizado === 'ordinario') {
+        return 'Ordinario';
+    }
+
+    if ($tipoNormalizado === 'extraordinario') {
+        return 'Extraordinario';
+    }
+
+    return $tipo;
 };
 
 $resolverPunto = static function (array $punto): array {

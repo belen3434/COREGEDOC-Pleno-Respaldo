@@ -53,12 +53,36 @@ $formatearHora = static function (?string $hora): string {
 
 $formatearTipo = static function (?string $tipo): string {
     $tipo = trim((string)$tipo);
-    return $tipo !== '' ? ucfirst($tipo) : '';
+    $tipoNormalizado = function_exists('mb_strtolower')
+        ? mb_strtolower($tipo, 'UTF-8')
+        : strtolower($tipo);
+
+    if ($tipoNormalizado === 'normal' || $tipoNormalizado === 'ordinario') {
+        return 'Ordinario';
+    }
+
+    if ($tipoNormalizado === 'extraordinario') {
+        return 'Extraordinario';
+    }
+
+    return $tipo;
 };
 
 $formatearTipoBadge = static function (?string $tipo): string {
     $tipo = trim((string)$tipo);
-    return $tipo !== '' ? strtoupper($tipo) : '';
+    $tipoNormalizado = function_exists('mb_strtolower')
+        ? mb_strtolower($tipo, 'UTF-8')
+        : strtolower($tipo);
+
+    if ($tipoNormalizado === 'normal' || $tipoNormalizado === 'ordinario') {
+        return 'ORDINARIO';
+    }
+
+    if ($tipoNormalizado === 'extraordinario') {
+        return 'EXTRAORDINARIO';
+    }
+
+    return strtoupper($tipo);
 };
 
 $formatearEstado = static function (?string $estado): string {
@@ -361,7 +385,7 @@ $duracionEstimada = 10 + 20 + $duracionComisiones + $duracionVarios;
             <div>
                 <div class="pleno-eyebrow text-success mb-2">SESIÓN PLENARIA</div>
                 <h1 class="display-6 pleno-page-title mb-3">
-                    Sesión <?php echo htmlspecialchars(strtolower($formatearTipo($sesion['tipo_pleno'] ?? '')), ENT_QUOTES, 'UTF-8'); ?> N° <?php echo htmlspecialchars((string)($sesion['numero_sesion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                    Sesión <?php echo htmlspecialchars($formatearTipo($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?> N° <?php echo htmlspecialchars((string)($sesion['numero_sesion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
                 </h1>
                 <div class="pleno-session-meta">
                     <span><i class="fas fa-calendar-alt text-success"></i><?php echo htmlspecialchars($formatearFechaLarga($sesion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>

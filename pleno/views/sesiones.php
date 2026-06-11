@@ -6,6 +6,23 @@ $sesiones = $data['pleno_sesiones'] ?? [];
 $puedeGestionar = (bool)($data['pleno_puede_gestionar'] ?? false);
 $flash = $data['pleno_flash'] ?? null;
 $crudError = $data['pleno_crud_error'] ?? null;
+
+$formatearTipoPleno = static function (?string $tipo): string {
+    $tipo = trim((string)$tipo);
+    $tipoNormalizado = function_exists('mb_strtolower')
+        ? mb_strtolower($tipo, 'UTF-8')
+        : strtolower($tipo);
+
+    if ($tipoNormalizado === 'normal' || $tipoNormalizado === 'ordinario') {
+        return 'Ordinario';
+    }
+
+    if ($tipoNormalizado === 'extraordinario') {
+        return 'Extraordinario';
+    }
+
+    return $tipo;
+};
 ?>
 <div class="container-fluid mt-4">
     <?php if ($flash): ?>
@@ -62,7 +79,7 @@ $crudError = $data['pleno_crud_error'] ?? null;
                                 <tr>
                                     <td><?php echo (int)$sesion['id_sesion']; ?></td>
                                     <td><?php echo htmlspecialchars($sesion['numero_sesion'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                    <td><?php echo htmlspecialchars(ucfirst($sesion['tipo_pleno']), ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><?php echo htmlspecialchars($formatearTipoPleno($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td><?php echo htmlspecialchars($sesion['fecha'], ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td><?php echo htmlspecialchars(substr((string)$sesion['hora'], 0, 5), ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td><?php echo htmlspecialchars((string)($sesion['lugar'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
