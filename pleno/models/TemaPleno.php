@@ -158,6 +158,47 @@ class TemaPleno
         return $stmt->fetchAll();
     }
 
+    public function listarTemasComisionSesion(int $idSesion): array
+    {
+        $stmt = $this->conn->prepare(
+            'SELECT
+                spt.orden,
+                spt.tipo_punto,
+                c.nombreComision,
+                t.nombreTema,
+                t.objetivo
+             FROM sesion_plenaria_temas spt
+             LEFT JOIN t_comision c ON c.idComision = spt.id_comision
+             LEFT JOIN t_tema t ON t.idTema = spt.id_tema
+             WHERE spt.id_sesion = :id_sesion
+               AND spt.vigente = 1
+               AND UPPER(COALESCE(spt.tipo_punto, \'COMISION\')) = \'COMISION\'
+             ORDER BY spt.orden ASC, spt.id ASC'
+        );
+        $stmt->execute([':id_sesion' => $idSesion]);
+
+        return $stmt->fetchAll();
+    }
+
+    public function listarPuntosVariosSesion(int $idSesion): array
+    {
+        $stmt = $this->conn->prepare(
+            'SELECT
+                spt.orden,
+                spt.tipo_punto,
+                spt.titulo_punto,
+                spt.descripcion_punto
+             FROM sesion_plenaria_temas spt
+             WHERE spt.id_sesion = :id_sesion
+               AND spt.vigente = 1
+               AND UPPER(COALESCE(spt.tipo_punto, \'COMISION\')) = \'TABLA\'
+             ORDER BY spt.orden ASC, spt.id ASC'
+        );
+        $stmt->execute([':id_sesion' => $idSesion]);
+
+        return $stmt->fetchAll();
+    }
+
     public function actualizarOrdenPuntosSesion(int $idSesion, array $ordenPuntos): bool
     {
         if ($idSesion <= 0 || empty($ordenPuntos) || !$this->tieneColumnaSeccionOrden()) {

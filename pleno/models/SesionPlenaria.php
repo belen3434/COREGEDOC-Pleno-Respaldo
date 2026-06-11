@@ -44,6 +44,21 @@ class SesionPlenaria
         return is_array($sesion) ? $sesion : null;
     }
 
+    public function obtenerUltimaVigente(): ?array
+    {
+        $stmt = $this->conn->prepare(
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
+             FROM sesiones_plenarias
+             WHERE vigencia = 1
+             ORDER BY fecha DESC, hora DESC, id_sesion DESC
+             LIMIT 1'
+        );
+        $stmt->execute();
+        $sesion = $stmt->fetch();
+
+        return is_array($sesion) ? $sesion : null;
+    }
+
     public function obtenerSesionVigenteHoy(): ?array
     {
         $stmt = $this->conn->prepare(
@@ -167,5 +182,19 @@ class SesionPlenaria
         $stmt->execute([':idComision' => $idComision]);
 
         return $stmt->fetchAll();
+    }
+
+    public function contarConsejerosYGobernador(): int
+    {
+        $stmt = $this->conn->prepare(
+            'SELECT COUNT(*) AS total
+             FROM t_usuario
+             WHERE tipoUsuario_id IN (1, 22)
+               AND estado = 1'
+        );
+        $stmt->execute();
+        $row = $stmt->fetch();
+
+        return (int)($row['total'] ?? 0);
     }
 }

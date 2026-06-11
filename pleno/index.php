@@ -44,6 +44,9 @@ $plenoNumeroSugerido = '';
 $plenoCrudError = null;
 $plenoComisionesActivas = [];
 $plenoPuntosSesion = [];
+$plenoTemasComisionSesion = [];
+$plenoPuntosVariosSesion = [];
+$plenoTotalConsejerosGobernador = 0;
 
 if ($plenoAuth['authorized']) {
     try {
@@ -77,6 +80,20 @@ if ($plenoAuth['authorized']) {
             }
         }
 
+        if ($vista === 'comisiones') {
+            $idSesion = (int)($_GET['id_sesion'] ?? 0);
+            $plenoSesionActual = $idSesion > 0
+                ? $plenoController->obtenerSesion($idSesion)
+                : $plenoController->obtenerUltimaSesionVigente();
+
+            if ($plenoSesionActual) {
+                $plenoTemasComisionSesion = $plenoController->listarTemasComisionSesion((int)$plenoSesionActual['id_sesion']);
+                $plenoPuntosVariosSesion = $plenoController->listarPuntosVariosSesion((int)$plenoSesionActual['id_sesion']);
+            }
+
+            $plenoTotalConsejerosGobernador = $plenoController->contarConsejerosYGobernador();
+        }
+
         if ($vista === 'editar_sesion') {
             $plenoSesionActual = $plenoController->obtenerSesion((int)($_GET['id'] ?? 0));
             if ($plenoSesionActual) {
@@ -107,6 +124,9 @@ $data = [
     'pleno_numero_sugerido' => $plenoNumeroSugerido,
     'pleno_comisiones_activas' => $plenoComisionesActivas,
     'pleno_puntos_sesion' => $plenoPuntosSesion,
+    'pleno_temas_comision_sesion' => $plenoTemasComisionSesion,
+    'pleno_puntos_varios_sesion' => $plenoPuntosVariosSesion,
+    'pleno_total_consejeros_gobernador' => $plenoTotalConsejerosGobernador,
     'pleno_crud_error' => $plenoCrudError,
 ];
 

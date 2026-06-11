@@ -1,5 +1,119 @@
 <?php
 require __DIR__ . '/partials/sidebar_pleno.php';
+
+$sesion = $data['pleno_sesion_actual'] ?? null;
+$temasComision = $data['pleno_temas_comision_sesion'] ?? [];
+$puntosVarios = $data['pleno_puntos_varios_sesion'] ?? [];
+$totalConsejerosGobernador = (int)($data['pleno_total_consejeros_gobernador'] ?? 0);
+
+$formatearFechaLarga = static function (?string $fecha): string {
+    if (!$fecha) {
+        return '';
+    }
+
+    $timestamp = strtotime($fecha);
+    if (!$timestamp) {
+        return $fecha;
+    }
+
+    $meses = [
+        1 => 'enero',
+        2 => 'febrero',
+        3 => 'marzo',
+        4 => 'abril',
+        5 => 'mayo',
+        6 => 'junio',
+        7 => 'julio',
+        8 => 'agosto',
+        9 => 'septiembre',
+        10 => 'octubre',
+        11 => 'noviembre',
+        12 => 'diciembre',
+    ];
+
+    return date('j', $timestamp) . ' de ' . $meses[(int)date('n', $timestamp)] . ' de ' . date('Y', $timestamp);
+};
+
+$formatearFechaCorta = static function (?string $fecha): string {
+    if (!$fecha) {
+        return '';
+    }
+
+    $timestamp = strtotime($fecha);
+    return $timestamp ? date('d/m/Y', $timestamp) : $fecha;
+};
+
+$formatearHora = static function (?string $hora): string {
+    if (!$hora) {
+        return '';
+    }
+
+    return substr($hora, 0, 5) . ' hrs.';
+};
+
+$formatearTipo = static function (?string $tipo): string {
+    $tipo = trim((string)$tipo);
+    return $tipo !== '' ? ucfirst($tipo) : '';
+};
+
+$formatearTipoBadge = static function (?string $tipo): string {
+    $tipo = trim((string)$tipo);
+    return $tipo !== '' ? strtoupper($tipo) : '';
+};
+
+$formatearEstado = static function (?string $estado): string {
+    $estado = trim((string)$estado);
+    return $estado !== '' ? strtoupper(str_replace('_', ' ', $estado)) : '';
+};
+
+$resolverTextoTema = static function (array $tema): string {
+    $comision = trim((string)($tema['nombreComision'] ?? ''));
+    $nombreTema = trim((string)($tema['nombreTema'] ?? ''));
+
+    if ($comision !== '' && $nombreTema !== '') {
+        return $comision . ' - Tema: ' . $nombreTema;
+    }
+
+    if ($comision !== '') {
+        return $comision;
+    }
+
+    if ($nombreTema !== '') {
+        return $nombreTema;
+    }
+
+    return 'Tema de comisión';
+};
+
+$resolverTextoVario = static function (array $punto): string {
+    $titulo = trim((string)($punto['titulo_punto'] ?? ''));
+    $descripcion = trim((string)($punto['descripcion_punto'] ?? ''));
+
+    if ($titulo !== '' && $descripcion !== '') {
+        return $titulo . ' - ' . $descripcion;
+    }
+
+    if ($titulo !== '') {
+        return $titulo;
+    }
+
+    if ($descripcion !== '') {
+        return $descripcion;
+    }
+
+    return 'Punto varios';
+};
+
+$cantidadTemasComision = count($temasComision);
+$cantidadPuntosVarios = count($puntosVarios);
+$nombreActa = trim((string)($sesion['aprobacion_actas'] ?? ''));
+$tituloAprobacionActa = $nombreActa !== ''
+    ? 'APROBACIÓN DE ACTA: ' . $nombreActa
+    : 'APROBACIÓN DE ACTA';
+$puntosEnTabla = 4 + $cantidadTemasComision + $cantidadPuntosVarios;
+$duracionComisiones = $cantidadTemasComision * 15;
+$duracionVarios = max(1, $cantidadPuntosVarios) * 10;
+$duracionEstimada = 10 + 20 + $duracionComisiones + $duracionVarios;
 ?>
 <style>
     .pleno-session-dashboard {
@@ -238,149 +352,174 @@ require __DIR__ . '/partials/sidebar_pleno.php';
         </a>
     </div>
 
-    <div class="pleno-session-hero">
-        <div>
-            <div class="pleno-eyebrow text-success mb-2">SESIÓN PLENARIA</div>
-            <h1 class="display-6 pleno-page-title mb-3">Sesión ordinaria N° 931</h1>
-            <div class="pleno-session-meta">
-                <span><i class="fas fa-calendar-alt text-success"></i>15 de mayo de 2025</span>
-                <span><i class="fas fa-clock text-success"></i>10:00 hrs.</span>
-                <span><i class="fas fa-map-marker-alt text-success"></i>Salón Plenario CORE Valparaíso</span>
-                <span class="badge bg-success-subtle text-success border border-success-subtle">ORDINARIA</span>
-            </div>
+    <?php if (!$sesion): ?>
+        <div class="alert alert-warning" role="alert">
+            No existe una sesión plenaria vigente para mostrar.
         </div>
-        <button type="button" class="btn btn-success pleno-btn-success pleno-start-btn">
-            <i class="fas fa-play me-2"></i>Iniciar Pleno
-        </button>
-    </div>
-
-    <div class="pleno-session-grid">
-        <section class="pleno-panel">
-            <div class="pleno-panel-body">
-                <h2 class="h4 pleno-section-title mb-4">Orden del Día</h2>
-
-                <div class="pleno-agenda-list">
-                    <article class="pleno-agenda-item">
-                        <span class="pleno-agenda-number">1</span>
-                        <div class="pleno-agenda-content">
-                            <h3 class="pleno-agenda-title">Cuenta del Gobernador Regional</h3>
-                            <p class="pleno-agenda-description">Informe ejecutivo de gestión regional y materias prioritarias.</p>
-                        </div>
-                        <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i>20 min</span>
-                        <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
-                    </article>
-
-                    <article class="pleno-agenda-item">
-                        <span class="pleno-agenda-number">2</span>
-                        <div class="pleno-agenda-content">
-                            <h3 class="pleno-agenda-title">Aprobación de Acta Anterior</h3>
-                            <p class="pleno-agenda-description">Revisión y aprobación formal del acta de la sesión anterior.</p>
-                        </div>
-                        <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i>10 min</span>
-                        <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
-                    </article>
-
-                    <article class="pleno-agenda-item">
-                        <span class="pleno-agenda-number">3</span>
-                        <div class="pleno-agenda-content">
-                            <h3 class="pleno-agenda-title">Cuenta de Comisiones</h3>
-                            <p class="pleno-agenda-description">Presentación de informes y acuerdos elevados por las comisiones.</p>
-                        </div>
-                        <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i>40 min</span>
-                        <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
-                    </article>
-
-                    <div class="pleno-subtemas-list">
-                        <div class="pleno-subtema-card">3.1 Régimen Interior</div>
-                        <div class="pleno-subtema-card">3.2 Inversiones, Presupuesto y Patrimonio Regional</div>
-                        <div class="pleno-subtema-card">3.3 Control de Gestión y Fiscalización</div>
-                        <div class="pleno-subtema-card">3.4 Educación, Arte, Cultura, Deportes y Recreación</div>
-                        <div class="pleno-subtema-card">3.5 Relaciones Internacionales</div>
-                        <div class="pleno-subtema-card">3.6 Ciencia, Tecnología e Innovación</div>
-                    </div>
-
-                    <article class="pleno-agenda-item">
-                        <span class="pleno-agenda-number">4</span>
-                        <div class="pleno-agenda-content">
-                            <h3 class="pleno-agenda-title">Varios</h3>
-                            <p class="pleno-agenda-description">Temas extraordinarios o de última incorporación.</p>
-                        </div>
-                        <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i>20 min</span>
-                        <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
-                    </article>
+    <?php else: ?>
+        <div class="pleno-session-hero">
+            <div>
+                <div class="pleno-eyebrow text-success mb-2">SESIÓN PLENARIA</div>
+                <h1 class="display-6 pleno-page-title mb-3">
+                    Sesión <?php echo htmlspecialchars(strtolower($formatearTipo($sesion['tipo_pleno'] ?? '')), ENT_QUOTES, 'UTF-8'); ?> N° <?php echo htmlspecialchars((string)($sesion['numero_sesion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                </h1>
+                <div class="pleno-session-meta">
+                    <span><i class="fas fa-calendar-alt text-success"></i><?php echo htmlspecialchars($formatearFechaLarga($sesion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span><i class="fas fa-clock text-success"></i><?php echo htmlspecialchars($formatearHora($sesion['hora'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span><i class="fas fa-map-marker-alt text-success"></i><?php echo htmlspecialchars((string)($sesion['lugar'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle"><?php echo htmlspecialchars($formatearTipoBadge($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
             </div>
-        </section>
+            <form action="index.php?action=iniciar_pleno&id_sesion=<?php echo (int)($sesion['id_sesion'] ?? 0); ?>" method="post">
+                <button type="button" class="btn btn-success pleno-btn-success pleno-start-btn" data-next-action="iniciar_pleno">
+                    <i class="fas fa-play me-2"></i>Iniciar Pleno
+                </button>
+            </form>
+        </div>
 
-        <aside class="pleno-side-stack">
+        <div class="pleno-session-grid">
             <section class="pleno-panel">
                 <div class="pleno-panel-body">
-                    <h2 class="h5 pleno-section-title mb-3">Información de la Sesión</h2>
-                    <div class="pleno-info-row">
-                        <span class="pleno-info-label">Tipo de sesión:</span>
-                        <span class="pleno-info-value">Ordinaria</span>
-                    </div>
-                    <div class="pleno-info-row">
-                        <span class="pleno-info-label">Número:</span>
-                        <span class="pleno-info-value">931</span>
-                    </div>
-                    <div class="pleno-info-row">
-                        <span class="pleno-info-label">Fecha:</span>
-                        <span class="pleno-info-value">15/05/2025</span>
-                    </div>
-                    <div class="pleno-info-row">
-                        <span class="pleno-info-label">Hora:</span>
-                        <span class="pleno-info-value">10:00 hrs.</span>
-                    </div>
-                    <div class="pleno-info-row">
-                        <span class="pleno-info-label">Lugar:</span>
-                        <span class="pleno-info-value">Salón Plenario CORE Valparaíso</span>
-                    </div>
-                    <div class="pleno-info-row">
-                        <span class="pleno-info-label">Estado:</span>
-                        <span class="badge pleno-badge-warning">PROGRAMADA</span>
+                    <h2 class="h4 pleno-section-title mb-4">Orden del Día</h2>
+
+                    <div class="pleno-agenda-list">
+                        <article class="pleno-agenda-item">
+                            <span class="pleno-agenda-number">1</span>
+                            <div class="pleno-agenda-content">
+                                <h3 class="pleno-agenda-title"><?php echo htmlspecialchars($tituloAprobacionActa, ENT_QUOTES, 'UTF-8'); ?></h3>
+                                <p class="pleno-agenda-description">Revisión y aprobación formal del acta de la sesión anterior.</p>
+                            </div>
+                            <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i>10 min</span>
+                            <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
+                        </article>
+
+                        <article class="pleno-agenda-item">
+                            <span class="pleno-agenda-number">2</span>
+                            <div class="pleno-agenda-content">
+                                <h3 class="pleno-agenda-title">CUENTA PRESIDENTE DEL CONSEJO REGIONAL DE VALPARAÍSO</h3>
+                                <p class="pleno-agenda-description">Cuenta institucional del Consejo Regional de Valparaíso.</p>
+                            </div>
+                            <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i>20 min</span>
+                            <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
+                        </article>
+
+                        <article class="pleno-agenda-item">
+                            <span class="pleno-agenda-number">3</span>
+                            <div class="pleno-agenda-content">
+                                <h3 class="pleno-agenda-title">CUENTA COMISIONES</h3>
+                                <p class="pleno-agenda-description">Presentación de informes y acuerdos elevados por las comisiones.</p>
+                            </div>
+                            <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i><?php echo (int)$duracionComisiones; ?> min</span>
+                            <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
+                        </article>
+
+                        <div class="pleno-subtemas-list">
+                            <?php if (empty($temasComision)): ?>
+                                <div class="pleno-subtema-card">No hay temas de comisión cargados para esta sesión.</div>
+                            <?php else: ?>
+                                <?php foreach ($temasComision as $indiceTema => $tema): ?>
+                                    <div class="pleno-subtema-card">
+                                        <?php echo '3.' . ((int)$indiceTema + 1) . ' ' . htmlspecialchars($resolverTextoTema($tema), ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+
+                        <article class="pleno-agenda-item">
+                            <span class="pleno-agenda-number">4</span>
+                            <div class="pleno-agenda-content">
+                                <h3 class="pleno-agenda-title">VARIOS</h3>
+                                <p class="pleno-agenda-description">Temas extraordinarios o de última incorporación.</p>
+                            </div>
+                            <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i><?php echo (int)$duracionVarios; ?> min</span>
+                            <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
+                        </article>
+
+                        <div class="pleno-subtemas-list">
+                            <?php if (empty($puntosVarios)): ?>
+                                <div class="pleno-subtema-card">No hay puntos varios cargados para esta sesión.</div>
+                            <?php else: ?>
+                                <?php foreach ($puntosVarios as $indiceVario => $puntoVario): ?>
+                                    <div class="pleno-subtema-card">
+                                        <?php echo '4.' . ((int)$indiceVario + 1) . ' ' . htmlspecialchars($resolverTextoVario($puntoVario), ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section class="pleno-panel">
-                <div class="pleno-panel-body">
-                    <h2 class="h5 pleno-section-title mb-3">Resumen del Pleno</h2>
-                    <div class="d-flex flex-column gap-3">
-                        <div class="pleno-summary-box">
-                            <span class="pleno-summary-icon"><i class="fas fa-users"></i></span>
-                            <div>
-                                <div class="pleno-summary-number">29</div>
-                                <div class="small text-muted fw-semibold">Consejeros y Gobernador</div>
-                            </div>
+            <aside class="pleno-side-stack">
+                <section class="pleno-panel">
+                    <div class="pleno-panel-body">
+                        <h2 class="h5 pleno-section-title mb-3">Información de la Sesión</h2>
+                        <div class="pleno-info-row">
+                            <span class="pleno-info-label">Tipo de sesión:</span>
+                            <span class="pleno-info-value"><?php echo htmlspecialchars($formatearTipo($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                         </div>
-                        <div class="pleno-summary-box">
-                            <span class="pleno-summary-icon"><i class="fas fa-list-check"></i></span>
-                            <div>
-                                <div class="pleno-summary-number">10</div>
-                                <div class="small text-muted fw-semibold">Puntos en tabla</div>
-                            </div>
+                        <div class="pleno-info-row">
+                            <span class="pleno-info-label">Número:</span>
+                            <span class="pleno-info-value"><?php echo htmlspecialchars((string)($sesion['numero_sesion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                         </div>
-                        <div class="pleno-summary-box">
-                            <span class="pleno-summary-icon"><i class="fas fa-hourglass-half"></i></span>
-                            <div>
-                                <div class="pleno-summary-number">90</div>
-                                <div class="small text-muted fw-semibold">Duración estimada total</div>
+                        <div class="pleno-info-row">
+                            <span class="pleno-info-label">Fecha:</span>
+                            <span class="pleno-info-value"><?php echo htmlspecialchars($formatearFechaCorta($sesion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                        </div>
+                        <div class="pleno-info-row">
+                            <span class="pleno-info-label">Hora:</span>
+                            <span class="pleno-info-value"><?php echo htmlspecialchars($formatearHora($sesion['hora'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                        </div>
+                        <div class="pleno-info-row">
+                            <span class="pleno-info-label">Lugar:</span>
+                            <span class="pleno-info-value"><?php echo htmlspecialchars((string)($sesion['lugar'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                        </div>
+                        <div class="pleno-info-row">
+                            <span class="pleno-info-label">Estado:</span>
+                            <span class="badge pleno-badge-warning"><?php echo htmlspecialchars($formatearEstado($sesion['estado'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="pleno-panel">
+                    <div class="pleno-panel-body">
+                        <h2 class="h5 pleno-section-title mb-3">Resumen del Pleno</h2>
+                        <div class="d-flex flex-column gap-3">
+                            <div class="pleno-summary-box">
+                                <span class="pleno-summary-icon"><i class="fas fa-users"></i></span>
+                                <div>
+                                    <div class="pleno-summary-number"><?php echo (int)$totalConsejerosGobernador; ?></div>
+                                    <div class="small text-muted fw-semibold">Consejeros y Gobernador</div>
+                                </div>
+                            </div>
+                            <div class="pleno-summary-box">
+                                <span class="pleno-summary-icon"><i class="fas fa-list-check"></i></span>
+                                <div>
+                                    <div class="pleno-summary-number"><?php echo (int)$puntosEnTabla; ?></div>
+                                    <div class="small text-muted fw-semibold">Puntos en tabla</div>
+                                </div>
+                            </div>
+                            <div class="pleno-summary-box">
+                                <span class="pleno-summary-icon"><i class="fas fa-hourglass-half"></i></span>
+                                <div>
+                                    <div class="pleno-summary-number"><?php echo (int)$duracionEstimada; ?></div>
+                                    <div class="small text-muted fw-semibold">Duración estimada total</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <section class="pleno-panel">
-                <div class="pleno-panel-body">
-                    <h2 class="h5 pleno-section-title mb-3">Documentos Asociados</h2>
-                    <button type="button" class="btn btn-light border pleno-doc-button">
-                        <span><i class="fas fa-folder-open me-2 text-success"></i>Ver documentos de la sesión</span>
-                        <i class="fas fa-chevron-right text-success"></i>
-                    </button>
-                </div>
-            </section>
-        </aside>
-    </div>
+                <section class="pleno-panel">
+                    <div class="pleno-panel-body">
+                        <h2 class="h5 pleno-section-title mb-3">Documentos Asociados</h2>
+                        <button type="button" class="btn btn-light border pleno-doc-button">
+                            <span><i class="fas fa-folder-open me-2 text-success"></i>Ver documentos de la sesión</span>
+                            <i class="fas fa-chevron-right text-success"></i>
+                        </button>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    <?php endif; ?>
 </div>

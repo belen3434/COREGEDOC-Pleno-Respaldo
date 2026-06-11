@@ -31,6 +31,11 @@ class PlenoController
         return $this->sesiones->obtenerPorId($id);
     }
 
+    public function obtenerUltimaSesionVigente(): ?array
+    {
+        return $this->sesiones->obtenerUltimaVigente();
+    }
+
     public function obtenerSesionVigenteHoy(): ?array
     {
         return $this->sesiones->obtenerSesionVigenteHoy();
@@ -62,6 +67,29 @@ class PlenoController
         }
 
         return $this->temas->listarPuntosSesion($idSesion);
+    }
+
+    public function listarTemasComisionSesion(int $idSesion): array
+    {
+        if ($idSesion <= 0) {
+            return [];
+        }
+
+        return $this->temas->listarTemasComisionSesion($idSesion);
+    }
+
+    public function listarPuntosVariosSesion(int $idSesion): array
+    {
+        if ($idSesion <= 0) {
+            return [];
+        }
+
+        return $this->temas->listarPuntosVariosSesion($idSesion);
+    }
+
+    public function contarConsejerosYGobernador(): int
+    {
+        return $this->sesiones->contarConsejerosYGobernador();
     }
 
     public function manejarAccion(?string $action): void
