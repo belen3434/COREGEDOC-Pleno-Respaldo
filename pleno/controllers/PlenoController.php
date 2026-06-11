@@ -319,7 +319,10 @@ class PlenoController
             $observacionImprevista = trim((string)($punto['observacion_imprevista'] ?? ''));
             $tituloPunto = trim((string)($punto['titulo_punto'] ?? ''));
             $descripcionPunto = trim((string)($punto['descripcion_punto'] ?? ''));
-            $seccionOrden = trim((string)($punto['seccion_orden'] ?? 'varios'));
+            $seccionOrden = trim((string)($punto['seccion_orden'] ?? ''));
+            if ($seccionOrden === '') {
+                $seccionOrden = $tipoPunto === 'TABLA' ? 'varios' : 'cuenta_comisiones';
+            }
             $seccionesPermitidas = ['cuenta_gobernador', 'cuenta_comisiones', 'varios'];
             $seccionOrden = $seccionOrden === 'cuenta_intendente' ? 'cuenta_gobernador' : $seccionOrden;
             $seccionOrden = in_array($seccionOrden, $seccionesPermitidas, true) ? $seccionOrden : 'varios';
