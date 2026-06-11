@@ -145,6 +145,18 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
                         </div>
                     </div>
                     <div class="col-12">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="col-form-label fw-semibold flex-shrink-0" for="plenoAprobacionActas">Aprobación Actas:</label>
+                            <input
+                                type="text"
+                                id="plenoAprobacionActas"
+                                name="aprobacion_actas"
+                                class="form-control"
+                                maxlength="255"
+                            >
+                        </div>
+                    </div>
+                    <div class="col-12">
                         <label class="form-label fw-semibold">Observaciones</label>
                         <textarea name="observaciones" rows="4" class="form-control" placeholder="Detalle adicional"></textarea>
                     </div>
@@ -152,12 +164,6 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
 
                 <div class="pleno-session-tools mt-4 pt-3">
                     <div class="pleno-session-tool-buttons">
-                        <button
-                            type="button"
-                            class="btn pleno-tool-btn pleno-tool-btn-governador"
-                        >
-                            <i class="fas fa-landmark me-2"></i>Cuenta Gobernador
-                        </button>
                         <button
                             type="button"
                             class="btn pleno-tool-btn pleno-tool-btn-outline"
