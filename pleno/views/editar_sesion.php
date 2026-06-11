@@ -151,6 +151,20 @@ $lugarOtro = $lugarEsSalonPlenario ? '' : $lugarSesion;
                         </div>
 
                         <div class="col-12">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="col-form-label fw-semibold flex-shrink-0" for="editarAprobacionActas">Aprobación Actas:</label>
+                                <input
+                                    type="text"
+                                    id="editarAprobacionActas"
+                                    name="aprobacion_actas"
+                                    class="form-control"
+                                    maxlength="255"
+                                    value="<?php echo htmlspecialchars((string)($sesion['aprobacion_actas'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="col-12">
                             <label class="form-label fw-semibold" for="editarObservacionesSesion">Observaciones</label>
                             <textarea
                                 name="observaciones"

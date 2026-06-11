@@ -229,6 +229,7 @@ class PlenoController
             'hora' => trim((string)($input['hora'] ?? '')),
             'lugar' => $lugar,
             'estado' => $estadoPersistido,
+            'aprobacion_actas' => trim((string)($input['aprobacion_actas'] ?? '')),
             'observaciones' => trim((string)($input['observaciones'] ?? '')),
         ];
     }
