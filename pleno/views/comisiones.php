@@ -448,16 +448,7 @@ $duracionEstimada = 10 + 20 + $duracionComisiones + $duracionVarios;
     }
 </style>
 
-<div class="container-fluid mt-4 pleno-session-dashboard">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">
-            <i class="fas fa-sitemap me-2 text-success"></i>Comisiones
-        </h2>
-        <a href="index.php" class="btn btn-pleno-back">
-            <i class="fas fa-arrow-left me-2"></i>Volver al inicio
-        </a>
-    </div>
-
+<div class="container-fluid mt-2 pleno-session-dashboard">
     <?php if (!$sesion): ?>
         <div class="alert alert-warning" role="alert">
             No existe una sesión plenaria vigente para mostrar.
