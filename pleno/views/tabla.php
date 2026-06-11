@@ -79,10 +79,11 @@ $resolverPunto = static function (array $punto): array {
     ];
 };
 
+$aprobacionActas = trim((string)($sesion['aprobacion_actas'] ?? ''));
+
 $seccionesOrdenDia = [
-    'cuenta_gobernador' => 'Cuenta Gobernador',
-    'cuenta_comisiones' => 'Cuenta de Comisiones',
-    'varios' => 'Varios',
+    'cuenta_comisiones' => '3. CUENTA COMISIONES',
+    'varios' => '4. VARIOS',
 ];
 
 $puntosPorSeccion = array_fill_keys(array_keys($seccionesOrdenDia), []);
@@ -169,6 +170,10 @@ foreach ($puntosSesion as $punto) {
                 data-sesion-id="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>"
                 data-update-url="<?php echo htmlspecialchars('index.php?action=actualizar_orden_tabla&id_sesion=' . (int)($sesion['id_sesion'] ?? 0), ENT_QUOTES, 'UTF-8'); ?>"
             >
+                <?php if ($aprobacionActas !== ''): ?>
+                    <div class="orden-dia-seccion-titulo">1. <?php echo htmlspecialchars($aprobacionActas, ENT_QUOTES, 'UTF-8'); ?></div>
+                <?php endif; ?>
+                <div class="orden-dia-seccion-titulo">2. CUENTA PRESIDENTE DEL CONSEJO REGIONAL DE VALPARAÍSO</div>
                 <?php foreach ($seccionesOrdenDia as $seccionKey => $seccionTitulo): ?>
                     <section class="orden-dia-seccion" data-seccion="<?php echo htmlspecialchars($seccionKey, ENT_QUOTES, 'UTF-8'); ?>">
                         <div class="orden-dia-seccion-titulo"><?php echo htmlspecialchars($seccionTitulo, ENT_QUOTES, 'UTF-8'); ?></div>
