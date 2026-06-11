@@ -11,6 +11,7 @@ $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
 $lugarSesion = is_array($sesion) ? trim((string)($sesion['lugar'] ?? '')) : '';
 $lugarEsSalonPlenario = $lugarSesion === '' || $lugarSesion === 'Salón Plenario 3';
 $lugarOtro = $lugarEsSalonPlenario ? '' : $lugarSesion;
+$tipoPlenoActual = strtolower(trim((string)($sesion['tipo_pleno'] ?? '')));
 ?>
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -63,13 +64,13 @@ $lugarOtro = $lugarEsSalonPlenario ? '' : $lugarSesion;
                                     class="btn-check"
                                     name="tipo_pleno"
                                     id="editarTipoPlenoNormal"
-                                    value="normal"
+                                    value="Ordinario"
                                     autocomplete="off"
-                                    <?php echo $sesion['tipo_pleno'] === 'normal' ? 'checked' : ''; ?>
+                                    <?php echo in_array($tipoPlenoActual, ['ordinario', 'normal'], true) ? 'checked' : ''; ?>
                                 >
                                 <label class="btn pleno-pill-toggle-btn" for="editarTipoPlenoNormal">
                                     <span class="pleno-pill-indicator" aria-hidden="true"></span>
-                                    <span>Normal</span>
+                                    <span>Ordinario</span>
                                 </label>
 
                                 <input
@@ -77,9 +78,9 @@ $lugarOtro = $lugarEsSalonPlenario ? '' : $lugarSesion;
                                     class="btn-check"
                                     name="tipo_pleno"
                                     id="editarTipoPlenoExtraordinario"
-                                    value="extraordinario"
+                                    value="Extraordinario"
                                     autocomplete="off"
-                                    <?php echo $sesion['tipo_pleno'] === 'extraordinario' ? 'checked' : ''; ?>
+                                    <?php echo $tipoPlenoActual === 'extraordinario' ? 'checked' : ''; ?>
                                 >
                                 <label class="btn pleno-pill-toggle-btn" for="editarTipoPlenoExtraordinario">
                                     <span class="pleno-pill-indicator" aria-hidden="true"></span>

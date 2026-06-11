@@ -245,13 +245,14 @@ class PlenoController
         $numeroSesion = trim((string)($input['numero_sesion'] ?? ''));
         $estadoPersistido = trim((string)$estadoActual);
         $lugar = $this->normalizarLugarSesion($input);
+        $tipoPleno = $this->normalizarTipoPleno($input['tipo_pleno'] ?? '');
 
         if ($estadoPersistido === '') {
             $estadoPersistido = self::ESTADO_SESION_POR_DEFECTO;
         }
 
         return [
-            'tipo_pleno' => trim((string)($input['tipo_pleno'] ?? '')),
+            'tipo_pleno' => $tipoPleno,
             'numero_sesion' => $numeroSesion !== '' ? $numeroSesion : $this->numeroSesionSugerido(),
             'fecha' => trim((string)($input['fecha'] ?? '')),
             'hora' => trim((string)($input['hora'] ?? '')),
@@ -260,6 +261,24 @@ class PlenoController
             'aprobacion_actas' => trim((string)($input['aprobacion_actas'] ?? '')),
             'observaciones' => trim((string)($input['observaciones'] ?? '')),
         ];
+    }
+
+    private function normalizarTipoPleno($tipo): string
+    {
+        $tipo = trim((string)$tipo);
+        $tipoNormalizado = function_exists('mb_strtolower')
+            ? mb_strtolower($tipo, 'UTF-8')
+            : strtolower($tipo);
+
+        if ($tipoNormalizado === 'normal' || $tipoNormalizado === 'ordinario') {
+            return 'Ordinario';
+        }
+
+        if ($tipoNormalizado === 'extraordinario') {
+            return 'Extraordinario';
+        }
+
+        return $tipo;
     }
 
     private function normalizarLugarSesion(array $input): string
