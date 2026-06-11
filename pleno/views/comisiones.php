@@ -91,6 +91,20 @@ $formatearEstado = static function (?string $estado): string {
 };
 
 $resolverTextoTema = static function (array $tema): string {
+    $tipoPunto = strtoupper(trim((string)($tema['tipo_punto'] ?? 'COMISION')));
+
+    if ($tipoPunto === 'IMPREVISTA') {
+        $nombre = trim((string)($tema['nombre_imprevista'] ?? ''));
+        $observacion = trim((string)($tema['observacion_imprevista'] ?? ''));
+        $texto = $nombre !== '' ? $nombre : 'Comisión Imprevista';
+
+        if ($observacion !== '') {
+            $texto .= ' - ' . $observacion;
+        }
+
+        return $texto;
+    }
+
     $comision = trim((string)($tema['nombreComision'] ?? ''));
     $nombreTema = trim((string)($tema['nombreTema'] ?? ''));
 
@@ -107,6 +121,22 @@ $resolverTextoTema = static function (array $tema): string {
     }
 
     return 'Tema de comisión';
+};
+
+$resolverBadgeTema = static function (array $tema): array {
+    $tipoPunto = strtoupper(trim((string)($tema['tipo_punto'] ?? 'COMISION')));
+
+    if ($tipoPunto === 'IMPREVISTA') {
+        return [
+            'texto' => 'IMPREVISTA',
+            'clase' => 'pleno-point-badge-imprevista',
+        ];
+    }
+
+    return [
+        'texto' => 'COMISIÓN',
+        'clase' => 'pleno-point-badge-permanente',
+    ];
 };
 
 $resolverTextoVario = static function (array $punto): string {
@@ -442,8 +472,12 @@ $duracionEstimada = 10 + 20 + $duracionComisiones + $duracionVarios;
                                 <div class="pleno-subtema-card">No hay temas de comisión cargados para esta sesión.</div>
                             <?php else: ?>
                                 <?php foreach ($temasComision as $indiceTema => $tema): ?>
+                                    <?php $badgeTema = $resolverBadgeTema($tema); ?>
                                     <div class="pleno-subtema-card">
-                                        <?php echo '3.' . ((int)$indiceTema + 1) . ' ' . htmlspecialchars($resolverTextoTema($tema), ENT_QUOTES, 'UTF-8'); ?>
+                                        <span class="pleno-point-badge <?php echo htmlspecialchars($badgeTema['clase'], ENT_QUOTES, 'UTF-8'); ?>">
+                                            <?php echo htmlspecialchars($badgeTema['texto'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                        <span><?php echo '3.' . ((int)$indiceTema + 1) . ' ' . htmlspecialchars($resolverTextoTema($tema), ENT_QUOTES, 'UTF-8'); ?></span>
                                     </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>

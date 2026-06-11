@@ -162,8 +162,13 @@ class TemaPleno
     {
         $stmt = $this->conn->prepare(
             'SELECT
+                spt.id,
                 spt.orden,
                 spt.tipo_punto,
+                spt.nombre_imprevista,
+                spt.observacion_imprevista,
+                spt.titulo_punto,
+                spt.descripcion_punto,
                 c.nombreComision,
                 t.nombreTema,
                 t.objetivo
@@ -172,7 +177,7 @@ class TemaPleno
              LEFT JOIN t_tema t ON t.idTema = spt.id_tema
              WHERE spt.id_sesion = :id_sesion
                AND spt.vigente = 1
-               AND UPPER(COALESCE(spt.tipo_punto, \'COMISION\')) = \'COMISION\'
+               AND UPPER(COALESCE(spt.tipo_punto, \'COMISION\')) IN (\'COMISION\', \'IMPREVISTA\')
              ORDER BY spt.orden ASC, spt.id ASC'
         );
         $stmt->execute([':id_sesion' => $idSesion]);
@@ -184,11 +189,19 @@ class TemaPleno
     {
         $stmt = $this->conn->prepare(
             'SELECT
+                spt.id,
                 spt.orden,
                 spt.tipo_punto,
+                spt.nombre_imprevista,
+                spt.observacion_imprevista,
                 spt.titulo_punto,
-                spt.descripcion_punto
+                spt.descripcion_punto,
+                c.nombreComision,
+                t.nombreTema,
+                t.objetivo
              FROM sesion_plenaria_temas spt
+             LEFT JOIN t_comision c ON c.idComision = spt.id_comision
+             LEFT JOIN t_tema t ON t.idTema = spt.id_tema
              WHERE spt.id_sesion = :id_sesion
                AND spt.vigente = 1
                AND UPPER(COALESCE(spt.tipo_punto, \'COMISION\')) = \'TABLA\'

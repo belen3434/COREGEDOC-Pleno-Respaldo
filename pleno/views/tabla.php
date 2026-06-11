@@ -101,7 +101,10 @@ $seccionesOrdenDia = [
 $puntosPorSeccion = array_fill_keys(array_keys($seccionesOrdenDia), []);
 
 foreach ($puntosSesion as $punto) {
-    $seccionOrden = trim((string)($punto['seccion_orden'] ?? ''));
+    $tipoPunto = strtoupper(trim((string)($punto['tipo_punto'] ?? 'COMISION')));
+    $seccionOrden = in_array($tipoPunto, ['COMISION', 'IMPREVISTA'], true)
+        ? 'cuenta_comisiones'
+        : ($tipoPunto === 'TABLA' ? 'varios' : trim((string)($punto['seccion_orden'] ?? '')));
 
     if (!isset($puntosPorSeccion[$seccionOrden])) {
         $seccionOrden = 'varios';
@@ -109,6 +112,20 @@ foreach ($puntosSesion as $punto) {
 
     $puntosPorSeccion[$seccionOrden][] = $punto;
 }
+
+foreach ($puntosPorSeccion as &$puntosSeccion) {
+    usort($puntosSeccion, static function (array $a, array $b): int {
+        $ordenA = (int)($a['orden'] ?? 0);
+        $ordenB = (int)($b['orden'] ?? 0);
+
+        if ($ordenA === $ordenB) {
+            return (int)($a['id'] ?? 0) <=> (int)($b['id'] ?? 0);
+        }
+
+        return $ordenA <=> $ordenB;
+    });
+}
+unset($puntosSeccion);
 ?>
 <div class="container-fluid mt-4">
     <?php if ($crudError): ?>
