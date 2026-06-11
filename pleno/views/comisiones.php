@@ -93,6 +93,18 @@ $formatearEstado = static function (?string $estado): string {
 $resolverTextoTema = static function (array $tema): string {
     $tipoPunto = strtoupper(trim((string)($tema['tipo_punto'] ?? 'COMISION')));
 
+    if ($tipoPunto === 'TABLA') {
+        $titulo = trim((string)($tema['titulo_punto'] ?? ''));
+        $descripcion = trim((string)($tema['descripcion_punto'] ?? ''));
+        $texto = $titulo !== '' ? $titulo : 'Punto de Tabla';
+
+        if ($descripcion !== '') {
+            $texto .= ' - ' . $descripcion;
+        }
+
+        return $texto;
+    }
+
     if ($tipoPunto === 'IMPREVISTA') {
         $nombre = trim((string)($tema['nombre_imprevista'] ?? ''));
         $observacion = trim((string)($tema['observacion_imprevista'] ?? ''));
@@ -126,6 +138,13 @@ $resolverTextoTema = static function (array $tema): string {
 $resolverBadgeTema = static function (array $tema): array {
     $tipoPunto = strtoupper(trim((string)($tema['tipo_punto'] ?? 'COMISION')));
 
+    if ($tipoPunto === 'TABLA') {
+        return [
+            'texto' => 'TABLA',
+            'clase' => 'pleno-point-badge-tabla',
+        ];
+    }
+
     if ($tipoPunto === 'IMPREVISTA') {
         return [
             'texto' => 'IMPREVISTA',
@@ -140,6 +159,39 @@ $resolverBadgeTema = static function (array $tema): array {
 };
 
 $resolverTextoVario = static function (array $punto): string {
+    $tipoPunto = strtoupper(trim((string)($punto['tipo_punto'] ?? 'TABLA')));
+
+    if ($tipoPunto === 'IMPREVISTA') {
+        $nombre = trim((string)($punto['nombre_imprevista'] ?? ''));
+        $observacion = trim((string)($punto['observacion_imprevista'] ?? ''));
+        $texto = $nombre !== '' ? $nombre : 'ComisiÃ³n Imprevista';
+
+        if ($observacion !== '') {
+            $texto .= ' - ' . $observacion;
+        }
+
+        return $texto;
+    }
+
+    if ($tipoPunto === 'COMISION') {
+        $comision = trim((string)($punto['nombreComision'] ?? ''));
+        $nombreTema = trim((string)($punto['nombreTema'] ?? ''));
+
+        if ($comision !== '' && $nombreTema !== '') {
+            return $comision . ' - Tema: ' . $nombreTema;
+        }
+
+        if ($comision !== '') {
+            return $comision;
+        }
+
+        if ($nombreTema !== '') {
+            return $nombreTema;
+        }
+
+        return 'Tema de comisiÃ³n';
+    }
+
     $titulo = trim((string)($punto['titulo_punto'] ?? ''));
     $descripcion = trim((string)($punto['descripcion_punto'] ?? ''));
 
@@ -498,8 +550,12 @@ $duracionEstimada = 10 + 20 + $duracionComisiones + $duracionVarios;
                                 <div class="pleno-subtema-card">No hay puntos varios cargados para esta sesión.</div>
                             <?php else: ?>
                                 <?php foreach ($puntosVarios as $indiceVario => $puntoVario): ?>
+                                    <?php $badgeVario = $resolverBadgeTema($puntoVario); ?>
                                     <div class="pleno-subtema-card">
-                                        <?php echo '4.' . ((int)$indiceVario + 1) . ' ' . htmlspecialchars($resolverTextoVario($puntoVario), ENT_QUOTES, 'UTF-8'); ?>
+                                        <span class="pleno-point-badge <?php echo htmlspecialchars($badgeVario['clase'], ENT_QUOTES, 'UTF-8'); ?>">
+                                            <?php echo htmlspecialchars($badgeVario['texto'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                        <span><?php echo '4.' . ((int)$indiceVario + 1) . ' ' . htmlspecialchars($resolverTextoVario($puntoVario), ENT_QUOTES, 'UTF-8'); ?></span>
                                     </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>

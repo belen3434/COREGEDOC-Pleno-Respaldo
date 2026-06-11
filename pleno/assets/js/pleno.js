@@ -394,6 +394,7 @@
                         "data-observacion-imprevista": "",
                         "data-titulo-punto": "",
                         "data-descripcion-punto": "",
+                        "data-seccion-orden": "cuenta_comisiones",
                         "data-vigente": "1"
                     }
                 );
@@ -446,6 +447,7 @@
                     "data-observacion-imprevista": observacionImprevista,
                     "data-titulo-punto": "",
                     "data-descripcion-punto": "",
+                    "data-seccion-orden": "cuenta_comisiones",
                     "data-vigente": "1"
                 });
                 closeModal("modalComisionImprevista");
@@ -501,6 +503,7 @@
                     "data-observacion-imprevista": "",
                     "data-titulo-punto": tituloPunto,
                     "data-descripcion-punto": descripcionPunto,
+                    "data-seccion-orden": "varios",
                     "data-vigente": "1",
                     "data-orden-tabla": ordenInput && ordenInput.value ? ordenInput.value.trim() : ""
                 });

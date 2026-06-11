@@ -101,10 +101,7 @@ $seccionesOrdenDia = [
 $puntosPorSeccion = array_fill_keys(array_keys($seccionesOrdenDia), []);
 
 foreach ($puntosSesion as $punto) {
-    $tipoPunto = strtoupper(trim((string)($punto['tipo_punto'] ?? 'COMISION')));
-    $seccionOrden = in_array($tipoPunto, ['COMISION', 'IMPREVISTA'], true)
-        ? 'cuenta_comisiones'
-        : ($tipoPunto === 'TABLA' ? 'varios' : trim((string)($punto['seccion_orden'] ?? '')));
+    $seccionOrden = trim((string)($punto['seccion_orden'] ?? ''));
 
     if (!isset($puntosPorSeccion[$seccionOrden])) {
         $seccionOrden = 'varios';

@@ -44,7 +44,10 @@ class TemaPleno
             $observacionImprevista = trim((string)($punto['observacion_imprevista'] ?? ''));
             $tituloPunto = trim((string)($punto['titulo_punto'] ?? ''));
             $descripcionPunto = trim((string)($punto['descripcion_punto'] ?? ''));
-            $seccionOrden = $this->normalizarSeccionOrden($punto['seccion_orden'] ?? 'varios');
+            $seccionOrdenEntrada = trim((string)($punto['seccion_orden'] ?? ''));
+            $seccionOrden = $this->normalizarSeccionOrden(
+                $seccionOrdenEntrada !== '' ? $seccionOrdenEntrada : ($tipoPunto === 'TABLA' ? 'varios' : 'cuenta_comisiones')
+            );
             $orden = $ordenPorSeccion[$seccionOrden];
 
             if ($tipoPunto === 'IMPREVISTA' && $nombreImprevista === '') {
@@ -163,12 +166,16 @@ class TemaPleno
         $stmt = $this->conn->prepare(
             'SELECT
                 spt.id,
+                spt.id_sesion,
+                spt.id_comision,
+                spt.id_tema,
                 spt.orden,
                 spt.tipo_punto,
                 spt.nombre_imprevista,
                 spt.observacion_imprevista,
                 spt.titulo_punto,
                 spt.descripcion_punto,
+                COALESCE(NULLIF(TRIM(spt.seccion_orden), \'\'), \'varios\') AS seccion_orden,
                 c.nombreComision,
                 t.nombreTema,
                 t.objetivo
@@ -177,7 +184,7 @@ class TemaPleno
              LEFT JOIN t_tema t ON t.idTema = spt.id_tema
              WHERE spt.id_sesion = :id_sesion
                AND spt.vigente = 1
-               AND UPPER(COALESCE(spt.tipo_punto, \'COMISION\')) IN (\'COMISION\', \'IMPREVISTA\')
+               AND COALESCE(NULLIF(TRIM(spt.seccion_orden), \'\'), \'varios\') = \'cuenta_comisiones\'
              ORDER BY spt.orden ASC, spt.id ASC'
         );
         $stmt->execute([':id_sesion' => $idSesion]);
@@ -190,12 +197,16 @@ class TemaPleno
         $stmt = $this->conn->prepare(
             'SELECT
                 spt.id,
+                spt.id_sesion,
+                spt.id_comision,
+                spt.id_tema,
                 spt.orden,
                 spt.tipo_punto,
                 spt.nombre_imprevista,
                 spt.observacion_imprevista,
                 spt.titulo_punto,
                 spt.descripcion_punto,
+                COALESCE(NULLIF(TRIM(spt.seccion_orden), \'\'), \'varios\') AS seccion_orden,
                 c.nombreComision,
                 t.nombreTema,
                 t.objetivo
@@ -204,7 +215,7 @@ class TemaPleno
              LEFT JOIN t_tema t ON t.idTema = spt.id_tema
              WHERE spt.id_sesion = :id_sesion
                AND spt.vigente = 1
-               AND UPPER(COALESCE(spt.tipo_punto, \'COMISION\')) = \'TABLA\'
+               AND COALESCE(NULLIF(TRIM(spt.seccion_orden), \'\'), \'varios\') = \'varios\'
              ORDER BY spt.orden ASC, spt.id ASC'
         );
         $stmt->execute([':id_sesion' => $idSesion]);
