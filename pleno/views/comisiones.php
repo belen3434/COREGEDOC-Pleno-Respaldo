@@ -1,630 +1,831 @@
 <?php
 require __DIR__ . '/partials/sidebar_pleno.php';
-
-$sesion = $data['pleno_sesion_actual'] ?? null;
-$temasComision = $data['pleno_temas_comision_sesion'] ?? [];
-$puntosVarios = $data['pleno_puntos_varios_sesion'] ?? [];
-$totalConsejerosGobernador = (int)($data['pleno_total_consejeros_gobernador'] ?? 0);
-
-$formatearFechaLarga = static function (?string $fecha): string {
-    if (!$fecha) {
-        return '';
-    }
-
-    $timestamp = strtotime($fecha);
-    if (!$timestamp) {
-        return $fecha;
-    }
-
-    $meses = [
-        1 => 'enero',
-        2 => 'febrero',
-        3 => 'marzo',
-        4 => 'abril',
-        5 => 'mayo',
-        6 => 'junio',
-        7 => 'julio',
-        8 => 'agosto',
-        9 => 'septiembre',
-        10 => 'octubre',
-        11 => 'noviembre',
-        12 => 'diciembre',
-    ];
-
-    return date('j', $timestamp) . ' de ' . $meses[(int)date('n', $timestamp)] . ' de ' . date('Y', $timestamp);
-};
-
-$formatearFechaCorta = static function (?string $fecha): string {
-    if (!$fecha) {
-        return '';
-    }
-
-    $timestamp = strtotime($fecha);
-    return $timestamp ? date('d/m/Y', $timestamp) : $fecha;
-};
-
-$formatearHora = static function (?string $hora): string {
-    if (!$hora) {
-        return '';
-    }
-
-    return substr($hora, 0, 5) . ' hrs.';
-};
-
-$formatearTipo = static function (?string $tipo): string {
-    $tipo = trim((string)$tipo);
-    $tipoNormalizado = function_exists('mb_strtolower')
-        ? mb_strtolower($tipo, 'UTF-8')
-        : strtolower($tipo);
-
-    if ($tipoNormalizado === 'normal' || $tipoNormalizado === 'ordinario') {
-        return 'Ordinario';
-    }
-
-    if ($tipoNormalizado === 'extraordinario') {
-        return 'Extraordinario';
-    }
-
-    return $tipo;
-};
-
-$formatearTipoBadge = static function (?string $tipo): string {
-    $tipo = trim((string)$tipo);
-    $tipoNormalizado = function_exists('mb_strtolower')
-        ? mb_strtolower($tipo, 'UTF-8')
-        : strtolower($tipo);
-
-    if ($tipoNormalizado === 'normal' || $tipoNormalizado === 'ordinario') {
-        return 'ORDINARIO';
-    }
-
-    if ($tipoNormalizado === 'extraordinario') {
-        return 'EXTRAORDINARIO';
-    }
-
-    return strtoupper($tipo);
-};
-
-$formatearEstado = static function (?string $estado): string {
-    $estado = trim((string)$estado);
-    return $estado !== '' ? strtoupper(str_replace('_', ' ', $estado)) : '';
-};
-
-$resolverTextoTema = static function (array $tema): string {
-    $tipoPunto = strtoupper(trim((string)($tema['tipo_punto'] ?? 'COMISION')));
-
-    if ($tipoPunto === 'TABLA') {
-        $titulo = trim((string)($tema['titulo_punto'] ?? ''));
-        $descripcion = trim((string)($tema['descripcion_punto'] ?? ''));
-        $texto = $titulo !== '' ? $titulo : 'Punto de Tabla';
-
-        if ($descripcion !== '') {
-            $texto .= ' - ' . $descripcion;
-        }
-
-        return $texto;
-    }
-
-    if ($tipoPunto === 'IMPREVISTA') {
-        $nombre = trim((string)($tema['nombre_imprevista'] ?? ''));
-        $observacion = trim((string)($tema['observacion_imprevista'] ?? ''));
-        $texto = $nombre !== '' ? $nombre : 'Comisión Imprevista';
-
-        if ($observacion !== '') {
-            $texto .= ' - ' . $observacion;
-        }
-
-        return $texto;
-    }
-
-    $comision = trim((string)($tema['nombreComision'] ?? ''));
-    $nombreTema = trim((string)($tema['nombreTema'] ?? ''));
-
-    if ($comision !== '' && $nombreTema !== '') {
-        return $comision . ' - Tema: ' . $nombreTema;
-    }
-
-    if ($comision !== '') {
-        return $comision;
-    }
-
-    if ($nombreTema !== '') {
-        return $nombreTema;
-    }
-
-    return 'Tema de comisión';
-};
-
-$resolverBadgeTema = static function (array $tema): array {
-    $tipoPunto = strtoupper(trim((string)($tema['tipo_punto'] ?? 'COMISION')));
-
-    if ($tipoPunto === 'TABLA') {
-        return [
-            'texto' => 'TABLA',
-            'clase' => 'pleno-point-badge-tabla',
-        ];
-    }
-
-    if ($tipoPunto === 'IMPREVISTA') {
-        return [
-            'texto' => 'IMPREVISTA',
-            'clase' => 'pleno-point-badge-imprevista',
-        ];
-    }
-
-    return [
-        'texto' => 'COMISIÓN',
-        'clase' => 'pleno-point-badge-permanente',
-    ];
-};
-
-$resolverTextoVario = static function (array $punto): string {
-    $tipoPunto = strtoupper(trim((string)($punto['tipo_punto'] ?? 'TABLA')));
-
-    if ($tipoPunto === 'IMPREVISTA') {
-        $nombre = trim((string)($punto['nombre_imprevista'] ?? ''));
-        $observacion = trim((string)($punto['observacion_imprevista'] ?? ''));
-        $texto = $nombre !== '' ? $nombre : 'ComisiÃ³n Imprevista';
-
-        if ($observacion !== '') {
-            $texto .= ' - ' . $observacion;
-        }
-
-        return $texto;
-    }
-
-    if ($tipoPunto === 'COMISION') {
-        $comision = trim((string)($punto['nombreComision'] ?? ''));
-        $nombreTema = trim((string)($punto['nombreTema'] ?? ''));
-
-        if ($comision !== '' && $nombreTema !== '') {
-            return $comision . ' - Tema: ' . $nombreTema;
-        }
-
-        if ($comision !== '') {
-            return $comision;
-        }
-
-        if ($nombreTema !== '') {
-            return $nombreTema;
-        }
-
-        return 'Tema de comisiÃ³n';
-    }
-
-    $titulo = trim((string)($punto['titulo_punto'] ?? ''));
-    $descripcion = trim((string)($punto['descripcion_punto'] ?? ''));
-
-    if ($titulo !== '' && $descripcion !== '') {
-        return $titulo . ' - ' . $descripcion;
-    }
-
-    if ($titulo !== '') {
-        return $titulo;
-    }
-
-    if ($descripcion !== '') {
-        return $descripcion;
-    }
-
-    return 'Punto varios';
-};
-
-$cantidadTemasComision = count($temasComision);
-$cantidadPuntosVarios = count($puntosVarios);
-$nombreActa = trim((string)($sesion['aprobacion_actas'] ?? ''));
-$tituloAprobacionActa = $nombreActa !== ''
-    ? 'APROBACIÓN DE ACTA: ' . $nombreActa
-    : 'APROBACIÓN DE ACTA';
-$puntosEnTabla = 4 + $cantidadTemasComision + $cantidadPuntosVarios;
-$duracionComisiones = $cantidadTemasComision * 15;
-$duracionVarios = max(1, $cantidadPuntosVarios) * 10;
-$duracionEstimada = 10 + 20 + $duracionComisiones + $duracionVarios;
 ?>
+
 <style>
-    .pleno-session-dashboard {
-        color: #1f3240;
+    .secretaria-pleno-view {
+        min-height: calc(100vh - 130px);
+        padding: 0.25rem 0 1.5rem;
+        color: #203949;
+        background: #f4f7f9;
     }
 
-    .pleno-session-hero {
+    .secretaria-hero,
+    .secretaria-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 12px 30px rgba(15, 38, 56, 0.08);
+    }
+
+    .secretaria-hero {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+        padding: 1.45rem 1.55rem;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
     }
 
-    .pleno-session-meta {
+    .secretaria-live-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.45rem;
+        color: #c62828;
+        font-size: 0.78rem;
+        font-weight: 850;
+        letter-spacing: 0.08em;
+    }
+
+    .secretaria-live-dot {
+        width: 0.48rem;
+        height: 0.48rem;
+        border-radius: 999px;
+        background: #dc3545;
+        box-shadow: 0 0 0 5px rgba(220, 53, 69, 0.12);
+    }
+
+    .secretaria-title {
+        margin: 0 0 0.85rem;
+        color: #17324d;
+        font-size: clamp(1.6rem, 2.4vw, 2.35rem);
+        font-weight: 850;
+        letter-spacing: 0;
+    }
+
+    .secretaria-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.85rem 1.2rem;
-        color: #657987;
-        font-size: 0.95rem;
-        font-weight: 600;
+        gap: 0.8rem 1.25rem;
+        color: #5f7483;
+        font-size: 0.96rem;
+        font-weight: 650;
     }
 
-    .pleno-session-meta span {
+    .secretaria-meta span {
         display: inline-flex;
         align-items: center;
         gap: 0.45rem;
     }
 
-    .pleno-start-btn {
-        min-width: 170px;
-        min-height: 48px;
-        border-radius: 12px;
-        font-weight: 700;
+    .secretaria-meta i,
+    .secretaria-card-title i {
+        color: #198754;
     }
 
-    .pleno-session-grid {
+    .secretaria-status-badge,
+    .secretaria-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .secretaria-status-badge {
+        min-width: 112px;
+        padding: 0.55rem 0.9rem;
+        border: 1px solid #b9ddc8;
+        color: #12633d;
+        background: #eaf7ef;
+        font-size: 0.78rem;
+        font-weight: 850;
+        letter-spacing: 0.06em;
+    }
+
+    .secretaria-grid {
         display: grid;
-        grid-template-columns: minmax(0, 7fr) minmax(280px, 3fr);
+        grid-template-columns: minmax(0, 1.65fr) minmax(330px, 0.85fr);
         gap: 1.25rem;
         align-items: start;
     }
 
-    .pleno-agenda-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.95rem;
-    }
-
-    .pleno-agenda-item,
-    .pleno-subtema-card {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        border: 1px solid #e1e9ee;
-        background: #ffffff;
-        box-shadow: 0 4px 12px rgba(15, 38, 56, 0.05);
-    }
-
-    .pleno-agenda-item {
-        padding: 1rem 1.1rem;
-        border-radius: 12px;
-    }
-
-    .pleno-agenda-number {
-        width: 46px;
-        height: 46px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 46px;
-        border-radius: 50%;
-        color: #ffffff;
-        background: #198754;
-        font-size: 1.2rem;
-        font-weight: 800;
-        box-shadow: 0 8px 18px rgba(25, 135, 84, 0.24);
-    }
-
-    .pleno-agenda-content {
-        min-width: 0;
-        flex: 1;
-    }
-
-    .pleno-agenda-title {
-        margin: 0 0 0.25rem;
-        color: #203949;
-        font-size: 1.03rem;
-        font-weight: 750;
-    }
-
-    .pleno-agenda-description {
-        margin: 0;
-        color: #657987;
-        font-size: 0.92rem;
-    }
-
-    .pleno-agenda-duration {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        flex-shrink: 0;
-        color: #198754;
-        font-size: 0.88rem;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    .pleno-agenda-arrow {
-        color: #8aa0ad;
-        flex-shrink: 0;
-    }
-
-    .pleno-subtemas-list {
+    .secretaria-stack {
         display: grid;
-        gap: 0.65rem;
-        margin: 0.75rem 0 0.2rem;
-        padding-left: 3.9rem;
+        gap: 1.25rem;
     }
 
-    .pleno-subtema-card {
-        padding: 0.7rem 0.85rem;
-        border-radius: 10px;
-        color: #203949;
-        font-weight: 650;
+    .secretaria-card {
+        overflow: hidden;
     }
 
-    .pleno-side-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+    .secretaria-card-body {
+        padding: 1.25rem;
     }
 
-    .pleno-info-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 0.8rem;
-        padding: 0.65rem 0;
-        border-bottom: 1px solid #edf2f5;
-    }
-
-    .pleno-info-row:last-child {
-        border-bottom: 0;
-    }
-
-    .pleno-info-label {
-        color: #657987;
-        font-weight: 650;
-    }
-
-    .pleno-info-value {
-        color: #203949;
-        font-weight: 750;
-        text-align: right;
-    }
-
-    .pleno-summary-box {
+    .secretaria-card-header {
         display: flex;
         align-items: center;
-        gap: 0.85rem;
-        padding: 0.9rem;
-        border: 1px solid #e1e9ee;
-        border-radius: 12px;
-        background: #f8fafc;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
 
-    .pleno-summary-icon {
-        width: 42px;
-        height: 42px;
+    .secretaria-card-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin: 0;
+        color: #17324d;
+        font-size: 0.9rem;
+        font-weight: 850;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .agenda-list {
+        display: grid;
+        gap: 0.72rem;
+    }
+
+    .agenda-item {
+        border: 1px solid #e4ebf0;
+        border-radius: 14px;
+        background: #ffffff;
+    }
+
+    .agenda-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 54px;
+        padding: 0.85rem 1rem;
+    }
+
+    .agenda-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 0;
+        color: #243f52;
+        font-weight: 760;
+    }
+
+    .agenda-number {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
-        color: #198754;
-        background: rgba(25, 135, 84, 0.1);
-        font-size: 1.1rem;
+        width: 2rem;
+        height: 2rem;
+        flex: 0 0 2rem;
+        border-radius: 10px;
+        color: #12633d;
+        background: #eaf7ef;
+        font-weight: 850;
     }
 
-    .pleno-summary-number {
-        color: #203949;
+    .agenda-chevron {
+        color: #7d93a1;
+        font-size: 0.9rem;
+    }
+
+    .agenda-sublist {
+        display: grid;
+        gap: 0.5rem;
+        padding: 0 1rem 1rem 3.75rem;
+    }
+
+    .agenda-subitem {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        min-height: 46px;
+        padding: 0.72rem 0.85rem;
+        border: 1px solid #e5edf2;
+        border-radius: 12px;
+        color: #314b5e;
+        background: #fbfdfe;
+        font-weight: 680;
+    }
+
+    .agenda-subitem-current {
+        border-color: #8fd0a9;
+        background: #eaf7ef;
+        box-shadow: inset 4px 0 0 #198754;
+    }
+
+    .agenda-subtext {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-width: 0;
+    }
+
+    .agenda-bullet {
+        width: 0.55rem;
+        height: 0.55rem;
+        flex: 0 0 0.55rem;
+        border-radius: 50%;
+        background: #91a3af;
+    }
+
+    .agenda-subitem-current .agenda-bullet {
+        background: #198754;
+    }
+
+    .secretaria-badge {
+        padding: 0.34rem 0.66rem;
+        font-size: 0.72rem;
+        font-weight: 850;
+        letter-spacing: 0.04em;
+    }
+
+    .badge-current {
+        border: 1px solid #8fd0a9;
+        color: #12633d;
+        background: #dff3e7;
+    }
+
+    .badge-info {
+        border: 1px solid #b8d9f3;
+        color: #0b5f97;
+        background: #e7f3fb;
+    }
+
+    .badge-success-soft {
+        border: 1px solid #b9ddc8;
+        color: #12633d;
+        background: #eaf7ef;
+    }
+
+    .badge-danger-soft {
+        border: 1px solid #f1b8bd;
+        color: #a52a35;
+        background: #fdecef;
+    }
+
+    .badge-warning-soft {
+        border: 1px solid #f4d37a;
+        color: #996a00;
+        background: #fff5d8;
+    }
+
+    .point-detail-title {
+        margin: 0.7rem 0 0.35rem;
+        color: #17324d;
         font-size: 1.55rem;
+        font-weight: 850;
+    }
+
+    .point-detail-subtitle {
+        margin-bottom: 0.75rem;
+        color: #198754;
+        font-weight: 760;
+    }
+
+    .point-detail-text {
+        margin-bottom: 1rem;
+        color: #526979;
+        line-height: 1.55;
+    }
+
+    .point-detail-meta {
+        display: grid;
+        gap: 0.5rem;
+        color: #415867;
+        font-weight: 650;
+    }
+
+    .point-detail-meta strong {
+        color: #17324d;
+    }
+
+    .secretaria-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+    }
+
+    .secretaria-control-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 48px;
+        padding: 0.7rem 1rem;
+        border-radius: 12px;
+        font-weight: 760;
+        box-shadow: 0 8px 16px rgba(15, 38, 56, 0.06);
+    }
+
+    .secretaria-control-btn.btn-outline-success {
+        border-color: #198754;
+        color: #12633d;
+        background: #ffffff;
+    }
+
+    .secretaria-control-btn.btn-success {
+        border-color: #198754;
+        background: #198754;
+    }
+
+    .secretaria-control-btn.btn-danger {
+        border-color: #dc3545;
+        background: #dc3545;
+    }
+
+    .attendance-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.8rem;
+    }
+
+    .attendance-item {
+        min-height: 118px;
+        padding: 1rem;
+        border: 1px solid #e4ebf0;
+        border-radius: 14px;
+        background: #fbfdfe;
+    }
+
+    .metric-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.55rem;
+        height: 2.55rem;
+        margin-bottom: 0.75rem;
+        border-radius: 50%;
+        font-size: 1rem;
+    }
+
+    .metric-green {
+        color: #198754;
+        background: #e5f5eb;
+    }
+
+    .metric-orange {
+        color: #c76a00;
+        background: #fff0d9;
+    }
+
+    .metric-blue {
+        color: #0b72b9;
+        background: #e4f2fc;
+    }
+
+    .metric-purple {
+        color: #6f42c1;
+        background: #efe7fb;
+    }
+
+    .metric-number {
+        color: #17324d;
+        font-size: 1.65rem;
         font-weight: 850;
         line-height: 1;
     }
 
-    .pleno-doc-button {
-        width: 100%;
-        display: flex;
+    .metric-label {
+        margin-top: 0.25rem;
+        color: #657987;
+        font-size: 0.88rem;
+        font-weight: 650;
+    }
+
+    .vote-count {
+        color: #657987;
+        font-size: 0.82rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .vote-results {
+        display: grid;
+        gap: 0.95rem;
+    }
+
+    .vote-row-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 0.7rem;
         align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        min-height: 48px;
+        margin-bottom: 0.45rem;
+        color: #334c5e;
+        font-weight: 750;
+    }
+
+    .vote-name {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        min-width: 0;
+    }
+
+    .vote-dot {
+        width: 0.65rem;
+        height: 0.65rem;
+        flex: 0 0 0.65rem;
+        border-radius: 50%;
+    }
+
+    .vote-green {
+        background: #198754;
+    }
+
+    .vote-red {
+        background: #dc3545;
+    }
+
+    .vote-yellow {
+        background: #f0ad00;
+    }
+
+    .vote-gray {
+        background: #9aa8b2;
+    }
+
+    .vote-percent {
+        color: #657987;
+        font-size: 0.86rem;
+    }
+
+    .vote-bar {
+        height: 0.62rem;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #edf2f5;
+    }
+
+    .vote-bar span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+    }
+
+    .vote-bar-green {
+        background: #198754;
+    }
+
+    .vote-bar-red {
+        background: #dc3545;
+    }
+
+    .vote-bar-yellow {
+        background: #f0ad00;
+    }
+
+    .vote-bar-gray {
+        background: #9aa8b2;
+    }
+
+    .latest-votes {
+        display: grid;
+        gap: 0.58rem;
+    }
+
+    .latest-vote-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 0.65rem;
+        align-items: center;
+        min-height: 46px;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid #e8eef2;
         border-radius: 12px;
+        background: #fbfdfe;
+    }
+
+    .latest-voter {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+        color: #263f51;
         font-weight: 700;
     }
 
-    @media (max-width: 991.98px) {
-        .pleno-session-hero,
-        .pleno-session-grid {
-            display: block;
-        }
+    .latest-voter i {
+        color: #7c909e;
+    }
 
-        .pleno-start-btn {
-            width: 100%;
-            margin-top: 1rem;
-        }
+    .latest-time {
+        color: #738795;
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
 
-        .pleno-side-stack {
-            margin-top: 1.25rem;
+    @media (max-width: 1199.98px) {
+        .secretaria-grid {
+            grid-template-columns: 1fr;
         }
     }
 
-    @media (max-width: 575.98px) {
-        .pleno-agenda-item {
-            align-items: flex-start;
-            flex-wrap: wrap;
+    @media (max-width: 767.98px) {
+        .secretaria-hero,
+        .secretaria-card-body {
+            padding: 1rem;
         }
 
-        .pleno-subtemas-list {
-            padding-left: 0;
+        .secretaria-hero {
+            display: block;
         }
 
-        .pleno-agenda-duration {
-            margin-left: 3.9rem;
+        .secretaria-status-badge {
+            margin-top: 1rem;
+        }
+
+        .agenda-sublist {
+            padding-left: 1rem;
+        }
+
+        .attendance-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .latest-vote-row {
+            grid-template-columns: 1fr;
+            align-items: start;
         }
     }
 </style>
 
-<div class="container-fluid mt-2 pleno-session-dashboard">
-    <?php if (!$sesion): ?>
-        <div class="alert alert-warning" role="alert">
-            No existe una sesión plenaria vigente para mostrar.
-        </div>
-    <?php else: ?>
-        <div class="pleno-session-hero">
-            <div>
-                <div class="pleno-eyebrow text-success mb-2">PLENO</div>
-                <h1 class="display-6 pleno-page-title mb-3">
-                    Pleno <?php echo htmlspecialchars($formatearTipo($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?> N° <?php echo htmlspecialchars((string)($sesion['numero_sesion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
-                </h1>
-                <div class="pleno-session-meta">
-                    <span><i class="fas fa-calendar-alt text-success"></i><?php echo htmlspecialchars($formatearFechaLarga($sesion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                    <span><i class="fas fa-clock text-success"></i><?php echo htmlspecialchars($formatearHora($sesion['hora'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                    <span><i class="fas fa-map-marker-alt text-success"></i><?php echo htmlspecialchars((string)($sesion['lugar'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle"><?php echo htmlspecialchars($formatearTipoBadge($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                </div>
+<div class="secretaria-pleno-view">
+    <div class="secretaria-hero">
+        <div>
+            <div class="secretaria-live-label">
+                <span class="secretaria-live-dot"></span>
+                <span>SESIÓN EN VIVO</span>
             </div>
-            <form action="index.php?action=iniciar_pleno&id_sesion=<?php echo (int)($sesion['id_sesion'] ?? 0); ?>" method="post">
-                <button type="button" class="btn btn-success pleno-btn-success pleno-start-btn" data-next-action="iniciar_pleno">
-                    <i class="fas fa-play me-2"></i>Iniciar Pleno
-                </button>
-            </form>
+            <h1 class="secretaria-title">Plenario Ordinario N° PL-2026-048</h1>
+            <div class="secretaria-meta">
+                <span><i class="fas fa-calendar-alt"></i>11/06/2026</span>
+                <span><i class="fas fa-clock"></i>22:00 hrs.</span>
+                <span><i class="fas fa-map-marker-alt"></i>Salón Plenario 3</span>
+            </div>
+        </div>
+        <span class="secretaria-status-badge">EN CURSO</span>
+    </div>
+
+    <div class="secretaria-grid">
+        <div class="secretaria-stack">
+            <section class="secretaria-card">
+                <div class="secretaria-card-body">
+                    <div class="secretaria-card-header">
+                        <h2 class="secretaria-card-title">
+                            <i class="fas fa-list-check"></i>
+                            ORDEN DEL DÍA
+                        </h2>
+                    </div>
+
+                    <div class="agenda-list">
+                        <article class="agenda-item">
+                            <div class="agenda-main">
+                                <div class="agenda-label">
+                                    <span class="agenda-number">1</span>
+                                    <span>Aprobación de Acta: GGG</span>
+                                </div>
+                                <i class="fas fa-chevron-down agenda-chevron"></i>
+                            </div>
+                        </article>
+
+                        <article class="agenda-item">
+                            <div class="agenda-main">
+                                <div class="agenda-label">
+                                    <span class="agenda-number">2</span>
+                                    <span>Cuenta Presidente del Consejo Regional</span>
+                                </div>
+                                <i class="fas fa-chevron-down agenda-chevron"></i>
+                            </div>
+                        </article>
+
+                        <article class="agenda-item">
+                            <div class="agenda-main">
+                                <div class="agenda-label">
+                                    <span class="agenda-number">3</span>
+                                    <span>Cuenta Comisiones</span>
+                                </div>
+                                <i class="fas fa-chevron-down agenda-chevron"></i>
+                            </div>
+                            <div class="agenda-sublist">
+                                <div class="agenda-subitem agenda-subitem-current">
+                                    <span class="agenda-subtext">
+                                        <span class="agenda-bullet"></span>
+                                        <span>3.1 Comisión Imprevista</span>
+                                    </span>
+                                    <span class="secretaria-badge badge-current">PUNTO ACTUAL</span>
+                                </div>
+                                <div class="agenda-subitem">
+                                    <span class="agenda-subtext">
+                                        <span class="agenda-bullet"></span>
+                                        <span>3.2 Comisión Prueba</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="agenda-item">
+                            <div class="agenda-main">
+                                <div class="agenda-label">
+                                    <span class="agenda-number">4</span>
+                                    <span>Varios</span>
+                                </div>
+                                <i class="fas fa-chevron-down agenda-chevron"></i>
+                            </div>
+                            <div class="agenda-sublist">
+                                <div class="agenda-subitem">
+                                    <span class="agenda-subtext">
+                                        <span class="agenda-bullet"></span>
+                                        <span>4.1 Punto Tabla A</span>
+                                    </span>
+                                </div>
+                                <div class="agenda-subitem">
+                                    <span class="agenda-subtext">
+                                        <span class="agenda-bullet"></span>
+                                        <span>4.2 Punto Tabla B</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="secretaria-card">
+                <div class="secretaria-card-body">
+                    <div class="secretaria-card-header">
+                        <h2 class="secretaria-card-title">
+                            <i class="fas fa-file-lines"></i>
+                            DETALLE DEL PUNTO ACTUAL
+                        </h2>
+                    </div>
+
+                    <span class="secretaria-badge badge-info">PUNTO 3.1</span>
+                    <h2 class="point-detail-title">Comisión Imprevista</h2>
+                    <div class="point-detail-subtitle">Tema: Agua en la comuna de Olmué</div>
+                    <p class="point-detail-text">
+                        Se presenta análisis y propuesta respecto a la situación actual del suministro de agua potable en la comuna de Olmué, incluyendo acciones a corto y mediano plazo.
+                    </p>
+                    <div class="point-detail-meta">
+                        <div><strong>Origen:</strong> Comisión Imprevista</div>
+                        <div><strong>Documentos asociados:</strong> No hay documentos asociados.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="secretaria-card">
+                <div class="secretaria-card-body">
+                    <div class="secretaria-card-header">
+                        <h2 class="secretaria-card-title">
+                            <i class="fas fa-sliders"></i>
+                            CONTROLES DE LA SECRETARÍA
+                        </h2>
+                    </div>
+
+                    <div class="secretaria-controls">
+                        <button type="button" class="btn btn-outline-success secretaria-control-btn">
+                            <i class="fas fa-arrow-left"></i>
+                            Punto anterior
+                        </button>
+                        <button type="button" class="btn btn-outline-success secretaria-control-btn">
+                            Siguiente punto
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button type="button" class="btn btn-success secretaria-control-btn">
+                            <i class="fas fa-play"></i>
+                            Iniciar votación
+                        </button>
+                        <button type="button" class="btn btn-danger secretaria-control-btn">
+                            <i class="fas fa-stop"></i>
+                            Cerrar votación
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary secretaria-control-btn">
+                            <i class="fas fa-flag-checkered"></i>
+                            Finalizar pleno
+                        </button>
+                    </div>
+                </div>
+            </section>
         </div>
 
-        <div class="pleno-session-grid">
-            <section class="pleno-panel">
-                <div class="pleno-panel-body">
-                    <h2 class="h4 pleno-section-title mb-4">Orden del Día</h2>
+        <aside class="secretaria-stack">
+            <section class="secretaria-card">
+                <div class="secretaria-card-body">
+                    <div class="secretaria-card-header">
+                        <h2 class="secretaria-card-title">
+                            <i class="fas fa-users"></i>
+                            ASISTENCIA
+                        </h2>
+                    </div>
 
-                    <div class="pleno-agenda-list">
-                        <article class="pleno-agenda-item">
-                            <span class="pleno-agenda-number">1</span>
-                            <div class="pleno-agenda-content">
-                                <h3 class="pleno-agenda-title"><?php echo htmlspecialchars($tituloAprobacionActa, ENT_QUOTES, 'UTF-8'); ?></h3>
-                                <p class="pleno-agenda-description">Revisión y aprobación formal del acta de la sesión anterior.</p>
-                            </div>
-                            <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i>10 min</span>
-                            <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
-                        </article>
-
-                        <article class="pleno-agenda-item">
-                            <span class="pleno-agenda-number">2</span>
-                            <div class="pleno-agenda-content">
-                                <h3 class="pleno-agenda-title">CUENTA PRESIDENTE DEL CONSEJO REGIONAL DE VALPARAÍSO</h3>
-                                <p class="pleno-agenda-description">Cuenta institucional del Consejo Regional de Valparaíso.</p>
-                            </div>
-                            <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i>20 min</span>
-                            <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
-                        </article>
-
-                        <article class="pleno-agenda-item">
-                            <span class="pleno-agenda-number">3</span>
-                            <div class="pleno-agenda-content">
-                                <h3 class="pleno-agenda-title">CUENTA COMISIONES</h3>
-                                <p class="pleno-agenda-description">Presentación de informes y acuerdos elevados por las comisiones.</p>
-                            </div>
-                            <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i><?php echo (int)$duracionComisiones; ?> min</span>
-                            <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
-                        </article>
-
-                        <div class="pleno-subtemas-list">
-                            <?php if (empty($temasComision)): ?>
-                                <div class="pleno-subtema-card">No hay temas de comisión cargados para esta sesión.</div>
-                            <?php else: ?>
-                                <?php foreach ($temasComision as $indiceTema => $tema): ?>
-                                    <?php $badgeTema = $resolverBadgeTema($tema); ?>
-                                    <div class="pleno-subtema-card">
-                                        <span class="pleno-point-badge <?php echo htmlspecialchars($badgeTema['clase'], ENT_QUOTES, 'UTF-8'); ?>">
-                                            <?php echo htmlspecialchars($badgeTema['texto'], ENT_QUOTES, 'UTF-8'); ?>
-                                        </span>
-                                        <span><?php echo '3.' . ((int)$indiceTema + 1) . ' ' . htmlspecialchars($resolverTextoTema($tema), ENT_QUOTES, 'UTF-8'); ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                    <div class="attendance-grid">
+                        <div class="attendance-item">
+                            <span class="metric-icon metric-green"><i class="fas fa-user-check"></i></span>
+                            <div class="metric-number">27</div>
+                            <div class="metric-label">Presentes</div>
                         </div>
-
-                        <article class="pleno-agenda-item">
-                            <span class="pleno-agenda-number">4</span>
-                            <div class="pleno-agenda-content">
-                                <h3 class="pleno-agenda-title">VARIOS</h3>
-                                <p class="pleno-agenda-description">Temas extraordinarios o de última incorporación.</p>
-                            </div>
-                            <span class="pleno-agenda-duration"><i class="fas fa-stopwatch"></i><?php echo (int)$duracionVarios; ?> min</span>
-                            <i class="fas fa-chevron-right pleno-agenda-arrow"></i>
-                        </article>
-
-                        <div class="pleno-subtemas-list">
-                            <?php if (empty($puntosVarios)): ?>
-                                <div class="pleno-subtema-card">No hay puntos varios cargados para esta sesión.</div>
-                            <?php else: ?>
-                                <?php foreach ($puntosVarios as $indiceVario => $puntoVario): ?>
-                                    <?php $badgeVario = $resolverBadgeTema($puntoVario); ?>
-                                    <div class="pleno-subtema-card">
-                                        <span class="pleno-point-badge <?php echo htmlspecialchars($badgeVario['clase'], ENT_QUOTES, 'UTF-8'); ?>">
-                                            <?php echo htmlspecialchars($badgeVario['texto'], ENT_QUOTES, 'UTF-8'); ?>
-                                        </span>
-                                        <span><?php echo '4.' . ((int)$indiceVario + 1) . ' ' . htmlspecialchars($resolverTextoVario($puntoVario), ENT_QUOTES, 'UTF-8'); ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                        <div class="attendance-item">
+                            <span class="metric-icon metric-orange"><i class="fas fa-user-minus"></i></span>
+                            <div class="metric-number">2</div>
+                            <div class="metric-label">Ausentes</div>
+                        </div>
+                        <div class="attendance-item">
+                            <span class="metric-icon metric-blue"><i class="fas fa-user-tie"></i></span>
+                            <div class="metric-number">1</div>
+                            <div class="metric-label">Gobernador</div>
+                        </div>
+                        <div class="attendance-item">
+                            <span class="metric-icon metric-purple"><i class="fas fa-users-gear"></i></span>
+                            <div class="metric-number">28</div>
+                            <div class="metric-label">Total habilitados</div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <aside class="pleno-side-stack">
-                <section class="pleno-panel">
-                    <div class="pleno-panel-body">
-                        <h2 class="h5 pleno-section-title mb-3">Información del Pleno</h2>
-                        <div class="pleno-info-row">
-                            <span class="pleno-info-label">Tipo de pleno:</span>
-                            <span class="pleno-info-value"><?php echo htmlspecialchars($formatearTipo($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                        </div>
-                        <div class="pleno-info-row">
-                            <span class="pleno-info-label">Número:</span>
-                            <span class="pleno-info-value"><?php echo htmlspecialchars((string)($sesion['numero_sesion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                        </div>
-                        <div class="pleno-info-row">
-                            <span class="pleno-info-label">Fecha:</span>
-                            <span class="pleno-info-value"><?php echo htmlspecialchars($formatearFechaCorta($sesion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                        </div>
-                        <div class="pleno-info-row">
-                            <span class="pleno-info-label">Hora:</span>
-                            <span class="pleno-info-value"><?php echo htmlspecialchars($formatearHora($sesion['hora'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                        </div>
-                        <div class="pleno-info-row">
-                            <span class="pleno-info-label">Lugar:</span>
-                            <span class="pleno-info-value"><?php echo htmlspecialchars((string)($sesion['lugar'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                        </div>
-                        <div class="pleno-info-row">
-                            <span class="pleno-info-label">Estado:</span>
-                            <span class="badge pleno-badge-warning"><?php echo htmlspecialchars($formatearEstado($sesion['estado'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                        </div>
+            <section class="secretaria-card">
+                <div class="secretaria-card-body">
+                    <div class="secretaria-card-header">
+                        <h2 class="secretaria-card-title">
+                            <i class="fas fa-chart-simple"></i>
+                            VOTACIÓN EN CURSO
+                        </h2>
+                        <span class="vote-count">20 de 28 votos emitidos</span>
                     </div>
-                </section>
 
-                <section class="pleno-panel">
-                    <div class="pleno-panel-body">
-                        <h2 class="h5 pleno-section-title mb-3">Resumen del Pleno</h2>
-                        <div class="d-flex flex-column gap-3">
-                            <div class="pleno-summary-box">
-                                <span class="pleno-summary-icon"><i class="fas fa-users"></i></span>
-                                <div>
-                                    <div class="pleno-summary-number"><?php echo (int)$totalConsejerosGobernador; ?></div>
-                                    <div class="small text-muted fw-semibold">Consejeros y Gobernador</div>
-                                </div>
+                    <div class="vote-results">
+                        <div>
+                            <div class="vote-row-head">
+                                <span class="vote-name"><span class="vote-dot vote-green"></span>A Favor</span>
+                                <span>15</span>
+                                <span class="vote-percent">53,6%</span>
                             </div>
-                            <div class="pleno-summary-box">
-                                <span class="pleno-summary-icon"><i class="fas fa-list-check"></i></span>
-                                <div>
-                                    <div class="pleno-summary-number"><?php echo (int)$puntosEnTabla; ?></div>
-                                    <div class="small text-muted fw-semibold">Puntos en tabla</div>
-                                </div>
+                            <div class="vote-bar"><span class="vote-bar-green" style="width: 53.6%;"></span></div>
+                        </div>
+
+                        <div>
+                            <div class="vote-row-head">
+                                <span class="vote-name"><span class="vote-dot vote-red"></span>En Contra</span>
+                                <span>3</span>
+                                <span class="vote-percent">10,7%</span>
                             </div>
-                            <div class="pleno-summary-box">
-                                <span class="pleno-summary-icon"><i class="fas fa-hourglass-half"></i></span>
-                                <div>
-                                    <div class="pleno-summary-number"><?php echo (int)$duracionEstimada; ?></div>
-                                    <div class="small text-muted fw-semibold">Duración estimada total</div>
-                                </div>
+                            <div class="vote-bar"><span class="vote-bar-red" style="width: 10.7%;"></span></div>
+                        </div>
+
+                        <div>
+                            <div class="vote-row-head">
+                                <span class="vote-name"><span class="vote-dot vote-yellow"></span>Abstención</span>
+                                <span>2</span>
+                                <span class="vote-percent">7,1%</span>
                             </div>
+                            <div class="vote-bar"><span class="vote-bar-yellow" style="width: 7.1%;"></span></div>
+                        </div>
+
+                        <div>
+                            <div class="vote-row-head">
+                                <span class="vote-name"><span class="vote-dot vote-gray"></span>Pendientes</span>
+                                <span>8</span>
+                                <span class="vote-percent">28,6%</span>
+                            </div>
+                            <div class="vote-bar"><span class="vote-bar-gray" style="width: 28.6%;"></span></div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <section class="pleno-panel">
-                    <div class="pleno-panel-body">
-                        <h2 class="h5 pleno-section-title mb-3">Documentos Asociados</h2>
-                        <button type="button" class="btn btn-light border pleno-doc-button">
-                            <span><i class="fas fa-folder-open me-2 text-success"></i>Ver documentos de la sesión</span>
-                            <i class="fas fa-chevron-right text-success"></i>
-                        </button>
+            <section class="secretaria-card">
+                <div class="secretaria-card-body">
+                    <div class="secretaria-card-header">
+                        <h2 class="secretaria-card-title">
+                            <i class="fas fa-clock-rotate-left"></i>
+                            ÚLTIMOS VOTOS RECIBIDOS
+                        </h2>
                     </div>
-                </section>
-            </aside>
-        </div>
-    <?php endif; ?>
+
+                    <div class="latest-votes">
+                        <div class="latest-vote-row">
+                            <span class="latest-voter"><i class="fas fa-user"></i>Juan Pérez</span>
+                            <span class="secretaria-badge badge-success-soft">A favor</span>
+                            <span class="latest-time">22:15:30</span>
+                        </div>
+                        <div class="latest-vote-row">
+                            <span class="latest-voter"><i class="fas fa-user"></i>María Soto</span>
+                            <span class="secretaria-badge badge-danger-soft">En contra</span>
+                            <span class="latest-time">22:15:18</span>
+                        </div>
+                        <div class="latest-vote-row">
+                            <span class="latest-voter"><i class="fas fa-user"></i>Pedro González</span>
+                            <span class="secretaria-badge badge-warning-soft">Abstención</span>
+                            <span class="latest-time">22:15:05</span>
+                        </div>
+                        <div class="latest-vote-row">
+                            <span class="latest-voter"><i class="fas fa-user"></i>Carla Muñoz</span>
+                            <span class="secretaria-badge badge-success-soft">A favor</span>
+                            <span class="latest-time">22:14:52</span>
+                        </div>
+                        <div class="latest-vote-row">
+                            <span class="latest-voter"><i class="fas fa-user"></i>Luis Fernández</span>
+                            <span class="secretaria-badge badge-success-soft">A favor</span>
+                            <span class="latest-time">22:14:41</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+    </div>
 </div>
