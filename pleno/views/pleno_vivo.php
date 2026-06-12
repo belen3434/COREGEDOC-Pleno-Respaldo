@@ -5,9 +5,9 @@ require __DIR__ . '/partials/sidebar_pleno.php';
     <div class="pleno-live-header">
         <div>
             <p class="pleno-live-status mb-2">
-                <span aria-hidden="true">&bull;</span> SESI&Oacute;N EN VIVO
+                <span aria-hidden="true">&bull;</span> PLENO EN VIVO
             </p>
-            <h1 class="pleno-live-title mb-2">Plenario Ordinario N&deg; 24</h1>
+            <h1 class="pleno-live-title mb-2">Pleno Ordinario N&deg; 24</h1>
             <p class="pleno-live-subtitle mb-0">
                 <i class="fas fa-map-marker-alt me-2" aria-hidden="true"></i>Edificio Institucional CORE, Valpara&iacute;so
             </p>

@@ -456,9 +456,9 @@ $duracionEstimada = 10 + 20 + $duracionComisiones + $duracionVarios;
     <?php else: ?>
         <div class="pleno-session-hero">
             <div>
-                <div class="pleno-eyebrow text-success mb-2">SESIÓN PLENARIA</div>
+                <div class="pleno-eyebrow text-success mb-2">PLENO</div>
                 <h1 class="display-6 pleno-page-title mb-3">
-                    Sesión <?php echo htmlspecialchars($formatearTipo($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?> N° <?php echo htmlspecialchars((string)($sesion['numero_sesion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                    Pleno <?php echo htmlspecialchars($formatearTipo($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?> N° <?php echo htmlspecialchars((string)($sesion['numero_sesion'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
                 </h1>
                 <div class="pleno-session-meta">
                     <span><i class="fas fa-calendar-alt text-success"></i><?php echo htmlspecialchars($formatearFechaLarga($sesion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
@@ -558,9 +558,9 @@ $duracionEstimada = 10 + 20 + $duracionComisiones + $duracionVarios;
             <aside class="pleno-side-stack">
                 <section class="pleno-panel">
                     <div class="pleno-panel-body">
-                        <h2 class="h5 pleno-section-title mb-3">Información de la Sesión</h2>
+                        <h2 class="h5 pleno-section-title mb-3">Información del Pleno</h2>
                         <div class="pleno-info-row">
-                            <span class="pleno-info-label">Tipo de sesión:</span>
+                            <span class="pleno-info-label">Tipo de pleno:</span>
                             <span class="pleno-info-value"><?php echo htmlspecialchars($formatearTipo($sesion['tipo_pleno'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                         </div>
                         <div class="pleno-info-row">
