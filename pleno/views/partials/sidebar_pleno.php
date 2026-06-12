@@ -13,7 +13,7 @@ if ($puedeVerMenuCompleto) {
     ];
 
     $plenoMenuPrincipal['comisiones'] = [
-        'label' => 'Comisiones',
+        'label' => 'Sesión del Día',
         'icon' => 'fas fa-sitemap',
         'href' => 'index.php?vista=comisiones',
     ];
