@@ -55,6 +55,13 @@ require __DIR__ . '/partials/sidebar_pleno.php';
         letter-spacing: 0;
     }
 
+    .secretaria-session-name {
+        margin-bottom: 0.85rem;
+        color: #526979;
+        font-size: 1.05rem;
+        font-weight: 760;
+    }
+
     .secretaria-meta {
         display: flex;
         flex-wrap: wrap;
@@ -552,7 +559,8 @@ require __DIR__ . '/partials/sidebar_pleno.php';
                 <span class="secretaria-live-dot"></span>
                 <span>SESIÓN EN VIVO</span>
             </div>
-            <h1 class="secretaria-title">Plenario Ordinario N° PL-2026-048</h1>
+            <h1 class="secretaria-title">Sesión del Día</h1>
+            <div class="secretaria-session-name">Plenario Ordinario N° PL-2026-048</div>
             <div class="secretaria-meta">
                 <span><i class="fas fa-calendar-alt"></i>11/06/2026</span>
                 <span><i class="fas fa-clock"></i>22:00 hrs.</span>
@@ -598,7 +606,7 @@ require __DIR__ . '/partials/sidebar_pleno.php';
                             <div class="agenda-main">
                                 <div class="agenda-label">
                                     <span class="agenda-number">3</span>
-                                    <span>Cuenta Comisiones</span>
+                                    <span>Cuenta de Sesión del Día</span>
                                 </div>
                                 <i class="fas fa-chevron-down agenda-chevron"></i>
                             </div>
