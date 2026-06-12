@@ -182,6 +182,48 @@ if (!$detallePuntoActual && $sesion) {
         letter-spacing: 0;
     }
 
+    .secretaria-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .secretaria-title-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.85rem;
+        min-width: 0;
+    }
+
+    .secretaria-title-row .secretaria-title {
+        margin-bottom: 0;
+    }
+
+    .secretaria-start-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 48px;
+        padding: 0.72rem 1.15rem;
+        border: 1px solid #198754;
+        border-radius: 12px;
+        color: #ffffff;
+        background: #198754;
+        font-weight: 800;
+        box-shadow: 0 8px 18px rgba(25, 135, 84, 0.24);
+        white-space: nowrap;
+    }
+
+    .secretaria-start-btn:hover,
+    .secretaria-start-btn:focus {
+        color: #ffffff;
+        background: #157347;
+        border-color: #157347;
+    }
+
     .secretaria-session-name {
         margin-bottom: 0.85rem;
         color: #526979;
@@ -514,8 +556,17 @@ if (!$detallePuntoActual && $sesion) {
             display: block;
         }
 
+        .secretaria-title-row {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .secretaria-start-btn {
+            margin-top: 0.2rem;
+        }
+
         .secretaria-status-badge {
-            margin-top: 1rem;
+            margin-top: 0;
         }
 
         .agenda-sublist {
@@ -537,12 +588,23 @@ if (!$detallePuntoActual && $sesion) {
         </div>
     <?php elseif ($sesion): ?>
         <div class="secretaria-hero">
-            <div>
+            <div class="w-100">
                 <div class="secretaria-live-label">
                     <span class="secretaria-live-dot"></span>
                     <span>SESIÓN EN VIVO</span>
                 </div>
-                <h1 class="secretaria-title">Sesión del Día</h1>
+                <div class="secretaria-title-row">
+                    <div class="secretaria-title-status">
+                        <h1 class="secretaria-title">Sesión del Día</h1>
+                        <span class="secretaria-status-badge">
+                            <?php echo htmlspecialchars($formatearEstado($sesion['estado'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                        </span>
+                    </div>
+                    <button type="button" class="secretaria-start-btn">
+                        <i class="fas fa-play"></i>
+                        Iniciar Pleno
+                    </button>
+                </div>
                 <div class="secretaria-session-name">
                     <?php echo htmlspecialchars($tituloSesion, ENT_QUOTES, 'UTF-8'); ?>
                 </div>
@@ -558,9 +620,6 @@ if (!$detallePuntoActual && $sesion) {
                     </div>
                 <?php endif; ?>
             </div>
-            <span class="secretaria-status-badge">
-                <?php echo htmlspecialchars($formatearEstado($sesion['estado'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
-            </span>
         </div>
 
         <div class="secretaria-grid">
