@@ -93,40 +93,69 @@ $tipoPleno = $formatearTipo($sesion['tipo_pleno'] ?? '');
 $numeroSesion = trim((string)($sesion['numero_sesion'] ?? ''));
 $tituloSesion = trim('Plenario ' . $tipoPleno . ($numeroSesion !== '' ? ' N° ' . $numeroSesion : ''));
 
+$puntosOrdenDia = [];
 $puntoActual = null;
-if (!empty($temasComision)) {
-    $puntoActual = [
-        'numero' => '3.1',
-        'data' => $temasComision[0],
-    ];
-} elseif (!empty($puntosVarios)) {
-    $puntoActual = [
-        'numero' => '4.1',
-        'data' => $puntosVarios[0],
-    ];
-}
-
-$detallePuntoActual = $puntoActual ? $resolverPunto($puntoActual['data']) : null;
-if (!$detallePuntoActual && $aprobacionActas !== '') {
-    $detallePuntoActual = [
+if ($sesion) {
+    $puntosOrdenDia[] = [
+        'numero' => '1',
+        'titulo' => 'Aprobación de Acta: ' . ($aprobacionActas !== '' ? $aprobacionActas : 'Sin acta registrada'),
         'tipo' => 'Aprobación de acta',
-        'titulo' => 'Aprobación de Acta',
-        'tema' => $aprobacionActas,
+        'tema' => '',
         'descripcion' => '',
         'origen' => 'Sesión plenaria',
     ];
-    $puntoActual = ['numero' => '1', 'data' => []];
-}
-if (!$detallePuntoActual && $sesion) {
-    $detallePuntoActual = [
-        'tipo' => 'Cuenta institucional',
+    $puntosOrdenDia[] = [
+        'numero' => '2',
         'titulo' => 'Cuenta Presidente del Consejo Regional',
+        'tipo' => 'Cuenta institucional',
         'tema' => '',
         'descripcion' => '',
         'origen' => 'Orden del día',
     ];
-    $puntoActual = ['numero' => '2', 'data' => []];
+    $puntosOrdenDia[] = [
+        'numero' => '3',
+        'titulo' => 'Cuenta Comisiones',
+        'tipo' => 'Sección',
+        'tema' => '',
+        'descripcion' => '',
+        'origen' => 'Orden del día',
+    ];
+
+    foreach ($temasComision as $indiceTema => $tema) {
+        $puntoRender = $resolverPunto($tema);
+        $puntosOrdenDia[] = [
+            'numero' => '3.' . ((int)$indiceTema + 1),
+            'titulo' => $puntoRender['titulo'] . ($puntoRender['tema'] !== '' ? ' - Tema: ' . $puntoRender['tema'] : ''),
+            'tipo' => $puntoRender['tipo'],
+            'tema' => $puntoRender['tema'],
+            'descripcion' => $puntoRender['descripcion'],
+            'origen' => $puntoRender['origen'],
+        ];
+    }
+
+    $puntosOrdenDia[] = [
+        'numero' => '4',
+        'titulo' => 'Varios',
+        'tipo' => 'Sección',
+        'tema' => '',
+        'descripcion' => '',
+        'origen' => 'Orden del día',
+    ];
+
+    foreach ($puntosVarios as $indiceVario => $puntoVario) {
+        $puntoRender = $resolverPunto($puntoVario);
+        $puntosOrdenDia[] = [
+            'numero' => '4.' . ((int)$indiceVario + 1),
+            'titulo' => $puntoRender['titulo'] . ($puntoRender['tema'] !== '' ? ' - Tema: ' . $puntoRender['tema'] : ''),
+            'tipo' => $puntoRender['tipo'],
+            'tema' => $puntoRender['tema'],
+            'descripcion' => $puntoRender['descripcion'],
+            'origen' => $puntoRender['origen'],
+        ];
+    }
 }
+$puntoActual = $puntosOrdenDia[0] ?? null;
+$detallePuntoActual = $puntoActual;
 ?>
 
 <style>
@@ -338,6 +367,12 @@ if (!$detallePuntoActual && $sesion) {
         background: #ffffff;
     }
 
+    .agenda-item-current {
+        border-color: #8fd0a9;
+        background: #eaf7ef;
+        box-shadow: inset 4px 0 0 #198754;
+    }
+
     .agenda-main {
         display: flex;
         align-items: center;
@@ -398,6 +433,12 @@ if (!$detallePuntoActual && $sesion) {
         border-color: #8fd0a9;
         background: #eaf7ef;
         box-shadow: inset 4px 0 0 #198754;
+    }
+
+    .secretaria-control-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+        box-shadow: none;
     }
 
     .agenda-subtext {
@@ -634,17 +675,18 @@ if (!$detallePuntoActual && $sesion) {
                         </div>
 
                         <div class="agenda-list">
-                            <article class="agenda-item">
+                            <article class="agenda-item agenda-item-current" data-agenda-number="1">
                                 <div class="agenda-main">
                                     <div class="agenda-label">
                                         <span class="agenda-number">1</span>
                                         <span>Aprobación de Acta: <?php echo htmlspecialchars($aprobacionActas !== '' ? $aprobacionActas : 'Sin acta registrada', ENT_QUOTES, 'UTF-8'); ?></span>
                                     </div>
+                                    <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
                                     <i class="fas fa-chevron-down agenda-chevron"></i>
                                 </div>
                             </article>
 
-                            <article class="agenda-item">
+                            <article class="agenda-item" data-agenda-number="2">
                                 <div class="agenda-main">
                                     <div class="agenda-label">
                                         <span class="agenda-number">2</span>
@@ -654,7 +696,7 @@ if (!$detallePuntoActual && $sesion) {
                                 </div>
                             </article>
 
-                            <article class="agenda-item">
+                            <article class="agenda-item" data-agenda-number="3">
                                 <div class="agenda-main">
                                     <div class="agenda-label">
                                         <span class="agenda-number">3</span>
@@ -674,7 +716,7 @@ if (!$detallePuntoActual && $sesion) {
                                             $numeroPunto = '3.' . ((int)$indiceTema + 1);
                                             $esActual = $puntoActual && $puntoActual['numero'] === $numeroPunto;
                                             ?>
-                                            <div class="agenda-subitem<?php echo $esActual ? ' agenda-subitem-current' : ''; ?>">
+                                            <div class="agenda-subitem<?php echo $esActual ? ' agenda-subitem-current' : ''; ?>" data-agenda-number="<?php echo htmlspecialchars($numeroPunto, ENT_QUOTES, 'UTF-8'); ?>">
                                                 <span class="agenda-subtext">
                                                     <span class="agenda-bullet"></span>
                                                     <span><?php echo htmlspecialchars($numeroPunto . ' ' . $puntoRender['titulo'] . ($puntoRender['tema'] !== '' ? ' - Tema: ' . $puntoRender['tema'] : ''), ENT_QUOTES, 'UTF-8'); ?></span>
@@ -688,7 +730,7 @@ if (!$detallePuntoActual && $sesion) {
                                 </div>
                             </article>
 
-                            <article class="agenda-item">
+                            <article class="agenda-item" data-agenda-number="4">
                                 <div class="agenda-main">
                                     <div class="agenda-label">
                                         <span class="agenda-number">4</span>
@@ -708,7 +750,7 @@ if (!$detallePuntoActual && $sesion) {
                                             $numeroPunto = '4.' . ((int)$indiceVario + 1);
                                             $esActual = $puntoActual && $puntoActual['numero'] === $numeroPunto;
                                             ?>
-                                            <div class="agenda-subitem<?php echo $esActual ? ' agenda-subitem-current' : ''; ?>">
+                                            <div class="agenda-subitem<?php echo $esActual ? ' agenda-subitem-current' : ''; ?>" data-agenda-number="<?php echo htmlspecialchars($numeroPunto, ENT_QUOTES, 'UTF-8'); ?>">
                                                 <span class="agenda-subtext">
                                                     <span class="agenda-bullet"></span>
                                                     <span><?php echo htmlspecialchars($numeroPunto . ' ' . $puntoRender['titulo'] . ($puntoRender['tema'] !== '' ? ' - Tema: ' . $puntoRender['tema'] : ''), ENT_QUOTES, 'UTF-8'); ?></span>
@@ -735,19 +777,15 @@ if (!$detallePuntoActual && $sesion) {
                         </div>
 
                         <?php if ($detallePuntoActual): ?>
-                            <span class="secretaria-badge badge-info">PUNTO <?php echo htmlspecialchars((string)$puntoActual['numero'], ENT_QUOTES, 'UTF-8'); ?></span>
-                            <h2 class="point-detail-title"><?php echo htmlspecialchars($detallePuntoActual['titulo'], ENT_QUOTES, 'UTF-8'); ?></h2>
-                            <?php if ($detallePuntoActual['tema'] !== ''): ?>
-                                <div class="point-detail-subtitle">Tema: <?php echo htmlspecialchars($detallePuntoActual['tema'], ENT_QUOTES, 'UTF-8'); ?></div>
-                            <?php endif; ?>
-                            <?php if ($detallePuntoActual['descripcion'] !== ''): ?>
-                                <p class="point-detail-text">
-                                    <?php echo nl2br(htmlspecialchars($detallePuntoActual['descripcion'], ENT_QUOTES, 'UTF-8')); ?>
-                                </p>
-                            <?php endif; ?>
+                            <span class="secretaria-badge badge-info" id="plenoCurrentPointNumber">PUNTO <?php echo htmlspecialchars((string)$puntoActual['numero'], ENT_QUOTES, 'UTF-8'); ?></span>
+                            <h2 class="point-detail-title" id="plenoCurrentPointTitle"><?php echo htmlspecialchars($detallePuntoActual['titulo'], ENT_QUOTES, 'UTF-8'); ?></h2>
+                            <div class="point-detail-subtitle" id="plenoCurrentPointTopic" <?php echo $detallePuntoActual['tema'] !== '' ? '' : 'hidden'; ?>>Tema: <?php echo htmlspecialchars($detallePuntoActual['tema'], ENT_QUOTES, 'UTF-8'); ?></div>
+                            <p class="point-detail-text" id="plenoCurrentPointDescription" <?php echo $detallePuntoActual['descripcion'] !== '' ? '' : 'hidden'; ?>>
+                                <?php echo nl2br(htmlspecialchars($detallePuntoActual['descripcion'], ENT_QUOTES, 'UTF-8')); ?>
+                            </p>
                             <div class="point-detail-meta">
-                                <div><strong>Tipo de punto:</strong> <?php echo htmlspecialchars($detallePuntoActual['tipo'], ENT_QUOTES, 'UTF-8'); ?></div>
-                                <div><strong>Origen:</strong> <?php echo htmlspecialchars($detallePuntoActual['origen'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div><strong>Tipo de punto:</strong> <span id="plenoCurrentPointType"><?php echo htmlspecialchars($detallePuntoActual['tipo'], ENT_QUOTES, 'UTF-8'); ?></span></div>
+                                <div><strong>Origen:</strong> <span id="plenoCurrentPointOrigin"><?php echo htmlspecialchars($detallePuntoActual['origen'], ENT_QUOTES, 'UTF-8'); ?></span></div>
                             </div>
                         <?php else: ?>
                             <div class="pending-state">
@@ -771,11 +809,11 @@ if (!$detallePuntoActual && $sesion) {
                         </div>
 
                         <div class="secretaria-controls">
-                            <button type="button" class="btn btn-outline-success secretaria-control-btn">
+                            <button type="button" class="btn btn-outline-success secretaria-control-btn" id="plenoPrevPointBtn">
                                 <i class="fas fa-arrow-left"></i>
                                 Punto anterior
                             </button>
-                            <button type="button" class="btn btn-outline-success secretaria-control-btn">
+                            <button type="button" class="btn btn-outline-success secretaria-control-btn" id="plenoNextPointBtn">
                                 Siguiente punto
                                 <i class="fas fa-arrow-right"></i>
                             </button>
@@ -854,3 +892,150 @@ if (!$detallePuntoActual && $sesion) {
         </div>
     <?php endif; ?>
 </div>
+
+<?php if ($sesion && !empty($puntosOrdenDia)): ?>
+    <script>
+        (function () {
+            "use strict";
+
+            var puntosOrdenDia = <?php echo json_encode($puntosOrdenDia, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+            var indiceActual = 0;
+            var btnAnterior = document.getElementById("plenoPrevPointBtn");
+            var btnSiguiente = document.getElementById("plenoNextPointBtn");
+            var detalleNumero = document.getElementById("plenoCurrentPointNumber");
+            var detalleTitulo = document.getElementById("plenoCurrentPointTitle");
+            var detalleTema = document.getElementById("plenoCurrentPointTopic");
+            var detalleDescripcion = document.getElementById("plenoCurrentPointDescription");
+            var detalleTipo = document.getElementById("plenoCurrentPointType");
+            var detalleOrigen = document.getElementById("plenoCurrentPointOrigin");
+
+            function buscarElementoPunto(numero) {
+                var elementos = document.querySelectorAll("[data-agenda-number]");
+                var encontrado = null;
+
+                elementos.forEach(function (elemento) {
+                    if (!encontrado && elemento.getAttribute("data-agenda-number") === numero) {
+                        encontrado = elemento;
+                    }
+                });
+
+                return encontrado;
+            }
+
+            function crearBadgeActual() {
+                var badge = document.createElement("span");
+                badge.className = "secretaria-badge badge-current";
+                badge.setAttribute("data-current-badge", "true");
+                badge.textContent = "PUNTO ACTUAL";
+                return badge;
+            }
+
+            function limpiarPuntoActual() {
+                document.querySelectorAll(".agenda-item-current").forEach(function (elemento) {
+                    elemento.classList.remove("agenda-item-current");
+                });
+                document.querySelectorAll(".agenda-subitem-current").forEach(function (elemento) {
+                    elemento.classList.remove("agenda-subitem-current");
+                });
+                document.querySelectorAll("[data-current-badge='true']").forEach(function (badge) {
+                    badge.remove();
+                });
+            }
+
+            function marcarPuntoActual(punto) {
+                var elemento = buscarElementoPunto(String(punto.numero || ""));
+
+                if (!elemento) {
+                    return;
+                }
+
+                if (elemento.classList.contains("agenda-item")) {
+                    var main = elemento.querySelector(".agenda-main");
+                    var chevron = elemento.querySelector(".agenda-chevron");
+                    elemento.classList.add("agenda-item-current");
+
+                    if (main) {
+                        main.insertBefore(crearBadgeActual(), chevron || null);
+                    }
+                    return;
+                }
+
+                elemento.classList.add("agenda-subitem-current");
+                elemento.appendChild(crearBadgeActual());
+            }
+
+            function actualizarDetalle(punto) {
+                if (detalleNumero) {
+                    detalleNumero.textContent = "PUNTO " + (punto.numero || "");
+                }
+                if (detalleTitulo) {
+                    detalleTitulo.textContent = punto.titulo || "Sin título";
+                }
+                if (detalleTema) {
+                    var tema = punto.tema || "";
+                    detalleTema.hidden = tema === "";
+                    detalleTema.textContent = tema !== "" ? "Tema: " + tema : "";
+                }
+                if (detalleDescripcion) {
+                    var descripcion = punto.descripcion || "";
+                    detalleDescripcion.hidden = descripcion === "";
+                    detalleDescripcion.textContent = descripcion;
+                }
+                if (detalleTipo) {
+                    detalleTipo.textContent = punto.tipo || "Sin tipo";
+                }
+                if (detalleOrigen) {
+                    detalleOrigen.textContent = punto.origen || "Sin origen";
+                }
+            }
+
+            function actualizarBotones() {
+                if (btnAnterior) {
+                    btnAnterior.disabled = indiceActual <= 0;
+                }
+                if (btnSiguiente) {
+                    btnSiguiente.disabled = indiceActual >= puntosOrdenDia.length - 1;
+                }
+            }
+
+            function actualizarVista() {
+                var punto = puntosOrdenDia[indiceActual];
+
+                if (!punto) {
+                    return;
+                }
+
+                limpiarPuntoActual();
+                marcarPuntoActual(punto);
+                actualizarDetalle(punto);
+                actualizarBotones();
+            }
+
+            if (!Array.isArray(puntosOrdenDia) || puntosOrdenDia.length === 0) {
+                return;
+            }
+
+            if (btnAnterior) {
+                btnAnterior.addEventListener("click", function () {
+                    if (indiceActual <= 0) {
+                        return;
+                    }
+                    indiceActual -= 1;
+                    actualizarVista();
+                });
+            }
+
+            if (btnSiguiente) {
+                btnSiguiente.addEventListener("click", function () {
+                    if (indiceActual >= puntosOrdenDia.length - 1) {
+                        return;
+                    }
+                    indiceActual += 1;
+                    actualizarVista();
+                });
+            }
+
+            actualizarVista();
+        }());
+    </script>
+<?php endif; ?>
