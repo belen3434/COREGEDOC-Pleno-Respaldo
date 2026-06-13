@@ -20,7 +20,7 @@ class SesionPlenaria
     public function listar(): array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE vigencia = 1
              ORDER BY fecha DESC, hora DESC, id_sesion DESC'
@@ -33,7 +33,7 @@ class SesionPlenaria
     public function obtenerPorId(int $id): ?array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE id_sesion = :id
              LIMIT 1'
@@ -47,7 +47,7 @@ class SesionPlenaria
     public function obtenerUltimaVigente(): ?array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE vigencia = 1
              ORDER BY fecha DESC, hora DESC, id_sesion DESC
@@ -62,7 +62,7 @@ class SesionPlenaria
     public function obtenerSesionVigenteHoy(): ?array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE fecha = CURDATE()
                AND vigencia = 1
@@ -138,6 +138,21 @@ class SesionPlenaria
         );
 
         return $stmt->execute([':id' => $id]);
+    }
+
+    public function actualizarPuntoActual(int $id, string $puntoActual): bool
+    {
+        $stmt = $this->conn->prepare(
+            'UPDATE sesiones_plenarias
+             SET punto_actual = :punto_actual,
+                 fecha_actualizacion = NOW()
+             WHERE id_sesion = :id'
+        );
+
+        return $stmt->execute([
+            ':id' => $id,
+            ':punto_actual' => $puntoActual,
+        ]);
     }
 
     public function generarNumeroSesion(): string

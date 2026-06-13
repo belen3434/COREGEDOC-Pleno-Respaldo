@@ -95,6 +95,7 @@ $tituloSesion = trim('Plenario ' . $tipoPleno . ($numeroSesion !== '' ? ' N° ' 
 
 $puntosOrdenDia = [];
 $puntoActual = null;
+$indicePuntoActual = 0;
 if ($sesion) {
     $puntosOrdenDia[] = [
         'numero' => '1',
@@ -154,7 +155,19 @@ if ($sesion) {
         ];
     }
 }
-$puntoActual = $puntosOrdenDia[0] ?? null;
+$puntoActualGuardado = trim((string)($sesion['punto_actual'] ?? '1'));
+if ($puntoActualGuardado === '') {
+    $puntoActualGuardado = '1';
+}
+
+foreach ($puntosOrdenDia as $indicePunto => $puntoOrdenDia) {
+    if (($puntoOrdenDia['numero'] ?? '') === $puntoActualGuardado) {
+        $indicePuntoActual = (int)$indicePunto;
+        break;
+    }
+}
+
+$puntoActual = $puntosOrdenDia[$indicePuntoActual] ?? ($puntosOrdenDia[0] ?? null);
 $detallePuntoActual = $puntoActual;
 ?>
 
@@ -675,33 +688,41 @@ $detallePuntoActual = $puntoActual;
                         </div>
 
                         <div class="agenda-list">
-                            <article class="agenda-item agenda-item-current" data-agenda-number="1">
+                            <article class="agenda-item<?php echo $puntoActual && $puntoActual['numero'] === '1' ? ' agenda-item-current' : ''; ?>" data-agenda-number="1">
                                 <div class="agenda-main">
                                     <div class="agenda-label">
                                         <span class="agenda-number">1</span>
                                         <span>Aprobación de Acta: <?php echo htmlspecialchars($aprobacionActas !== '' ? $aprobacionActas : 'Sin acta registrada', ENT_QUOTES, 'UTF-8'); ?></span>
                                     </div>
-                                    <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
+                                    <?php if ($puntoActual && $puntoActual['numero'] === '1'): ?>
+                                        <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
+                                    <?php endif; ?>
                                     <i class="fas fa-chevron-down agenda-chevron"></i>
                                 </div>
                             </article>
 
-                            <article class="agenda-item" data-agenda-number="2">
+                            <article class="agenda-item<?php echo $puntoActual && $puntoActual['numero'] === '2' ? ' agenda-item-current' : ''; ?>" data-agenda-number="2">
                                 <div class="agenda-main">
                                     <div class="agenda-label">
                                         <span class="agenda-number">2</span>
                                         <span>Cuenta Presidente del Consejo Regional</span>
                                     </div>
+                                    <?php if ($puntoActual && $puntoActual['numero'] === '2'): ?>
+                                        <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
+                                    <?php endif; ?>
                                     <i class="fas fa-chevron-down agenda-chevron"></i>
                                 </div>
                             </article>
 
-                            <article class="agenda-item" data-agenda-number="3">
+                            <article class="agenda-item<?php echo $puntoActual && $puntoActual['numero'] === '3' ? ' agenda-item-current' : ''; ?>" data-agenda-number="3">
                                 <div class="agenda-main">
                                     <div class="agenda-label">
                                         <span class="agenda-number">3</span>
                                         <span>Cuenta Comisiones</span>
                                     </div>
+                                    <?php if ($puntoActual && $puntoActual['numero'] === '3'): ?>
+                                        <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
+                                    <?php endif; ?>
                                     <i class="fas fa-chevron-down agenda-chevron"></i>
                                 </div>
                                 <div class="agenda-sublist">
@@ -722,7 +743,7 @@ $detallePuntoActual = $puntoActual;
                                                     <span><?php echo htmlspecialchars($numeroPunto . ' ' . $puntoRender['titulo'] . ($puntoRender['tema'] !== '' ? ' - Tema: ' . $puntoRender['tema'] : ''), ENT_QUOTES, 'UTF-8'); ?></span>
                                                 </span>
                                                 <?php if ($esActual): ?>
-                                                    <span class="secretaria-badge badge-current">PUNTO ACTUAL</span>
+                                                    <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
                                                 <?php endif; ?>
                                             </div>
                                         <?php endforeach; ?>
@@ -730,12 +751,15 @@ $detallePuntoActual = $puntoActual;
                                 </div>
                             </article>
 
-                            <article class="agenda-item" data-agenda-number="4">
+                            <article class="agenda-item<?php echo $puntoActual && $puntoActual['numero'] === '4' ? ' agenda-item-current' : ''; ?>" data-agenda-number="4">
                                 <div class="agenda-main">
                                     <div class="agenda-label">
                                         <span class="agenda-number">4</span>
                                         <span>Varios</span>
                                     </div>
+                                    <?php if ($puntoActual && $puntoActual['numero'] === '4'): ?>
+                                        <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
+                                    <?php endif; ?>
                                     <i class="fas fa-chevron-down agenda-chevron"></i>
                                 </div>
                                 <div class="agenda-sublist">
@@ -756,7 +780,7 @@ $detallePuntoActual = $puntoActual;
                                                     <span><?php echo htmlspecialchars($numeroPunto . ' ' . $puntoRender['titulo'] . ($puntoRender['tema'] !== '' ? ' - Tema: ' . $puntoRender['tema'] : ''), ENT_QUOTES, 'UTF-8'); ?></span>
                                                 </span>
                                                 <?php if ($esActual): ?>
-                                                    <span class="secretaria-badge badge-current">PUNTO ACTUAL</span>
+                                                    <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
                                                 <?php endif; ?>
                                             </div>
                                         <?php endforeach; ?>
@@ -899,7 +923,9 @@ $detallePuntoActual = $puntoActual;
             "use strict";
 
             var puntosOrdenDia = <?php echo json_encode($puntosOrdenDia, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
-            var indiceActual = 0;
+            var idSesion = <?php echo (int)($sesion['id_sesion'] ?? 0); ?>;
+            var actualizarPuntoUrl = "ajax/actualizar_punto_actual.php";
+            var indiceActual = <?php echo (int)$indicePuntoActual; ?>;
             var btnAnterior = document.getElementById("plenoPrevPointBtn");
             var btnSiguiente = document.getElementById("plenoNextPointBtn");
             var detalleNumero = document.getElementById("plenoCurrentPointNumber");
@@ -1011,6 +1037,38 @@ $detallePuntoActual = $puntoActual;
                 actualizarBotones();
             }
 
+            function guardarPuntoActual(punto) {
+                if (!punto || !idSesion) {
+                    return;
+                }
+
+                fetch(actualizarPuntoUrl, {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id_sesion: idSesion,
+                        punto_actual: String(punto.numero || "")
+                    })
+                }).then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("No fue posible guardar el punto actual.");
+                    }
+
+                    return response.json();
+                }).then(function (payload) {
+                    if (!payload || payload.ok !== true) {
+                        throw new Error("No fue posible guardar el punto actual.");
+                    }
+                }).catch(function (error) {
+                    if (window.console && typeof window.console.error === "function") {
+                        window.console.error(error);
+                    }
+                });
+            }
+
             if (!Array.isArray(puntosOrdenDia) || puntosOrdenDia.length === 0) {
                 return;
             }
@@ -1022,6 +1080,7 @@ $detallePuntoActual = $puntoActual;
                     }
                     indiceActual -= 1;
                     actualizarVista();
+                    guardarPuntoActual(puntosOrdenDia[indiceActual]);
                 });
             }
 
@@ -1032,6 +1091,7 @@ $detallePuntoActual = $puntoActual;
                     }
                     indiceActual += 1;
                     actualizarVista();
+                    guardarPuntoActual(puntosOrdenDia[indiceActual]);
                 });
             }
 
