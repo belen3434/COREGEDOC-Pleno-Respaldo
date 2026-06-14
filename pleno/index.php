@@ -73,11 +73,16 @@ if ($plenoAuth['authorized']) {
             $plenoSesiones = $plenoController->listarSesiones();
         }
 
-        if ($vista === 'tabla') {
+        if ($vista === 'tabla' || $vista === 'pleno_vivo') {
             $plenoSesionActual = $plenoController->obtenerSesionVigenteHoy();
             if ($plenoSesionActual) {
                 $plenoPuntosSesion = $plenoController->listarPuntosSesion((int)$plenoSesionActual['id_sesion']);
             }
+        }
+
+        if ($vista === 'pleno_vivo' && $plenoSesionActual) {
+            $plenoTemasComisionSesion = $plenoController->listarTemasComisionSesion((int)$plenoSesionActual['id_sesion']);
+            $plenoPuntosVariosSesion = $plenoController->listarPuntosVariosSesion((int)$plenoSesionActual['id_sesion']);
         }
 
         if ($vista === 'comisiones') {
