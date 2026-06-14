@@ -168,6 +168,27 @@ foreach ($puntosOrdenDia as $indicePunto => $puntoOrdenDia) {
     }
 }
 
+if ($sesion && !empty($puntosOrdenDia) && function_exists('plenoObtenerEstadosVotacion')) {
+    try {
+        $estadosVotacion = plenoObtenerEstadosVotacion(plenoVotacionConn(), (int)($sesion['id_sesion'] ?? 0));
+
+        foreach ($puntosOrdenDia as &$puntoOrdenDia) {
+            $numeroPunto = trim((string)($puntoOrdenDia['numero'] ?? ''));
+            $puntoOrdenDia['estado_votacion'] = plenoNormalizarEstadoVotacion(
+                $estadosVotacion[$numeroPunto] ?? null,
+                $numeroPunto
+            );
+        }
+        unset($puntoOrdenDia);
+    } catch (Throwable $e) {
+        foreach ($puntosOrdenDia as &$puntoOrdenDia) {
+            $numeroPunto = trim((string)($puntoOrdenDia['numero'] ?? ''));
+            $puntoOrdenDia['estado_votacion'] = plenoPuntoPermiteVotacion($numeroPunto) ? 'pendiente' : 'no_vota';
+        }
+        unset($puntoOrdenDia);
+    }
+}
+
 $puntoActual = $puntosOrdenDia[$indicePuntoActual] ?? ($puntosOrdenDia[0] ?? null);
 $detallePuntoActual = $puntoActual;
 ?>
@@ -1104,7 +1125,7 @@ $detallePuntoActual = $puntoActual;
             function actualizarControles() {
                 var punto = obtenerPuntoActual();
                 var permiteVotacion = puntoPermiteVotacion(punto);
-                var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "sin_votacion";
+                var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "pendiente";
 
                 if (btnAnterior) {
                     btnAnterior.disabled = indiceActual <= 0;
@@ -1403,7 +1424,7 @@ $detallePuntoActual = $puntoActual;
             function actualizarControlesVotacion() {
                 var punto = obtenerPuntoActual();
                 var permiteVotacion = puntoPermiteVotacion(punto);
-                var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "sin_votacion";
+                var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "pendiente";
 
                 if (!btnIniciarVotacion || !btnCerrarVotacion) {
                     return;
@@ -1950,7 +1971,7 @@ $detallePuntoActual = $puntoActual;
             function actualizarControles() {
                 var punto = obtenerPuntoActual();
                 var permiteVotacion = puntoPermiteVotacion(punto);
-                var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "sin_votacion";
+                var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "pendiente";
                 if (btnAnterior) {
                     btnAnterior.disabled = indiceActual <= 0;
                 }
