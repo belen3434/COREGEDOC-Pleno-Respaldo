@@ -3,6 +3,7 @@
 require_once dirname(__DIR__) . '/app/config/Constants.php';
 require_once dirname(__DIR__) . '/app/config/Database.php';
 require_once __DIR__ . '/helpers/auth.php';
+require_once __DIR__ . '/helpers/votacion_pleno.php';
 require_once __DIR__ . '/models/SesionPlenaria.php';
 require_once __DIR__ . '/models/TemaPleno.php';
 require_once __DIR__ . '/controllers/PlenoController.php';
@@ -47,6 +48,7 @@ $plenoPuntosSesion = [];
 $plenoTemasComisionSesion = [];
 $plenoPuntosVariosSesion = [];
 $plenoTotalConsejerosGobernador = 0;
+$plenoEstadoVotacionActual = 'sin_votacion';
 
 if ($plenoAuth['authorized']) {
     try {
@@ -83,6 +85,11 @@ if ($plenoAuth['authorized']) {
         if ($vista === 'pleno_vivo' && $plenoSesionActual) {
             $plenoTemasComisionSesion = $plenoController->listarTemasComisionSesion((int)$plenoSesionActual['id_sesion']);
             $plenoPuntosVariosSesion = $plenoController->listarPuntosVariosSesion((int)$plenoSesionActual['id_sesion']);
+            $plenoEstadoVotacionActual = plenoObtenerEstadoVotacion(
+                plenoVotacionConn(),
+                (int)$plenoSesionActual['id_sesion'],
+                trim((string)($plenoSesionActual['punto_actual'] ?? '1')) ?: '1'
+            );
         }
 
         if ($vista === 'comisiones') {
@@ -132,6 +139,7 @@ $data = [
     'pleno_temas_comision_sesion' => $plenoTemasComisionSesion,
     'pleno_puntos_varios_sesion' => $plenoPuntosVariosSesion,
     'pleno_total_consejeros_gobernador' => $plenoTotalConsejerosGobernador,
+    'pleno_estado_votacion_actual' => $plenoEstadoVotacionActual,
     'pleno_crud_error' => $plenoCrudError,
 ];
 
