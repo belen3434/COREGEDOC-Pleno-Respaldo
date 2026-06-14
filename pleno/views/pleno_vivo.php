@@ -109,6 +109,26 @@ if ($sesion && !array_key_exists('cuenta_presidente', $sesion)) {
 
 $cuentaPresidente = trim((string)($sesion['cuenta_presidente'] ?? $sesion['observaciones'] ?? ''));
 $estadoSesion = strtolower(trim((string)($sesion['estado'] ?? 'programada')));
+$estadoVotacionActual = in_array($estadoVotacionActual, ['sin_votacion', 'pendiente', 'votacion_en_curso', 'votacion_cerrada', 'no_vota'], true)
+    ? $estadoVotacionActual
+    : 'pendiente';
+$mensajeEstadoVotacion = 'Estado de votación: Esperando inicio de votación';
+$claseEstadoVotacion = 'alert-info';
+
+if ($estadoVotacionActual === 'votacion_en_curso') {
+    $mensajeEstadoVotacion = 'Estado de votación: Votación en curso';
+    $claseEstadoVotacion = 'alert-success';
+}
+
+if ($estadoVotacionActual === 'votacion_cerrada') {
+    $mensajeEstadoVotacion = 'Estado de votación: Votación cerrada';
+    $claseEstadoVotacion = 'alert-warning';
+}
+
+if ($estadoVotacionActual === 'no_vota') {
+    $mensajeEstadoVotacion = 'Este punto no requiere votación';
+    $claseEstadoVotacion = 'alert-success';
+}
 ?>
 <style>
     .pleno-live-session-grid {
@@ -315,13 +335,15 @@ $estadoSesion = strtolower(trim((string)($sesion['estado'] ?? 'programada')));
                             <h2 class="h4 mb-3">Acta a aprobar</h2>
                             <p class="lead mb-3"><?php echo $h(trim((string)($sesion['aprobacion_actas'] ?? '')) ?: 'No hay acta registrada para aprobación.'); ?></p>
                             <div class="alert alert-light border mb-3">Documento del acta: no hay documento asociado.</div>
-                            <div class="alert alert-info mb-0">Estado de votación: Esperando inicio de votación</div>
+                            <div class="alert <?php echo $h($claseEstadoVotacion); ?> mb-0"><?php echo $h($mensajeEstadoVotacion); ?></div>
                             <?php if ($estadoVotacionActual === 'votacion_en_curso'): ?>
                             <div class="pleno-live-actions">
                                 <button class="pleno-live-option pleno-live-option-favor" type="button"><span>A Favor</span></button>
                                 <button class="pleno-live-option pleno-live-option-against" type="button"><span>En Contra</span></button>
                                 <button class="pleno-live-option pleno-live-option-abstain" type="button"><span>Abstención</span></button>
                             </div>
+                            <?php elseif ($estadoVotacionActual === 'votacion_cerrada'): ?>
+                                <div class="alert alert-warning mt-3 mb-0">La votación de este punto se encuentra cerrada.</div>
                             <?php else: ?>
                                 <div class="alert alert-info mt-3 mb-0">No hay votación activa. La Secretaría aún no ha iniciado una votación para el punto actual.</div>
                             <?php endif; ?>
@@ -342,12 +364,17 @@ $estadoSesion = strtolower(trim((string)($sesion['estado'] ?? 'programada')));
                                         <?php if ($punto['descripcion'] !== ''): ?><p class="text-muted mb-2"><?php echo $h($punto['descripcion']); ?></p><?php endif; ?>
                                         <span class="badge bg-secondary mb-3">Pendiente</span>
                                         <?php $subpuntoNumero = '3.' . ((int)$indice + 1); ?>
+                                        <?php if ($puntoActualGuardado === $subpuntoNumero): ?>
+                                            <div class="alert <?php echo $h($claseEstadoVotacion); ?> mb-3"><?php echo $h($mensajeEstadoVotacion); ?></div>
+                                        <?php endif; ?>
                                         <?php if ($puntoActualGuardado === $subpuntoNumero && $estadoVotacionActual === 'votacion_en_curso'): ?>
                                         <div class="pleno-live-actions">
                                             <button class="btn btn-success" type="button">Aprobar</button>
                                             <button class="btn btn-outline-danger" type="button">Rechazar</button>
                                             <button class="btn btn-outline-secondary" type="button">Abstención</button>
                                         </div>
+                                        <?php elseif ($puntoActualGuardado === $subpuntoNumero && $estadoVotacionActual === 'votacion_cerrada'): ?>
+                                            <div class="alert alert-warning mb-0">La votación de este punto se encuentra cerrada.</div>
                                         <?php elseif ($puntoActualGuardado === $subpuntoNumero): ?>
                                             <div class="alert alert-info mb-0">No hay votación activa. La Secretaría aún no ha iniciado una votación para el punto actual.</div>
                                         <?php endif; ?>
