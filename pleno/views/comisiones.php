@@ -89,6 +89,7 @@ $resolverPunto = static function (array $punto): array {
 
 $aprobacionActas = trim((string)($sesion['aprobacion_actas'] ?? ''));
 $observaciones = trim((string)($sesion['observaciones'] ?? ''));
+$estadoSesion = trim((string)($sesion['estado'] ?? ''));
 $tipoPleno = $formatearTipo($sesion['tipo_pleno'] ?? '');
 $numeroSesion = trim((string)($sesion['numero_sesion'] ?? ''));
 $tituloSesion = trim('Plenario ' . $tipoPleno . ($numeroSesion !== '' ? ' N° ' . $numeroSesion : ''));
@@ -650,14 +651,19 @@ $detallePuntoActual = $puntoActual;
                 <div class="secretaria-title-row">
                     <div class="secretaria-title-status">
                         <h1 class="secretaria-title">Sesión del Día</h1>
-                        <span class="secretaria-status-badge">
+                        <span class="secretaria-status-badge" id="plenoSessionStatusBadge">
                             <?php echo htmlspecialchars($formatearEstado($sesion['estado'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
                         </span>
                     </div>
-                    <button type="button" class="secretaria-start-btn">
-                        <i class="fas fa-play"></i>
-                        Iniciar Pleno
-                    </button>
+                    <?php if ($estadoSesion === 'programada'): ?>
+                        <button type="button" class="secretaria-start-btn" id="plenoStartSessionBtn" data-id-sesion="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>">
+                            <i class="fas fa-play"></i>
+                            Iniciar Pleno
+                        </button>
+                    <?php endif; ?>
+                </div>
+                <div class="alert alert-success mt-3 mb-0 d-none" id="plenoStartSessionMessage" role="alert">
+                    Pleno iniciado correctamente.
                 </div>
                 <div class="secretaria-session-name">
                     <?php echo htmlspecialchars($tituloSesion, ENT_QUOTES, 'UTF-8'); ?>
@@ -833,23 +839,23 @@ $detallePuntoActual = $puntoActual;
                         </div>
 
                         <div class="secretaria-controls">
-                            <button type="button" class="btn btn-outline-success secretaria-control-btn" id="plenoPrevPointBtn">
+                            <button type="button" class="btn btn-outline-success secretaria-control-btn pleno-session-action-btn" id="plenoPrevPointBtn" <?php echo $estadoSesion === 'finalizada' ? 'disabled' : ''; ?>>
                                 <i class="fas fa-arrow-left"></i>
                                 Punto anterior
                             </button>
-                            <button type="button" class="btn btn-outline-success secretaria-control-btn" id="plenoNextPointBtn">
+                            <button type="button" class="btn btn-outline-success secretaria-control-btn pleno-session-action-btn" id="plenoNextPointBtn" <?php echo $estadoSesion === 'finalizada' ? 'disabled' : ''; ?>>
                                 Siguiente punto
                                 <i class="fas fa-arrow-right"></i>
                             </button>
-                            <button type="button" class="btn btn-success secretaria-control-btn">
+                            <button type="button" class="btn btn-success secretaria-control-btn pleno-session-action-btn" id="plenoStartVoteBtn" <?php echo $estadoSesion !== 'en_curso' ? 'disabled' : ''; ?>>
                                 <i class="fas fa-play"></i>
                                 Iniciar votación
                             </button>
-                            <button type="button" class="btn btn-danger secretaria-control-btn">
+                            <button type="button" class="btn btn-danger secretaria-control-btn pleno-session-action-btn" id="plenoCloseVoteBtn" <?php echo $estadoSesion !== 'en_curso' ? 'disabled' : ''; ?>>
                                 <i class="fas fa-stop"></i>
                                 Cerrar votación
                             </button>
-                            <button type="button" class="btn btn-outline-secondary secretaria-control-btn">
+                            <button type="button" class="btn btn-outline-secondary secretaria-control-btn pleno-session-action-btn" id="plenoFinishSessionBtn" data-id-sesion="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>" <?php echo $estadoSesion !== 'en_curso' ? 'disabled' : ''; ?>>
                                 <i class="fas fa-flag-checkered"></i>
                                 Finalizar pleno
                             </button>
@@ -917,7 +923,150 @@ $detallePuntoActual = $puntoActual;
     <?php endif; ?>
 </div>
 
-<?php if ($sesion && !empty($puntosOrdenDia)): ?>
+<?php if ($sesion): ?>
+    <script>
+        (function () {
+            "use strict";
+
+            var iniciarBtn = document.getElementById("plenoStartSessionBtn");
+            var estadoBadge = document.getElementById("plenoSessionStatusBadge");
+            var mensajeInicio = document.getElementById("plenoStartSessionMessage");
+            var iniciarPlenoUrl = "ajax/iniciar_pleno.php";
+
+            if (!iniciarBtn) {
+                return;
+            }
+
+            function mostrarMensaje(texto, tipo) {
+                if (!mensajeInicio) {
+                    return;
+                }
+
+                mensajeInicio.textContent = texto;
+                mensajeInicio.classList.remove("d-none", "alert-success", "alert-danger");
+                mensajeInicio.classList.add(tipo === "error" ? "alert-danger" : "alert-success");
+            }
+
+            iniciarBtn.addEventListener("click", function () {
+                var idSesion = parseInt(iniciarBtn.getAttribute("data-id-sesion") || "0", 10);
+                var confirmado = window.confirm("¿Desea iniciar el pleno? Desde este momento los usuarios podrán visualizar el pleno en vivo.");
+
+                if (!confirmado || !idSesion) {
+                    return;
+                }
+
+                iniciarBtn.disabled = true;
+
+                fetch(iniciarPlenoUrl, {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id_sesion: idSesion
+                    })
+                }).then(function (response) {
+                    return response.json().then(function (payload) {
+                        if (!response.ok || !payload || payload.success !== true) {
+                            throw new Error(payload && payload.mensaje ? payload.mensaje : "No fue posible iniciar el pleno.");
+                        }
+
+                        return payload;
+                    });
+                }).then(function (payload) {
+                    if (estadoBadge) {
+                        estadoBadge.textContent = "EN CURSO";
+                    }
+
+                    iniciarBtn.classList.add("d-none");
+                    document.querySelectorAll(".pleno-session-action-btn").forEach(function (boton) {
+                        boton.disabled = false;
+                    });
+                    mostrarMensaje(payload.mensaje || "Pleno iniciado correctamente.", "success");
+                }).catch(function (error) {
+                    iniciarBtn.disabled = false;
+                    mostrarMensaje(error.message || "No fue posible iniciar el pleno.", "error");
+                });
+            });
+        }());
+    </script>
+<?php endif; ?>
+
+<?php if ($sesion): ?>
+    <script>
+        (function () {
+            "use strict";
+
+            var finalizarBtn = document.getElementById("plenoFinishSessionBtn");
+            var estadoBadge = document.getElementById("plenoSessionStatusBadge");
+            var mensajeEstado = document.getElementById("plenoStartSessionMessage");
+            var finalizarPlenoUrl = "ajax/finalizar_pleno.php";
+
+            if (!finalizarBtn) {
+                return;
+            }
+
+            function mostrarMensaje(texto, tipo) {
+                if (!mensajeEstado) {
+                    return;
+                }
+
+                mensajeEstado.textContent = texto;
+                mensajeEstado.classList.remove("d-none", "alert-success", "alert-danger");
+                mensajeEstado.classList.add(tipo === "error" ? "alert-danger" : "alert-success");
+            }
+
+            function bloquearAcciones() {
+                document.querySelectorAll(".pleno-session-action-btn").forEach(function (boton) {
+                    boton.disabled = true;
+                });
+            }
+
+            finalizarBtn.addEventListener("click", function () {
+                var idSesion = parseInt(finalizarBtn.getAttribute("data-id-sesion") || "0", 10);
+                var confirmado = window.confirm("¿Desea finalizar el pleno? Una vez finalizado, no se podrán iniciar nuevas votaciones ni modificar el punto actual.");
+
+                if (!confirmado || !idSesion) {
+                    return;
+                }
+
+                finalizarBtn.disabled = true;
+
+                fetch(finalizarPlenoUrl, {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id_sesion: idSesion
+                    })
+                }).then(function (response) {
+                    return response.json().then(function (payload) {
+                        if (!response.ok || !payload || payload.success !== true) {
+                            throw new Error(payload && payload.mensaje ? payload.mensaje : "No fue posible finalizar el pleno.");
+                        }
+
+                        return payload;
+                    });
+                }).then(function (payload) {
+                    if (estadoBadge) {
+                        estadoBadge.textContent = "FINALIZADA";
+                    }
+
+                    bloquearAcciones();
+                    mostrarMensaje(payload.mensaje || "Pleno finalizado correctamente.", "success");
+                }).catch(function (error) {
+                    finalizarBtn.disabled = false;
+                    mostrarMensaje(error.message || "No fue posible finalizar el pleno.", "error");
+                });
+            });
+        }());
+    </script>
+<?php endif; ?>
+
+<?php if ($sesion && !empty($puntosOrdenDia) && $estadoSesion !== 'finalizada'): ?>
     <script>
         (function () {
             "use strict";

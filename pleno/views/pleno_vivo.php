@@ -30,6 +30,7 @@ $formatearEstado = static function (?string $estado): string {
         return 'EN CURSO';
     }
 
+    $estado = str_replace('_', ' ', $estado);
     return function_exists('mb_strtoupper') ? mb_strtoupper($estado, 'UTF-8') : strtoupper($estado);
 };
 
@@ -104,6 +105,7 @@ if ($sesion && !array_key_exists('cuenta_presidente', $sesion)) {
 }
 
 $cuentaPresidente = trim((string)($sesion['cuenta_presidente'] ?? $sesion['observaciones'] ?? ''));
+$estadoSesion = strtolower(trim((string)($sesion['estado'] ?? 'programada')));
 ?>
 <style>
     .pleno-live-session-grid {
@@ -235,7 +237,57 @@ $cuentaPresidente = trim((string)($sesion['cuenta_presidente'] ?? $sesion['obser
                 <p class="text-muted mb-0">No existe una sesión plenaria en curso.</p>
             </div>
         </div>
-    <?php else: ?>
+    <?php elseif ($estadoSesion === 'programada'): ?>
+        <div class="pleno-live-session-card">
+            <div class="pleno-live-session-body">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                    <div>
+                        <div class="pleno-live-progress-dot mb-3">
+                            <i class="fas fa-info" aria-hidden="true"></i>
+                        </div>
+                        <h1 class="pleno-live-title mb-2">Pleno aún no iniciado</h1>
+                        <p class="text-muted mb-0">
+                            La sesión plenaria se encuentra programada. El contenido del Pleno en Vivo estará disponible cuando la Secretaría inicie el pleno.
+                        </p>
+                    </div>
+                    <span class="badge bg-secondary"><?php echo $h($formatearEstado($sesion['estado'] ?? 'programada')); ?></span>
+                </div>
+                <div class="pleno-live-meta">
+                    <div class="pleno-live-meta-item"><span>Sesión</span><strong><?php echo $h($sesion['numero_sesion'] ?? 'Sin número'); ?></strong></div>
+                    <div class="pleno-live-meta-item"><span>Fecha</span><strong><?php echo $h($formatearFecha($sesion['fecha'] ?? null)); ?></strong></div>
+                    <div class="pleno-live-meta-item"><span>Hora</span><strong><?php echo $h($formatearHora($sesion['hora'] ?? null)); ?></strong></div>
+                    <div class="pleno-live-meta-item"><span>Lugar</span><strong><?php echo $h($sesion['lugar'] ?? 'Sin lugar'); ?></strong></div>
+                </div>
+                <div class="alert alert-info mb-0">
+                    <?php echo $rolUsuario === 20 ? 'Debe iniciar el pleno desde la vista Sesión del Día.' : 'Espere a que la Secretaría inicie el pleno.'; ?>
+                </div>
+            </div>
+        </div>
+    <?php elseif ($estadoSesion === 'finalizada'): ?>
+        <div class="pleno-live-session-card">
+            <div class="pleno-live-session-body">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                    <div>
+                        <div class="pleno-live-progress-dot mb-3">
+                            <i class="fas fa-flag-checkered" aria-hidden="true"></i>
+                        </div>
+                        <h1 class="pleno-live-title mb-2">Pleno finalizado</h1>
+                        <p class="text-muted mb-0">
+                            La sesión plenaria ya fue finalizada. Puede revisar el resumen de la sesión en la pestaña Resumen.
+                        </p>
+                    </div>
+                    <span class="badge bg-secondary"><?php echo $h($formatearEstado($sesion['estado'] ?? 'finalizada')); ?></span>
+                </div>
+                <div class="pleno-live-meta">
+                    <div class="pleno-live-meta-item"><span>Sesión</span><strong><?php echo $h($sesion['numero_sesion'] ?? 'Sin número'); ?></strong></div>
+                    <div class="pleno-live-meta-item"><span>Fecha</span><strong><?php echo $h($formatearFecha($sesion['fecha'] ?? null)); ?></strong></div>
+                    <div class="pleno-live-meta-item"><span>Hora</span><strong><?php echo $h($formatearHora($sesion['hora'] ?? null)); ?></strong></div>
+                    <div class="pleno-live-meta-item"><span>Lugar</span><strong><?php echo $h($sesion['lugar'] ?? 'Sin lugar'); ?></strong></div>
+                </div>
+                <a href="index.php?vista=resumen" class="btn btn-success mt-3">Ir a Resumen</a>
+            </div>
+        </div>
+    <?php elseif ($estadoSesion === 'en_curso'): ?>
         <div class="pleno-live-header">
             <div>
                 <p class="pleno-live-status mb-2"><span aria-hidden="true">&bull;</span> PLENO EN VIVO</p>
@@ -339,10 +391,19 @@ $cuentaPresidente = trim((string)($sesion['cuenta_presidente'] ?? $sesion['obser
                 </section>
             </aside>
         </div>
+    <?php else: ?>
+        <div class="pleno-live-session-card">
+            <div class="pleno-live-session-body">
+                <h1 class="pleno-live-title mb-2">Pleno aún no iniciado</h1>
+                <p class="text-muted mb-0">
+                    La sesión plenaria no se encuentra en curso. El contenido del Pleno en Vivo estará disponible cuando la Secretaría inicie el pleno.
+                </p>
+            </div>
+        </div>
     <?php endif; ?>
 </div>
 
-<?php if ($sesion && $puedeControlarPunto): ?>
+<?php if ($sesion && $puedeControlarPunto && $estadoSesion === 'en_curso'): ?>
     <script>
         (function () {
             "use strict";
