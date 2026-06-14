@@ -5,7 +5,7 @@ $sesion = $data['pleno_sesion_actual'] ?? null;
 $temasComision = $data['pleno_temas_comision_sesion'] ?? [];
 $puntosVarios = $data['pleno_puntos_varios_sesion'] ?? [];
 $rolUsuario = (int)($data['usuario']['rol'] ?? $_SESSION['tipoUsuario_id'] ?? 0);
-$puedeControlarPunto = $rolUsuario === 20;
+$puedeControlarPunto = in_array($rolUsuario, [6, 20], true);
 
 $h = static function ($valor): string {
     return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
@@ -259,7 +259,7 @@ $estadoSesion = strtolower(trim((string)($sesion['estado'] ?? 'programada')));
                     <div class="pleno-live-meta-item"><span>Lugar</span><strong><?php echo $h($sesion['lugar'] ?? 'Sin lugar'); ?></strong></div>
                 </div>
                 <div class="alert alert-info mb-0">
-                    <?php echo $rolUsuario === 20 ? 'Debe iniciar el pleno desde la vista Sesión del Día.' : 'Espere a que la Secretaría inicie el pleno.'; ?>
+                    <?php echo $puedeControlarPunto ? 'Debe iniciar el pleno desde la vista Sesión del Día.' : 'Espere a que la Secretaría inicie el pleno.'; ?>
                 </div>
             </div>
         </div>

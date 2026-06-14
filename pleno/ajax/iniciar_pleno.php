@@ -11,7 +11,7 @@ header('Content-Type: application/json; charset=utf-8');
 try {
     $auth = plenoRequireAuthorizedUser();
 
-    if (!$auth['authorized'] || (int)($auth['tipoUsuarioId'] ?? 0) !== 20) {
+    if (!$auth['authorized'] || !in_array((int)($auth['tipoUsuarioId'] ?? 0), [6, 20], true)) {
         http_response_code(403);
         echo json_encode([
             'success' => false,
