@@ -860,6 +860,9 @@ $detallePuntoActual = $puntoActual;
                                 Finalizar pleno
                             </button>
                         </div>
+                        <div class="alert alert-info mt-3 mb-0" id="plenoVoteControlMessage" role="status">
+                            No hay votación activa.
+                        </div>
                     </div>
                 </section>
             </div>
@@ -989,6 +992,579 @@ $detallePuntoActual = $puntoActual;
                     mostrarMensaje(error.message || "No fue posible iniciar el pleno.", "error");
                 });
             });
+        }());
+    </script>
+<?php endif; ?>
+
+<?php if ($sesion && !empty($puntosOrdenDia) && $estadoSesion !== 'finalizada'): ?>
+    <script>
+        (function () {
+            "use strict";
+
+            var puntosOrdenDia = <?php echo json_encode($puntosOrdenDia, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+            var idSesion = <?php echo (int)($sesion['id_sesion'] ?? 0); ?>;
+            var indiceActual = <?php echo (int)$indicePuntoActual; ?>;
+            var sesionEnCurso = <?php echo $estadoSesion === 'en_curso' ? 'true' : 'false'; ?>;
+            var actualizarPuntoUrl = "ajax/actualizar_punto_actual.php";
+            var iniciarVotacionUrl = "ajax/iniciar_votacion.php";
+            var cerrarVotacionUrl = "ajax/cerrar_votacion.php";
+
+            function limpiarListeners(id) {
+                var original = document.getElementById(id);
+                if (!original) {
+                    return null;
+                }
+                var limpio = original.cloneNode(true);
+                original.parentNode.replaceChild(limpio, original);
+                return limpio;
+            }
+
+            var btnAnterior = limpiarListeners("plenoPrevPointBtn");
+            var btnSiguiente = limpiarListeners("plenoNextPointBtn");
+            var btnIniciarVotacion = limpiarListeners("plenoStartVoteBtn");
+            var btnCerrarVotacion = limpiarListeners("plenoCloseVoteBtn");
+            var mensajeVotacion = document.getElementById("plenoVoteControlMessage");
+            var detalleNumero = document.getElementById("plenoCurrentPointNumber");
+            var detalleTitulo = document.getElementById("plenoCurrentPointTitle");
+            var detalleTema = document.getElementById("plenoCurrentPointTopic");
+            var detalleDescripcion = document.getElementById("plenoCurrentPointDescription");
+            var detalleTipo = document.getElementById("plenoCurrentPointType");
+            var detalleOrigen = document.getElementById("plenoCurrentPointOrigin");
+
+            function buscarElementoPunto(numero) {
+                var encontrado = null;
+                document.querySelectorAll("[data-agenda-number]").forEach(function (elemento) {
+                    if (!encontrado && elemento.getAttribute("data-agenda-number") === numero) {
+                        encontrado = elemento;
+                    }
+                });
+                return encontrado;
+            }
+
+            function crearBadgeActual() {
+                var badge = document.createElement("span");
+                badge.className = "secretaria-badge badge-current";
+                badge.setAttribute("data-current-badge", "true");
+                badge.textContent = "PUNTO ACTUAL";
+                return badge;
+            }
+
+            function limpiarPuntoActual() {
+                document.querySelectorAll(".agenda-item-current, .agenda-subitem-current").forEach(function (elemento) {
+                    elemento.classList.remove("agenda-item-current", "agenda-subitem-current");
+                });
+                document.querySelectorAll("[data-current-badge='true']").forEach(function (badge) {
+                    badge.remove();
+                });
+            }
+
+            function obtenerPuntoActual() {
+                return puntosOrdenDia[indiceActual] || null;
+            }
+
+            function puntoPermiteVotacion(punto) {
+                var numero = punto ? String(punto.numero || "") : "";
+                return numero === "1" || /^3\.\d+$/.test(numero);
+            }
+
+            function mostrarMensajeVotacion(texto, tipo) {
+                if (!mensajeVotacion) {
+                    return;
+                }
+                mensajeVotacion.textContent = texto;
+                mensajeVotacion.classList.remove("alert-info", "alert-success", "alert-warning", "alert-danger");
+                mensajeVotacion.classList.add(tipo || "alert-info");
+            }
+
+            function actualizarDetalle(punto) {
+                if (detalleNumero) {
+                    detalleNumero.textContent = "PUNTO " + (punto.numero || "");
+                }
+                if (detalleTitulo) {
+                    detalleTitulo.textContent = punto.titulo || "Sin titulo";
+                }
+                if (detalleTema) {
+                    var tema = punto.tema || "";
+                    detalleTema.hidden = tema === "";
+                    detalleTema.textContent = tema !== "" ? "Tema: " + tema : "";
+                }
+                if (detalleDescripcion) {
+                    var descripcion = punto.descripcion || "";
+                    detalleDescripcion.hidden = descripcion === "";
+                    detalleDescripcion.textContent = descripcion;
+                }
+                if (detalleTipo) {
+                    detalleTipo.textContent = punto.tipo || "Sin tipo";
+                }
+                if (detalleOrigen) {
+                    detalleOrigen.textContent = punto.origen || "Sin origen";
+                }
+            }
+
+            function actualizarControles() {
+                var punto = obtenerPuntoActual();
+                var permiteVotacion = puntoPermiteVotacion(punto);
+                var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "sin_votacion";
+
+                if (btnAnterior) {
+                    btnAnterior.disabled = indiceActual <= 0;
+                }
+                if (btnSiguiente) {
+                    btnSiguiente.disabled = indiceActual >= puntosOrdenDia.length - 1;
+                }
+                if (!btnIniciarVotacion || !btnCerrarVotacion) {
+                    return;
+                }
+                if (!sesionEnCurso) {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = true;
+                    mostrarMensajeVotacion("Debe iniciar el pleno antes de abrir una votación.", "alert-info");
+                    return;
+                }
+                if (!permiteVotacion) {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = true;
+                    mostrarMensajeVotacion("Este punto no requiere votación.", "alert-info");
+                    return;
+                }
+                if (estadoVotacion === "votacion_en_curso") {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = false;
+                    mostrarMensajeVotacion("Votación en curso.", "alert-success");
+                    return;
+                }
+                if (estadoVotacion === "votacion_cerrada") {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = true;
+                    mostrarMensajeVotacion("Votación cerrada.", "alert-warning");
+                    return;
+                }
+                btnIniciarVotacion.disabled = false;
+                btnCerrarVotacion.disabled = true;
+                mostrarMensajeVotacion("No hay votación activa.", "alert-info");
+            }
+
+            function actualizarVista() {
+                var punto = obtenerPuntoActual();
+                var elemento;
+                if (!punto) {
+                    return;
+                }
+                limpiarPuntoActual();
+                elemento = buscarElementoPunto(String(punto.numero || ""));
+                if (elemento) {
+                    if (elemento.classList.contains("agenda-item")) {
+                        elemento.classList.add("agenda-item-current");
+                        (elemento.querySelector(".agenda-main") || elemento).appendChild(crearBadgeActual());
+                    } else {
+                        elemento.classList.add("agenda-subitem-current");
+                        elemento.appendChild(crearBadgeActual());
+                    }
+                }
+                actualizarDetalle(punto);
+                actualizarControles();
+            }
+
+            function guardarPuntoActual(punto) {
+                if (!punto || !idSesion) {
+                    return Promise.resolve();
+                }
+                return fetch(actualizarPuntoUrl, {
+                    method: "POST",
+                    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                    body: JSON.stringify({ id_sesion: idSesion, punto_actual: String(punto.numero || "") })
+                });
+            }
+
+            function navegarPunto(direccion) {
+                var nuevoIndice = indiceActual + direccion;
+                if (nuevoIndice < 0 || nuevoIndice >= puntosOrdenDia.length) {
+                    return;
+                }
+                indiceActual = nuevoIndice;
+                actualizarVista();
+                guardarPuntoActual(obtenerPuntoActual()).catch(function (error) {
+                    if (window.console) {
+                        window.console.error(error);
+                    }
+                });
+            }
+
+            function ejecutarAccionVotacion(url, mensajeError) {
+                return fetch(url, {
+                    method: "POST",
+                    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                    body: JSON.stringify({ id_sesion: idSesion })
+                }).then(function (response) {
+                    return response.json().then(function (payload) {
+                        if (!response.ok || !payload || payload.success !== true) {
+                            throw new Error(payload && payload.mensaje ? payload.mensaje : mensajeError);
+                        }
+                        return payload;
+                    });
+                });
+            }
+
+            function obtenerVotacionActiva() {
+                var punto = obtenerPuntoActual();
+                return punto && punto.estado_votacion === "votacion_en_curso" ? punto : null;
+            }
+
+            function iniciarVotacion() {
+                var punto = obtenerPuntoActual();
+                if (!puntoPermiteVotacion(punto)) {
+                    mostrarMensajeVotacion("Este punto no requiere votación.", "alert-info");
+                    return;
+                }
+                ejecutarAccionVotacion(iniciarVotacionUrl, "No fue posible iniciar la votación.").then(function () {
+                    punto.estado_votacion = "votacion_en_curso";
+                    actualizarControles();
+                }).catch(function (error) {
+                    mostrarMensajeVotacion(error.message || "No fue posible iniciar la votación.", "alert-danger");
+                    actualizarControles();
+                });
+            }
+
+            function cerrarVotacion() {
+                var punto = obtenerVotacionActiva();
+                if (!punto) {
+                    mostrarMensajeVotacion("No hay votación activa.", "alert-warning");
+                    return;
+                }
+                ejecutarAccionVotacion(cerrarVotacionUrl, "No fue posible cerrar la votación.").then(function () {
+                    punto.estado_votacion = "votacion_cerrada";
+                    actualizarControles();
+                }).catch(function (error) {
+                    mostrarMensajeVotacion(error.message || "No fue posible cerrar la votación.", "alert-danger");
+                    actualizarControles();
+                });
+            }
+
+            if (btnAnterior) {
+                btnAnterior.addEventListener("click", function () { navegarPunto(-1); });
+            }
+            if (btnSiguiente) {
+                btnSiguiente.addEventListener("click", function () { navegarPunto(1); });
+            }
+            if (btnIniciarVotacion) {
+                btnIniciarVotacion.addEventListener("click", iniciarVotacion);
+            }
+            if (btnCerrarVotacion) {
+                btnCerrarVotacion.addEventListener("click", cerrarVotacion);
+            }
+            document.addEventListener("pleno:estado-en-curso", function () {
+                sesionEnCurso = true;
+                actualizarControles();
+            });
+            actualizarVista();
+        }());
+    </script>
+<?php endif; ?>
+
+<?php if ($sesion && !empty($puntosOrdenDia) && $estadoSesion !== 'finalizada'): ?>
+    <script>
+        (function () {
+            "use strict";
+
+            var puntosOrdenDia = <?php echo json_encode($puntosOrdenDia, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+            var idSesion = <?php echo (int)($sesion['id_sesion'] ?? 0); ?>;
+            var indiceActual = <?php echo (int)$indicePuntoActual; ?>;
+            var sesionEnCurso = <?php echo $estadoSesion === 'en_curso' ? 'true' : 'false'; ?>;
+            var actualizarPuntoUrl = "ajax/actualizar_punto_actual.php";
+            var iniciarVotacionUrl = "ajax/iniciar_votacion.php";
+            var cerrarVotacionUrl = "ajax/cerrar_votacion.php";
+
+            function limpiarListeners(id) {
+                var original = document.getElementById(id);
+                if (!original) {
+                    return null;
+                }
+                var limpio = original.cloneNode(true);
+                original.parentNode.replaceChild(limpio, original);
+                return limpio;
+            }
+
+            var btnAnterior = limpiarListeners("plenoPrevPointBtn");
+            var btnSiguiente = limpiarListeners("plenoNextPointBtn");
+            var btnIniciarVotacion = limpiarListeners("plenoStartVoteBtn");
+            var btnCerrarVotacion = limpiarListeners("plenoCloseVoteBtn");
+            var mensajeVotacion = document.getElementById("plenoVoteControlMessage");
+            var detalleNumero = document.getElementById("plenoCurrentPointNumber");
+            var detalleTitulo = document.getElementById("plenoCurrentPointTitle");
+            var detalleTema = document.getElementById("plenoCurrentPointTopic");
+            var detalleDescripcion = document.getElementById("plenoCurrentPointDescription");
+            var detalleTipo = document.getElementById("plenoCurrentPointType");
+            var detalleOrigen = document.getElementById("plenoCurrentPointOrigin");
+
+            function buscarElementoPunto(numero) {
+                var encontrado = null;
+                document.querySelectorAll("[data-agenda-number]").forEach(function (elemento) {
+                    if (!encontrado && elemento.getAttribute("data-agenda-number") === numero) {
+                        encontrado = elemento;
+                    }
+                });
+                return encontrado;
+            }
+
+            function crearBadgeActual() {
+                var badge = document.createElement("span");
+                badge.className = "secretaria-badge badge-current";
+                badge.setAttribute("data-current-badge", "true");
+                badge.textContent = "PUNTO ACTUAL";
+                return badge;
+            }
+
+            function limpiarPuntoActual() {
+                document.querySelectorAll(".agenda-item-current, .agenda-subitem-current").forEach(function (elemento) {
+                    elemento.classList.remove("agenda-item-current", "agenda-subitem-current");
+                });
+                document.querySelectorAll("[data-current-badge='true']").forEach(function (badge) {
+                    badge.remove();
+                });
+            }
+
+            function marcarPuntoActual(punto) {
+                var elemento = buscarElementoPunto(String(punto.numero || ""));
+                if (!elemento) {
+                    return;
+                }
+
+                if (elemento.classList.contains("agenda-item")) {
+                    var main = elemento.querySelector(".agenda-main");
+                    var chevron = elemento.querySelector(".agenda-chevron");
+                    elemento.classList.add("agenda-item-current");
+                    if (main) {
+                        main.insertBefore(crearBadgeActual(), chevron || null);
+                    }
+                    return;
+                }
+
+                elemento.classList.add("agenda-subitem-current");
+                elemento.appendChild(crearBadgeActual());
+            }
+
+            function obtenerPuntoActual() {
+                return puntosOrdenDia[indiceActual] || null;
+            }
+
+            function puntoPermiteVotacion(punto) {
+                var numero = punto ? String(punto.numero || "") : "";
+                return numero === "1" || /^3\.\d+$/.test(numero);
+            }
+
+            function mostrarMensajeVotacion(texto, tipo) {
+                if (!mensajeVotacion) {
+                    return;
+                }
+                mensajeVotacion.textContent = texto;
+                mensajeVotacion.classList.remove("alert-info", "alert-success", "alert-warning", "alert-danger");
+                mensajeVotacion.classList.add(tipo || "alert-info");
+            }
+
+            function actualizarDetalle(punto) {
+                if (detalleNumero) {
+                    detalleNumero.textContent = "PUNTO " + (punto.numero || "");
+                }
+                if (detalleTitulo) {
+                    detalleTitulo.textContent = punto.titulo || "Sin titulo";
+                }
+                if (detalleTema) {
+                    var tema = punto.tema || "";
+                    detalleTema.hidden = tema === "";
+                    detalleTema.textContent = tema !== "" ? "Tema: " + tema : "";
+                }
+                if (detalleDescripcion) {
+                    var descripcion = punto.descripcion || "";
+                    detalleDescripcion.hidden = descripcion === "";
+                    detalleDescripcion.textContent = descripcion;
+                }
+                if (detalleTipo) {
+                    detalleTipo.textContent = punto.tipo || "Sin tipo";
+                }
+                if (detalleOrigen) {
+                    detalleOrigen.textContent = punto.origen || "Sin origen";
+                }
+            }
+
+            function actualizarControlesNavegacion() {
+                if (btnAnterior) {
+                    btnAnterior.disabled = indiceActual <= 0;
+                }
+                if (btnSiguiente) {
+                    btnSiguiente.disabled = indiceActual >= puntosOrdenDia.length - 1;
+                }
+            }
+
+            function obtenerVotacionActiva() {
+                var punto = obtenerPuntoActual();
+                return punto && punto.estado_votacion === "votacion_en_curso" ? punto : null;
+            }
+
+            function actualizarControlesVotacion() {
+                var punto = obtenerPuntoActual();
+                var permiteVotacion = puntoPermiteVotacion(punto);
+                var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "sin_votacion";
+
+                if (!btnIniciarVotacion || !btnCerrarVotacion) {
+                    return;
+                }
+
+                if (!sesionEnCurso) {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = true;
+                    mostrarMensajeVotacion("Debe iniciar el pleno antes de abrir una votación.", "alert-info");
+                    return;
+                }
+
+                if (!permiteVotacion) {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = true;
+                    mostrarMensajeVotacion("Este punto no requiere votación.", "alert-info");
+                    return;
+                }
+
+                if (estadoVotacion === "votacion_en_curso") {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = false;
+                    mostrarMensajeVotacion("Votación en curso.", "alert-success");
+                    return;
+                }
+
+                if (estadoVotacion === "votacion_cerrada") {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = true;
+                    mostrarMensajeVotacion("Votación cerrada.", "alert-warning");
+                    return;
+                }
+
+                btnIniciarVotacion.disabled = false;
+                btnCerrarVotacion.disabled = true;
+                mostrarMensajeVotacion("No hay votación activa.", "alert-info");
+            }
+
+            function actualizarVista() {
+                var punto = obtenerPuntoActual();
+                if (!punto) {
+                    return;
+                }
+                limpiarPuntoActual();
+                marcarPuntoActual(punto);
+                actualizarDetalle(punto);
+                actualizarControlesNavegacion();
+                actualizarControlesVotacion();
+            }
+
+            function guardarPuntoActual(punto) {
+                if (!punto || !idSesion) {
+                    return Promise.resolve();
+                }
+                return fetch(actualizarPuntoUrl, {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id_sesion: idSesion,
+                        punto_actual: String(punto.numero || "")
+                    })
+                }).then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("No fue posible guardar el punto actual.");
+                    }
+                    return response.json();
+                });
+            }
+
+            function navegarPunto(direccion) {
+                var nuevoIndice = indiceActual + direccion;
+                if (nuevoIndice < 0 || nuevoIndice >= puntosOrdenDia.length) {
+                    return;
+                }
+                indiceActual = nuevoIndice;
+                actualizarVista();
+                guardarPuntoActual(obtenerPuntoActual()).catch(function (error) {
+                    if (window.console && typeof window.console.error === "function") {
+                        window.console.error(error);
+                    }
+                });
+            }
+
+            function ejecutarAccionVotacion(url, mensajeError) {
+                return fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ id_sesion: idSesion })
+                }).then(function (response) {
+                    return response.json().then(function (payload) {
+                        if (!response.ok || !payload || payload.success !== true) {
+                            throw new Error(payload && payload.mensaje ? payload.mensaje : mensajeError);
+                        }
+                        return payload;
+                    });
+                });
+            }
+
+            function iniciarVotacion() {
+                var punto = obtenerPuntoActual();
+                if (!puntoPermiteVotacion(punto)) {
+                    mostrarMensajeVotacion("Este punto no requiere votación.", "alert-info");
+                    return;
+                }
+                if (btnIniciarVotacion) {
+                    btnIniciarVotacion.disabled = true;
+                }
+                ejecutarAccionVotacion(iniciarVotacionUrl, "No fue posible iniciar la votación.").then(function () {
+                    punto.estado_votacion = "votacion_en_curso";
+                    actualizarControlesVotacion();
+                }).catch(function (error) {
+                    mostrarMensajeVotacion(error.message || "No fue posible iniciar la votación.", "alert-danger");
+                    actualizarControlesVotacion();
+                });
+            }
+
+            function cerrarVotacion() {
+                var punto = obtenerVotacionActiva();
+                if (!punto) {
+                    mostrarMensajeVotacion("No hay votación activa.", "alert-warning");
+                    return;
+                }
+                if (btnCerrarVotacion) {
+                    btnCerrarVotacion.disabled = true;
+                }
+                ejecutarAccionVotacion(cerrarVotacionUrl, "No fue posible cerrar la votación.").then(function () {
+                    punto.estado_votacion = "votacion_cerrada";
+                    actualizarControlesVotacion();
+                }).catch(function (error) {
+                    mostrarMensajeVotacion(error.message || "No fue posible cerrar la votación.", "alert-danger");
+                    actualizarControlesVotacion();
+                });
+            }
+
+            if (!Array.isArray(puntosOrdenDia) || puntosOrdenDia.length === 0) {
+                return;
+            }
+            if (btnAnterior) {
+                btnAnterior.addEventListener("click", function () { navegarPunto(-1); });
+            }
+            if (btnSiguiente) {
+                btnSiguiente.addEventListener("click", function () { navegarPunto(1); });
+            }
+            if (btnIniciarVotacion) {
+                btnIniciarVotacion.addEventListener("click", iniciarVotacion);
+            }
+            if (btnCerrarVotacion) {
+                btnCerrarVotacion.addEventListener("click", cerrarVotacion);
+            }
+            document.addEventListener("pleno:estado-en-curso", function () {
+                sesionEnCurso = true;
+                actualizarControlesVotacion();
+            });
+
+            actualizarVista();
         }());
     </script>
 <?php endif; ?>
@@ -1244,6 +1820,266 @@ $detallePuntoActual = $puntoActual;
                 });
             }
 
+            actualizarVista();
+        }());
+    </script>
+<?php endif; ?>
+
+<?php if ($sesion && !empty($puntosOrdenDia) && $estadoSesion !== 'finalizada'): ?>
+    <script>
+        (function () {
+            "use strict";
+
+            var puntosOrdenDia = <?php echo json_encode($puntosOrdenDia, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+            var idSesion = <?php echo (int)($sesion['id_sesion'] ?? 0); ?>;
+            var indiceActual = <?php echo (int)$indicePuntoActual; ?>;
+            var sesionEnCurso = <?php echo $estadoSesion === 'en_curso' ? 'true' : 'false'; ?>;
+            var actualizarPuntoUrl = "ajax/actualizar_punto_actual.php";
+            var iniciarVotacionUrl = "ajax/iniciar_votacion.php";
+            var cerrarVotacionUrl = "ajax/cerrar_votacion.php";
+
+            function limpiarListeners(id) {
+                var original = document.getElementById(id);
+                if (!original) {
+                    return null;
+                }
+                var limpio = original.cloneNode(true);
+                original.parentNode.replaceChild(limpio, original);
+                return limpio;
+            }
+
+            var btnAnterior = limpiarListeners("plenoPrevPointBtn");
+            var btnSiguiente = limpiarListeners("plenoNextPointBtn");
+            var btnIniciarVotacion = limpiarListeners("plenoStartVoteBtn");
+            var btnCerrarVotacion = limpiarListeners("plenoCloseVoteBtn");
+            var mensajeVotacion = document.getElementById("plenoVoteControlMessage");
+            var detalleNumero = document.getElementById("plenoCurrentPointNumber");
+            var detalleTitulo = document.getElementById("plenoCurrentPointTitle");
+            var detalleTema = document.getElementById("plenoCurrentPointTopic");
+            var detalleDescripcion = document.getElementById("plenoCurrentPointDescription");
+            var detalleTipo = document.getElementById("plenoCurrentPointType");
+            var detalleOrigen = document.getElementById("plenoCurrentPointOrigin");
+
+            function obtenerPuntoActual() {
+                return puntosOrdenDia[indiceActual] || null;
+            }
+
+            function puntoPermiteVotacion(punto) {
+                var numero = punto ? String(punto.numero || "") : "";
+                return numero === "1" || /^3\.\d+$/.test(numero);
+            }
+
+            function mostrarMensajeVotacion(texto, tipo) {
+                if (!mensajeVotacion) {
+                    return;
+                }
+                mensajeVotacion.textContent = texto;
+                mensajeVotacion.classList.remove("alert-info", "alert-success", "alert-warning", "alert-danger");
+                mensajeVotacion.classList.add(tipo || "alert-info");
+            }
+
+            function buscarElementoPunto(numero) {
+                var encontrado = null;
+                document.querySelectorAll("[data-agenda-number]").forEach(function (elemento) {
+                    if (!encontrado && elemento.getAttribute("data-agenda-number") === numero) {
+                        encontrado = elemento;
+                    }
+                });
+                return encontrado;
+            }
+
+            function crearBadgeActual() {
+                var badge = document.createElement("span");
+                badge.className = "secretaria-badge badge-current";
+                badge.setAttribute("data-current-badge", "true");
+                badge.textContent = "PUNTO ACTUAL";
+                return badge;
+            }
+
+            function actualizarDetalle(punto) {
+                if (detalleNumero) {
+                    detalleNumero.textContent = "PUNTO " + (punto.numero || "");
+                }
+                if (detalleTitulo) {
+                    detalleTitulo.textContent = punto.titulo || "Sin titulo";
+                }
+                if (detalleTema) {
+                    var tema = punto.tema || "";
+                    detalleTema.hidden = tema === "";
+                    detalleTema.textContent = tema !== "" ? "Tema: " + tema : "";
+                }
+                if (detalleDescripcion) {
+                    var descripcion = punto.descripcion || "";
+                    detalleDescripcion.hidden = descripcion === "";
+                    detalleDescripcion.textContent = descripcion;
+                }
+                if (detalleTipo) {
+                    detalleTipo.textContent = punto.tipo || "Sin tipo";
+                }
+                if (detalleOrigen) {
+                    detalleOrigen.textContent = punto.origen || "Sin origen";
+                }
+            }
+
+            function actualizarVista() {
+                var punto = obtenerPuntoActual();
+                var elemento;
+                if (!punto) {
+                    return;
+                }
+                document.querySelectorAll(".agenda-item-current, .agenda-subitem-current").forEach(function (nodo) {
+                    nodo.classList.remove("agenda-item-current", "agenda-subitem-current");
+                });
+                document.querySelectorAll("[data-current-badge='true']").forEach(function (badge) {
+                    badge.remove();
+                });
+                elemento = buscarElementoPunto(String(punto.numero || ""));
+                if (elemento) {
+                    if (elemento.classList.contains("agenda-item")) {
+                        elemento.classList.add("agenda-item-current");
+                        (elemento.querySelector(".agenda-main") || elemento).appendChild(crearBadgeActual());
+                    } else {
+                        elemento.classList.add("agenda-subitem-current");
+                        elemento.appendChild(crearBadgeActual());
+                    }
+                }
+                actualizarDetalle(punto);
+                actualizarControles();
+            }
+
+            function actualizarControles() {
+                var punto = obtenerPuntoActual();
+                var permiteVotacion = puntoPermiteVotacion(punto);
+                var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "sin_votacion";
+                if (btnAnterior) {
+                    btnAnterior.disabled = indiceActual <= 0;
+                }
+                if (btnSiguiente) {
+                    btnSiguiente.disabled = indiceActual >= puntosOrdenDia.length - 1;
+                }
+                if (!btnIniciarVotacion || !btnCerrarVotacion) {
+                    return;
+                }
+                if (!sesionEnCurso) {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = true;
+                    mostrarMensajeVotacion("Debe iniciar el pleno antes de abrir una votación.", "alert-info");
+                    return;
+                }
+                if (!permiteVotacion) {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = true;
+                    mostrarMensajeVotacion("Este punto no requiere votación.", "alert-info");
+                    return;
+                }
+                if (estadoVotacion === "votacion_en_curso") {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = false;
+                    mostrarMensajeVotacion("Votación en curso.", "alert-success");
+                    return;
+                }
+                if (estadoVotacion === "votacion_cerrada") {
+                    btnIniciarVotacion.disabled = true;
+                    btnCerrarVotacion.disabled = true;
+                    mostrarMensajeVotacion("Votación cerrada.", "alert-warning");
+                    return;
+                }
+                btnIniciarVotacion.disabled = false;
+                btnCerrarVotacion.disabled = true;
+                mostrarMensajeVotacion("No hay votación activa.", "alert-info");
+            }
+
+            function guardarPuntoActual(punto) {
+                if (!punto || !idSesion) {
+                    return Promise.resolve();
+                }
+                return fetch(actualizarPuntoUrl, {
+                    method: "POST",
+                    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                    body: JSON.stringify({ id_sesion: idSesion, punto_actual: String(punto.numero || "") })
+                });
+            }
+
+            function navegarPunto(direccion) {
+                var nuevoIndice = indiceActual + direccion;
+                if (nuevoIndice < 0 || nuevoIndice >= puntosOrdenDia.length) {
+                    return;
+                }
+                indiceActual = nuevoIndice;
+                actualizarVista();
+                guardarPuntoActual(obtenerPuntoActual()).catch(function (error) {
+                    if (window.console) {
+                        window.console.error(error);
+                    }
+                });
+            }
+
+            function ejecutarAccionVotacion(url, mensajeError) {
+                return fetch(url, {
+                    method: "POST",
+                    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                    body: JSON.stringify({ id_sesion: idSesion })
+                }).then(function (response) {
+                    return response.json().then(function (payload) {
+                        if (!response.ok || !payload || payload.success !== true) {
+                            throw new Error(payload && payload.mensaje ? payload.mensaje : mensajeError);
+                        }
+                        return payload;
+                    });
+                });
+            }
+
+            function obtenerVotacionActiva() {
+                var punto = obtenerPuntoActual();
+                return punto && punto.estado_votacion === "votacion_en_curso" ? punto : null;
+            }
+
+            function iniciarVotacion() {
+                var punto = obtenerPuntoActual();
+                if (!puntoPermiteVotacion(punto)) {
+                    mostrarMensajeVotacion("Este punto no requiere votación.", "alert-info");
+                    return;
+                }
+                ejecutarAccionVotacion(iniciarVotacionUrl, "No fue posible iniciar la votación.").then(function () {
+                    punto.estado_votacion = "votacion_en_curso";
+                    actualizarControles();
+                }).catch(function (error) {
+                    mostrarMensajeVotacion(error.message || "No fue posible iniciar la votación.", "alert-danger");
+                    actualizarControles();
+                });
+            }
+
+            function cerrarVotacion() {
+                var punto = obtenerVotacionActiva();
+                if (!punto) {
+                    mostrarMensajeVotacion("No hay votación activa.", "alert-warning");
+                    return;
+                }
+                ejecutarAccionVotacion(cerrarVotacionUrl, "No fue posible cerrar la votación.").then(function () {
+                    punto.estado_votacion = "votacion_cerrada";
+                    actualizarControles();
+                }).catch(function (error) {
+                    mostrarMensajeVotacion(error.message || "No fue posible cerrar la votación.", "alert-danger");
+                    actualizarControles();
+                });
+            }
+
+            if (btnAnterior) {
+                btnAnterior.addEventListener("click", function () { navegarPunto(-1); });
+            }
+            if (btnSiguiente) {
+                btnSiguiente.addEventListener("click", function () { navegarPunto(1); });
+            }
+            if (btnIniciarVotacion) {
+                btnIniciarVotacion.addEventListener("click", iniciarVotacion);
+            }
+            if (btnCerrarVotacion) {
+                btnCerrarVotacion.addEventListener("click", cerrarVotacion);
+            }
+            document.addEventListener("pleno:estado-en-curso", function () {
+                sesionEnCurso = true;
+                actualizarControles();
+            });
             actualizarVista();
         }());
     </script>

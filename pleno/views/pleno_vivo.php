@@ -4,6 +4,7 @@ require __DIR__ . '/partials/sidebar_pleno.php';
 $sesion = $data['pleno_sesion_actual'] ?? null;
 $temasComision = $data['pleno_temas_comision_sesion'] ?? [];
 $puntosVarios = $data['pleno_puntos_varios_sesion'] ?? [];
+$estadoVotacionActual = (string)($data['pleno_estado_votacion_actual'] ?? 'sin_votacion');
 $rolUsuario = (int)($data['usuario']['rol'] ?? $_SESSION['tipoUsuario_id'] ?? 0);
 $puedeControlarPunto = in_array($rolUsuario, [6, 20], true);
 
@@ -64,8 +65,10 @@ $resolverPunto = static function (array $punto): array {
 };
 
 $puntoActual = 1;
+$puntoActualGuardado = '1';
 if ($sesion) {
     $puntoGuardado = trim((string)($sesion['punto_actual'] ?? '1'));
+    $puntoActualGuardado = $puntoGuardado !== '' ? $puntoGuardado : '1';
     $puntoBase = strtok($puntoGuardado !== '' ? $puntoGuardado : '1', '.');
     $puntoActual = in_array($puntoBase, ['1', '2', '3', '4'], true) ? (int)$puntoBase : 1;
 }
@@ -313,11 +316,15 @@ $estadoSesion = strtolower(trim((string)($sesion['estado'] ?? 'programada')));
                             <p class="lead mb-3"><?php echo $h(trim((string)($sesion['aprobacion_actas'] ?? '')) ?: 'No hay acta registrada para aprobación.'); ?></p>
                             <div class="alert alert-light border mb-3">Documento del acta: no hay documento asociado.</div>
                             <div class="alert alert-info mb-0">Estado de votación: Esperando inicio de votación</div>
+                            <?php if ($estadoVotacionActual === 'votacion_en_curso'): ?>
                             <div class="pleno-live-actions">
                                 <button class="pleno-live-option pleno-live-option-favor" type="button"><span>A Favor</span></button>
                                 <button class="pleno-live-option pleno-live-option-against" type="button"><span>En Contra</span></button>
                                 <button class="pleno-live-option pleno-live-option-abstain" type="button"><span>Abstención</span></button>
                             </div>
+                            <?php else: ?>
+                                <div class="alert alert-info mt-3 mb-0">No hay votación activa. La Secretaría aún no ha iniciado una votación para el punto actual.</div>
+                            <?php endif; ?>
                         <?php elseif ($puntoActual === 2): ?>
                             <h2 class="h4 mb-3">Cuenta cargada</h2>
                             <p class="mb-3"><?php echo nl2br($h($cuentaPresidente !== '' ? $cuentaPresidente : 'No hay cuenta del presidente registrada para esta sesión.')); ?></p>
@@ -334,11 +341,16 @@ $estadoSesion = strtolower(trim((string)($sesion['estado'] ?? 'programada')));
                                         <?php if ($punto['tema'] !== ''): ?><p class="fw-semibold mb-2">Tema: <?php echo $h($punto['tema']); ?></p><?php endif; ?>
                                         <?php if ($punto['descripcion'] !== ''): ?><p class="text-muted mb-2"><?php echo $h($punto['descripcion']); ?></p><?php endif; ?>
                                         <span class="badge bg-secondary mb-3">Pendiente</span>
+                                        <?php $subpuntoNumero = '3.' . ((int)$indice + 1); ?>
+                                        <?php if ($puntoActualGuardado === $subpuntoNumero && $estadoVotacionActual === 'votacion_en_curso'): ?>
                                         <div class="pleno-live-actions">
                                             <button class="btn btn-success" type="button">Aprobar</button>
                                             <button class="btn btn-outline-danger" type="button">Rechazar</button>
                                             <button class="btn btn-outline-secondary" type="button">Abstención</button>
                                         </div>
+                                        <?php elseif ($puntoActualGuardado === $subpuntoNumero): ?>
+                                            <div class="alert alert-info mb-0">No hay votación activa. La Secretaría aún no ha iniciado una votación para el punto actual.</div>
+                                        <?php endif; ?>
                                     </article>
                                 <?php endforeach; ?>
                             <?php endif; ?>
