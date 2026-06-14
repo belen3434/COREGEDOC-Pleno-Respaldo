@@ -18,7 +18,7 @@ if (!function_exists('plenoAsegurarTablaVotacion')) {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 id_sesion INT NOT NULL,
                 punto_numero VARCHAR(20) NOT NULL,
-                estado_votacion VARCHAR(30) NOT NULL DEFAULT 'sin_votacion',
+                estado_votacion VARCHAR(30) NOT NULL DEFAULT 'pendiente',
                 fecha_inicio_votacion DATETIME NULL,
                 fecha_cierre_votacion DATETIME NULL,
                 fecha_actualizacion DATETIME NULL,
@@ -32,6 +32,24 @@ if (!function_exists('plenoPuntoPermiteVotacion')) {
     function plenoPuntoPermiteVotacion(string $puntoNumero): bool
     {
         return $puntoNumero === '1' || preg_match('/^3\.\d+$/', $puntoNumero) === 1;
+    }
+}
+
+if (!function_exists('plenoNormalizarEstadoVotacion')) {
+    function plenoNormalizarEstadoVotacion(?string $estado, string $puntoNumero): string
+    {
+        if (!plenoPuntoPermiteVotacion($puntoNumero)) {
+            return 'no_vota';
+        }
+
+        $estado = trim((string)$estado);
+        if ($estado === '' || $estado === 'sin_votacion') {
+            return 'pendiente';
+        }
+
+        return in_array($estado, ['pendiente', 'votacion_en_curso', 'votacion_cerrada', 'no_vota'], true)
+            ? $estado
+            : 'pendiente';
     }
 }
 
@@ -53,8 +71,42 @@ if (!function_exists('plenoObtenerEstadoVotacion')) {
         ]);
         $row = $stmt->fetch();
 
-        return is_array($row) && !empty($row['estado_votacion'])
-            ? (string)$row['estado_votacion']
-            : 'sin_votacion';
+        return plenoNormalizarEstadoVotacion(
+            is_array($row) && !empty($row['estado_votacion']) ? (string)$row['estado_votacion'] : null,
+            $puntoNumero
+        );
+    }
+}
+
+if (!function_exists('plenoObtenerEstadosVotacion')) {
+    function plenoObtenerEstadosVotacion($conn, int $idSesion): array
+    {
+        plenoAsegurarTablaVotacion($conn);
+
+        $stmt = $conn->prepare(
+            'SELECT punto_numero, estado_votacion
+             FROM pleno_votacion_punto
+             WHERE id_sesion = :id_sesion'
+        );
+        $stmt->execute([':id_sesion' => $idSesion]);
+
+        $estados = [];
+        while ($row = $stmt->fetch()) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $puntoNumero = trim((string)($row['punto_numero'] ?? ''));
+            if ($puntoNumero === '') {
+                continue;
+            }
+
+            $estados[$puntoNumero] = plenoNormalizarEstadoVotacion(
+                (string)($row['estado_votacion'] ?? ''),
+                $puntoNumero
+            );
+        }
+
+        return $estados;
     }
 }

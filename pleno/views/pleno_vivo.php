@@ -4,7 +4,7 @@ require __DIR__ . '/partials/sidebar_pleno.php';
 $sesion = $data['pleno_sesion_actual'] ?? null;
 $temasComision = $data['pleno_temas_comision_sesion'] ?? [];
 $puntosVarios = $data['pleno_puntos_varios_sesion'] ?? [];
-$estadoVotacionActual = (string)($data['pleno_estado_votacion_actual'] ?? 'sin_votacion');
+$estadoVotacionActual = (string)($data['pleno_estado_votacion_actual'] ?? 'pendiente');
 $rolUsuario = (int)($data['usuario']['rol'] ?? $_SESSION['tipoUsuario_id'] ?? 0);
 $puedeControlarPunto = in_array($rolUsuario, [6, 20], true);
 

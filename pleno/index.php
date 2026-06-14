@@ -48,7 +48,7 @@ $plenoPuntosSesion = [];
 $plenoTemasComisionSesion = [];
 $plenoPuntosVariosSesion = [];
 $plenoTotalConsejerosGobernador = 0;
-$plenoEstadoVotacionActual = 'sin_votacion';
+$plenoEstadoVotacionActual = 'pendiente';
 
 if ($plenoAuth['authorized']) {
     try {

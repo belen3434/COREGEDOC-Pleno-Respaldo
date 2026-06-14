@@ -57,6 +57,23 @@ try {
         exit();
     }
 
+    $estadoActual = plenoObtenerEstadoVotacion($conn, $idSesion, $puntoActual);
+    if ($estadoActual === 'votacion_cerrada') {
+        http_response_code(409);
+        echo json_encode(['success' => false, 'mensaje' => 'La votaciÃ³n de este punto ya fue cerrada.'], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    if ($estadoActual === 'votacion_en_curso') {
+        echo json_encode([
+            'success' => true,
+            'punto_actual' => $puntoActual,
+            'estado_votacion' => 'votacion_en_curso',
+            'mensaje' => 'VotaciÃ³n en curso.',
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
     $stmt = $conn->prepare(
         "INSERT INTO pleno_votacion_punto
             (id_sesion, punto_numero, estado_votacion, fecha_inicio_votacion, fecha_actualizacion)
