@@ -149,33 +149,45 @@
                 }
             })
                 .then(function (response) {
-                    if (!response.ok) {
-                        throw new Error("No fue posible cargar temas.");
-                    }
+                    return response.json().then(function (data) {
+                        if (!response.ok) {
+                            throw new Error(data && (data.message || data.mensaje) ? (data.message || data.mensaje) : "No fue posible cargar temas.");
+                        }
 
-                    return response.json();
+                        return data;
+                    });
                 })
-                .then(function (payload) {
-                    var temas = Array.isArray(payload.temas) ? payload.temas : [];
+                .then(function (data) {
+                    var temas;
 
-                    clearTemaSelect(
-                        temas.length > 0
-                            ? "Seleccionar tema"
-                            : "No existen temas asociados"
-                    );
-
-                    if (temas.length > 0) {
-                        temas.forEach(function (tema) {
-                            var option = document.createElement("option");
-                            option.value = String(tema.idTema || "");
-                            option.textContent = String(tema.nombreTema || "");
-                            temaComisionSelect.appendChild(option);
-                        });
+                    if (!data || data.success !== true) {
+                        clearTemaSelect("No fue posible cargar los temas");
+                        temaComisionSelect.disabled = true;
+                        return;
                     }
+
+                    temas = Array.isArray(data.temas) ? data.temas : [];
+
+                    if (temas.length === 0) {
+                        clearTemaSelect("No existen temas asociados");
+                        temaComisionSelect.disabled = true;
+                        return;
+                    }
+
+                    clearTemaSelect("Seleccione un tema");
+                    temas.forEach(function (tema) {
+                        var option = document.createElement("option");
+                        option.value = String(tema.idTema || "");
+                        option.textContent = String(tema.nombreTema || "");
+                        temaComisionSelect.appendChild(option);
+                    });
 
                     temaComisionSelect.disabled = false;
                 })
-                .catch(function () {
+                .catch(function (error) {
+                    if (window.console && typeof window.console.error === "function") {
+                        window.console.error("Error cargando temas de comisión:", error);
+                    }
                     clearTemaSelect("No fue posible cargar los temas");
                     temaComisionSelect.disabled = true;
                 });
