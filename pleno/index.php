@@ -1,5 +1,55 @@
 <?php
 
+$plenoEsListadoTemasComision = ($_GET['action'] ?? null) === 'listar_temas_comision';
+if ($plenoEsListadoTemasComision) {
+    ob_start();
+
+    require_once dirname(__DIR__) . '/app/config/Constants.php';
+    require_once dirname(__DIR__) . '/app/config/Database.php';
+    require_once __DIR__ . '/helpers/auth.php';
+    require_once __DIR__ . '/models/SesionPlenaria.php';
+
+    try {
+        $plenoAuthTemas = plenoRequireAuthorizedUser();
+
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (empty($plenoAuthTemas['authorized'])) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No autorizado',
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        $idComision = (int)($_GET['idComision'] ?? 0);
+        $temas = (new SesionPlenaria())->listarTemasPorComision($idComision);
+
+        echo json_encode([
+            'success' => true,
+            'temas' => $temas,
+        ], JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $e) {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'message' => 'No fue posible cargar los temas',
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    exit();
+}
+
 require_once dirname(__DIR__) . '/app/config/Constants.php';
 require_once dirname(__DIR__) . '/app/config/Database.php';
 require_once __DIR__ . '/helpers/auth.php';
@@ -78,19 +128,6 @@ if ($plenoAuth['authorized']) {
     try {
         $plenoController = new PlenoController(new SesionPlenaria(), new TemaPleno(), $plenoAuth);
         $plenoAsistencia = new AsistenciaPleno();
-
-        if ($action === 'listar_temas_comision') {
-            header('Content-Type: application/json; charset=utf-8');
-
-            $idComision = (int)($_GET['idComision'] ?? 0);
-            $temas = $plenoController->listarTemasPorComision($idComision);
-
-            echo json_encode([
-                'success' => true,
-                'temas' => $temas,
-            ], JSON_UNESCAPED_UNICODE);
-            exit();
-        }
 
         $plenoController->manejarAccion($action);
         $plenoFlash = $plenoController->consumirFlash();
