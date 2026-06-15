@@ -404,16 +404,6 @@ if ($estadoVotacionActual === 'no_vota') {
             <aside class="pleno-live-main">
                 <section class="pleno-live-session-card">
                     <div class="pleno-live-session-body">
-                        <h2 class="h5 mb-3">Control de la Sesión</h2>
-                        <div class="pleno-live-control-buttons">
-                            <button type="button" class="btn btn-outline-success" id="plenoLivePrevBtn" <?php echo !$puedeControlarPunto || $puntoActual <= 1 ? 'disabled' : ''; ?>>Punto anterior</button>
-                            <button type="button" class="btn btn-outline-success" id="plenoLiveNextBtn" <?php echo !$puedeControlarPunto || $puntoActual >= 4 ? 'disabled' : ''; ?>>Siguiente punto</button>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="pleno-live-session-card">
-                    <div class="pleno-live-session-body">
                         <h2 class="h5 mb-3">Navegación del Pleno</h2>
                         <p class="mb-3"><strong>Punto actual:</strong> <?php echo (int)$puntoActual; ?> - <?php echo $h($puntosNavegacion[$puntoActual]); ?></p>
                         <?php foreach ($puntosNavegacion as $numero => $nombre): ?>
@@ -441,62 +431,3 @@ if ($estadoVotacionActual === 'no_vota') {
         </div>
     <?php endif; ?>
 </div>
-
-<?php if ($sesion && $puedeControlarPunto && $estadoSesion === 'en_curso'): ?>
-    <script>
-        (function () {
-            "use strict";
-
-            var idSesion = <?php echo (int)($sesion['id_sesion'] ?? 0); ?>;
-            var puntoActual = <?php echo (int)$puntoActual; ?>;
-            var actualizarPuntoUrl = "ajax/actualizar_punto_actual.php";
-
-            function guardarPunto(punto) {
-                if (!idSesion || punto < 1 || punto > 4) {
-                    return;
-                }
-
-                fetch(actualizarPuntoUrl, {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        id_sesion: idSesion,
-                        punto_actual: String(punto)
-                    })
-                }).then(function (response) {
-                    if (!response.ok) {
-                        throw new Error("No fue posible guardar el punto actual.");
-                    }
-
-                    return response.json();
-                }).then(function (payload) {
-                    if (payload && payload.ok === true) {
-                        window.location.reload();
-                    }
-                }).catch(function (error) {
-                    if (window.console && typeof window.console.error === "function") {
-                        window.console.error(error);
-                    }
-                });
-            }
-
-            var prev = document.getElementById("plenoLivePrevBtn");
-            var next = document.getElementById("plenoLiveNextBtn");
-
-            if (prev) {
-                prev.addEventListener("click", function () {
-                    guardarPunto(puntoActual - 1);
-                });
-            }
-
-            if (next) {
-                next.addEventListener("click", function () {
-                    guardarPunto(puntoActual + 1);
-                });
-            }
-        })();
-    </script>
-<?php endif; ?>
