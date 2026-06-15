@@ -58,6 +58,7 @@ $plenoTotalConsejerosGobernador = 0;
 $plenoEstadoVotacionActual = 'pendiente';
 $plenoAsistenciaUsuario = null;
 $plenoAsistenciaResumen = null;
+$plenoVotoUsuarioActual = null;
 
 if ($plenoAuth['authorized']) {
     try {
@@ -103,6 +104,12 @@ if ($plenoAuth['authorized']) {
                 plenoVotacionConn(),
                 (int)$plenoSesionActual['id_sesion'],
                 trim((string)($plenoSesionActual['punto_actual'] ?? '1')) ?: '1'
+            );
+            $plenoVotoUsuarioActual = plenoObtenerVotoUsuarioPunto(
+                plenoVotacionConn(),
+                (int)$plenoSesionActual['id_sesion'],
+                trim((string)($plenoSesionActual['punto_actual'] ?? '1')) ?: '1',
+                (int)($_SESSION['idUsuario'] ?? 0)
             );
         }
 
@@ -157,6 +164,7 @@ $data = [
     'pleno_estado_votacion_actual' => $plenoEstadoVotacionActual,
     'pleno_asistencia_usuario' => $plenoAsistenciaUsuario,
     'pleno_asistencia_resumen' => $plenoAsistenciaResumen,
+    'pleno_voto_usuario_actual' => $plenoVotoUsuarioActual,
     'pleno_crud_error' => $plenoCrudError,
 ];
 
