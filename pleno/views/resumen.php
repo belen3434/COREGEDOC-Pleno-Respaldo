@@ -1,19 +1,66 @@
 <?php
 require __DIR__ . '/partials/sidebar_pleno.php';
 
-$resultados = [
-    ['punto' => '1. Aprobación de Acta: GGG', 'resultado' => 'Aprobado', 'favor' => 25, 'contra' => 1, 'abstenciones' => 1],
-    ['punto' => '2. Cuenta Presidente del Consejo Regional', 'resultado' => 'Aprobado', 'favor' => 26, 'contra' => 0, 'abstenciones' => 2],
-    ['punto' => '3.1 Comisión de Régimen Interior', 'resultado' => 'Aprobado', 'favor' => 24, 'contra' => 3, 'abstenciones' => 1],
-    ['punto' => '3.2 Comisión de Educación', 'resultado' => 'Rechazado', 'favor' => 12, 'contra' => 15, 'abstenciones' => 1],
-    ['punto' => '4. Varios: Modificación Reglamento Interno', 'resultado' => 'Aprobado', 'favor' => 23, 'contra' => 2, 'abstenciones' => 3],
-];
+$sesion = $data['pleno_sesion_actual'] ?? null;
+$asistenciaResumen = $data['pleno_asistencia_resumen'] ?? null;
+$resultados = $data['pleno_resumen_resultados'] ?? [];
+$participantes = is_array($asistenciaResumen) ? ($asistenciaResumen['participantes'] ?? []) : [];
 
-$acuerdos = [
-    ['numero' => 'Acuerdo N°1', 'texto' => 'Se aprueba el Presupuesto Regional 2026.'],
-    ['numero' => 'Acuerdo N°2', 'texto' => 'Se aprueba la modificación del Reglamento Interno.'],
-    ['numero' => 'Acuerdo N°3', 'texto' => 'Se aprueba la ejecución del proyecto de infraestructura vial.'],
-];
+$h = static function ($valor): string {
+    return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
+};
+
+$formatearFecha = static function (?string $fecha): string {
+    if (!$fecha) {
+        return 'Sin fecha';
+    }
+
+    $timestamp = strtotime($fecha);
+    return $timestamp ? date('d/m/Y', $timestamp) : $fecha;
+};
+
+$formatearHora = static function (?string $hora): string {
+    if (!$hora) {
+        return 'Sin hora';
+    }
+
+    return substr($hora, 0, 5) . ' hrs.';
+};
+
+$formatearFechaHora = static function (?string $fecha): string {
+    if (!$fecha) {
+        return 'Sin registro';
+    }
+
+    $timestamp = strtotime($fecha);
+    return $timestamp ? date('d/m/Y H:i', $timestamp) . ' hrs.' : $fecha;
+};
+
+$formatearEstado = static function (?string $estado): string {
+    $estado = trim((string)$estado);
+    return $estado !== '' ? strtoupper(str_replace('_', ' ', $estado)) : 'SIN ESTADO';
+};
+
+$formatearTipo = static function (?string $tipo): string {
+    $tipo = trim((string)$tipo);
+    return $tipo !== '' ? ucfirst(strtolower($tipo)) : 'Sin tipo';
+};
+
+$claseResultado = static function (string $resultado): string {
+    if ($resultado === 'Aprobado') {
+        return 'pleno-result-approved';
+    }
+
+    if ($resultado === 'Rechazado') {
+        return 'pleno-result-rejected';
+    }
+
+    return 'pleno-result-neutral';
+};
+
+$presentes = is_array($asistenciaResumen) ? (int)($asistenciaResumen['presentes'] ?? 0) : 0;
+$ausentes = is_array($asistenciaResumen) ? (int)($asistenciaResumen['ausentes'] ?? 0) : 0;
+$totalHabilitados = is_array($asistenciaResumen) ? (int)($asistenciaResumen['total'] ?? 0) : 0;
 ?>
 <style>
     .pleno-resumen-page {
@@ -275,6 +322,11 @@ $acuerdos = [
         color: #d72638;
     }
 
+    .pleno-result-neutral {
+        background: #eef2f6;
+        color: #5d7180;
+    }
+
     .pleno-vote-favor,
     .pleno-vote-contra,
     .pleno-vote-abstencion {
@@ -474,6 +526,17 @@ $acuerdos = [
         <h1 class="pleno-resumen-title">Resumen</h1>
     </div>
 
+    <?php if (!$sesion): ?>
+        <section class="pleno-resumen-card">
+            <div class="pleno-resumen-card-body">
+                <h2 class="pleno-resumen-card-title">
+                    <i class="fas fa-info-circle"></i>
+                    Sin sesión disponible
+                </h2>
+                <p class="pleno-observation-text">No existe una sesión plenaria vigente para mostrar resumen.</p>
+            </div>
+        </section>
+    <?php else: ?>
     <div class="pleno-resumen-grid">
         <section class="pleno-resumen-card">
             <div class="pleno-resumen-card-body">
@@ -484,31 +547,31 @@ $acuerdos = [
                 <div class="pleno-session-summary-grid">
                     <div class="pleno-session-summary-item">
                         <div class="pleno-session-label">Número de sesión</div>
-                        <div class="pleno-session-value">PL-2026-048</div>
+                        <div class="pleno-session-value"><?php echo $h($sesion['numero_sesion'] ?? 'Sin número'); ?></div>
                     </div>
                     <div class="pleno-session-summary-item">
                         <div class="pleno-session-label">Tipo de pleno</div>
-                        <div class="pleno-session-value">Ordinario</div>
+                        <div class="pleno-session-value"><?php echo $h($formatearTipo($sesion['tipo_pleno'] ?? null)); ?></div>
                     </div>
                     <div class="pleno-session-summary-item">
                         <div class="pleno-session-label">Fecha</div>
-                        <div class="pleno-session-value">11/06/2026</div>
+                        <div class="pleno-session-value"><?php echo $h($formatearFecha($sesion['fecha'] ?? null)); ?></div>
                     </div>
                     <div class="pleno-session-summary-item">
-                        <div class="pleno-session-label">Hora inicio</div>
-                        <div class="pleno-session-value">22:00 hrs.</div>
-                    </div>
-                    <div class="pleno-session-summary-item">
-                        <div class="pleno-session-label">Hora término</div>
-                        <div class="pleno-session-value">23:15 hrs.</div>
+                        <div class="pleno-session-label">Hora</div>
+                        <div class="pleno-session-value"><?php echo $h($formatearHora($sesion['hora'] ?? null)); ?></div>
                     </div>
                     <div class="pleno-session-summary-item">
                         <div class="pleno-session-label">Estado</div>
-                        <div class="pleno-session-value"><span class="pleno-badge-finalizado">Finalizado</span></div>
+                        <div class="pleno-session-value"><span class="pleno-badge-finalizado"><?php echo $h($formatearEstado($sesion['estado'] ?? null)); ?></span></div>
                     </div>
                     <div class="pleno-session-summary-item">
                         <div class="pleno-session-label">Lugar</div>
-                        <div class="pleno-session-value">Salón Plenario 3</div>
+                        <div class="pleno-session-value"><?php echo $h($sesion['lugar'] ?? 'Sin lugar'); ?></div>
+                    </div>
+                    <div class="pleno-session-summary-item">
+                        <div class="pleno-session-label">Observaciones</div>
+                        <div class="pleno-session-value"><?php echo $h(trim((string)($sesion['observaciones'] ?? '')) ?: 'Sin observaciones'); ?></div>
                     </div>
                 </div>
             </div>
@@ -524,29 +587,22 @@ $acuerdos = [
                     <div class="pleno-attendance-tile pleno-attendance-green">
                         <span class="pleno-attendance-icon"><i class="fas fa-users"></i></span>
                         <div>
-                            <div class="pleno-attendance-number">27</div>
-                            <div class="pleno-attendance-text">Consejeros presentes</div>
-                        </div>
-                    </div>
-                    <div class="pleno-attendance-tile pleno-attendance-blue">
-                        <span class="pleno-attendance-icon"><i class="fas fa-user-tie"></i></span>
-                        <div>
-                            <div class="pleno-attendance-number">1</div>
-                            <div class="pleno-attendance-text">Gobernador</div>
+                            <div class="pleno-attendance-number"><?php echo (int)$presentes; ?></div>
+                            <div class="pleno-attendance-text">Presentes</div>
                         </div>
                     </div>
                     <div class="pleno-attendance-tile pleno-attendance-orange">
                         <span class="pleno-attendance-icon"><i class="fas fa-user-minus"></i></span>
                         <div>
-                            <div class="pleno-attendance-number">2</div>
+                            <div class="pleno-attendance-number"><?php echo (int)$ausentes; ?></div>
                             <div class="pleno-attendance-text">Ausentes</div>
                         </div>
                     </div>
                     <div class="pleno-attendance-tile pleno-attendance-purple">
                         <span class="pleno-attendance-icon"><i class="fas fa-clipboard-check"></i></span>
                         <div>
-                            <div class="pleno-attendance-number">28</div>
-                            <div class="pleno-attendance-text">Total asistentes</div>
+                            <div class="pleno-attendance-number"><?php echo (int)$totalHabilitados; ?></div>
+                            <div class="pleno-attendance-text">Total habilitados</div>
                         </div>
                     </div>
                 </div>
@@ -557,37 +613,108 @@ $acuerdos = [
     <section class="pleno-resumen-card">
         <div class="pleno-resumen-card-body">
             <h2 class="pleno-resumen-card-title">
+                <i class="fas fa-user-check"></i>
+                Lista de Asistentes
+            </h2>
+            <?php if (empty($participantes)): ?>
+                <p class="pleno-observation-text">No hay asistentes registrados para esta sesión.</p>
+            <?php else: ?>
+                <div class="pleno-results-table-wrap">
+                    <table class="pleno-results-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Estado</th>
+                                <th>Hora registro</th>
+                                <th>Origen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($participantes as $participante): ?>
+                                <?php $estadoAsistencia = strtoupper(trim((string)($participante['estadoAsistencia'] ?? 'AUSENTE'))) ?: 'AUSENTE'; ?>
+                                <tr>
+                                    <td><?php echo $h($participante['nombreCompleto'] ?? 'Sin nombre'); ?></td>
+                                    <td><?php echo $h($estadoAsistencia); ?></td>
+                                    <td><?php echo $h($formatearFechaHora($participante['fechaRegistroAsistencia'] ?? null)); ?></td>
+                                    <td><?php echo $h(trim((string)($participante['origenAsistencia'] ?? '')) ?: 'Sin origen'); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <section class="pleno-resumen-card">
+        <div class="pleno-resumen-card-body">
+            <h2 class="pleno-resumen-card-title">
                 <i class="fas fa-poll"></i>
                 Resultados por Punto Tratado
             </h2>
-            <div class="pleno-results-table-wrap">
-                <table class="pleno-results-table">
-                    <thead>
-                        <tr>
-                            <th>Punto</th>
-                            <th>Resultado</th>
-                            <th>A favor</th>
-                            <th>En contra</th>
-                            <th>Abstenciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($resultados as $resultado): ?>
+            <?php if (empty($resultados)): ?>
+                <p class="pleno-observation-text">No hay puntos tratados registrados para esta sesión.</p>
+            <?php else: ?>
+                <div class="pleno-results-table-wrap">
+                    <table class="pleno-results-table">
+                        <thead>
                             <tr>
-                                <td><?php echo htmlspecialchars($resultado['punto'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                <td>
-                                    <span class="pleno-result-badge <?php echo $resultado['resultado'] === 'Aprobado' ? 'pleno-result-approved' : 'pleno-result-rejected'; ?>">
-                                        <?php echo htmlspecialchars($resultado['resultado'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </span>
-                                </td>
-                                <td class="pleno-vote-favor"><?php echo (int)$resultado['favor']; ?></td>
-                                <td class="pleno-vote-contra"><?php echo (int)$resultado['contra']; ?></td>
-                                <td class="pleno-vote-abstencion"><?php echo (int)$resultado['abstenciones']; ?></td>
+                                <th>Punto</th>
+                                <th>Resultado</th>
+                                <th>Sí</th>
+                                <th>No</th>
+                                <th>Abstención</th>
+                                <th>Total</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($resultados as $indice => $resultado): ?>
+                                <tr>
+                                    <td><?php echo $h($resultado['numero'] . '. ' . $resultado['titulo']); ?></td>
+                                    <td>
+                                        <span class="pleno-result-badge <?php echo $h($claseResultado((string)$resultado['resultado'])); ?>">
+                                            <?php echo $h($resultado['resultado']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="pleno-vote-favor"><?php echo (int)$resultado['si']; ?></td>
+                                    <td class="pleno-vote-contra"><?php echo (int)$resultado['no']; ?></td>
+                                    <td class="pleno-vote-abstencion"><?php echo (int)$resultado['abstencion']; ?></td>
+                                    <td><?php echo (int)$resultado['total']; ?></td>
+                                </tr>
+                                <?php if (!empty($resultado['votos'])): ?>
+                                    <tr>
+                                        <td colspan="6">
+                                            <details>
+                                                <summary>Ver detalle de votos</summary>
+                                                <div class="pleno-results-table-wrap mt-3">
+                                                    <table class="pleno-results-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Consejero</th>
+                                                                <th>Voto emitido</th>
+                                                                <th>Hora</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php foreach ($resultado['votos'] as $voto): ?>
+                                                                <tr>
+                                                                    <td><?php echo $h($voto['consejero'] ?? 'Sin nombre'); ?></td>
+                                                                    <td><?php echo $h($voto['opcionVoto'] ?? 'Sin voto'); ?></td>
+                                                                    <td><?php echo $h($formatearFechaHora($voto['hora'] ?? null)); ?></td>
+                                                                </tr>
+                                                            <?php endforeach; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </details>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
         </div>
     </section>
 
@@ -598,20 +725,7 @@ $acuerdos = [
                     <i class="fas fa-check-double"></i>
                     Acuerdos Adoptados
                 </h2>
-                <ul class="pleno-agreements-list">
-                    <?php foreach ($acuerdos as $acuerdo): ?>
-                        <li class="pleno-agreement-card">
-                            <span class="pleno-agreement-check"><i class="fas fa-check"></i></span>
-                            <div>
-                                <div class="pleno-agreement-number"><?php echo htmlspecialchars($acuerdo['numero'], ENT_QUOTES, 'UTF-8'); ?></div>
-                                <div class="pleno-agreement-text"><?php echo htmlspecialchars($acuerdo['texto'], ENT_QUOTES, 'UTF-8'); ?></div>
-                            </div>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-                <button type="button" class="btn pleno-view-all-btn">
-                    <i class="fas fa-list-check me-2"></i>Ver todos los acuerdos
-                </button>
+                <p class="pleno-observation-text">No hay acuerdos registrados para esta sesión.</p>
             </div>
         </section>
 
@@ -624,21 +738,9 @@ $acuerdos = [
                 <div class="pleno-certificate-box">
                     <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
                     <div>
-                        <div class="pleno-certificate-name">Certificado_Acuerdos_PL-2026-048.pdf</div>
-                        <div class="pleno-certificate-date">Generado el 11/06/2026 - 23:16 hrs.</div>
-                        <span class="pleno-badge-generado">GENERADO</span>
+                        <div class="pleno-certificate-name">No hay certificado generado.</div>
+                        <div class="pleno-certificate-date">El certificado se mostrará cuando sea generado.</div>
                     </div>
-                </div>
-                <div class="pleno-certificate-actions">
-                    <button type="button" class="btn btn-outline-success">
-                        <i class="fas fa-eye me-2"></i>Vista previa
-                    </button>
-                    <button type="button" class="btn btn-outline-success">
-                        <i class="fas fa-download me-2"></i>Descargar PDF
-                    </button>
-                    <button type="button" class="btn btn-success">
-                        <i class="fas fa-upload me-2"></i>Publicar Certificado
-                    </button>
                 </div>
             </div>
         </section>
@@ -650,11 +752,12 @@ $acuerdos = [
                 <i class="fas fa-comment-dots"></i>
                 Observaciones Finales
             </h2>
-            <p class="pleno-observation-text">La sesión se desarrolló sin incidentes y concluyó a las 23:15 hrs.</p>
+            <p class="pleno-observation-text"><?php echo $h(trim((string)($sesion['observaciones'] ?? '')) ?: 'Sin observaciones registradas para esta sesión.'); ?></p>
             <div class="pleno-observation-meta">
-                <span>Registrado por: <strong>Secretaría de Pleno</strong></span>
-                <span>Fecha: <strong>11/06/2026 - 23:16 hrs.</strong></span>
+                <span>Estado: <strong><?php echo $h($formatearEstado($sesion['estado'] ?? null)); ?></strong></span>
+                <span>Última actualización: <strong><?php echo $h($formatearFechaHora($sesion['fecha_actualizacion'] ?? $sesion['fecha_creacion'] ?? null)); ?></strong></span>
             </div>
         </div>
     </section>
+    <?php endif; ?>
 </div>

@@ -7,6 +7,7 @@ require_once __DIR__ . '/helpers/votacion_pleno.php';
 require_once __DIR__ . '/models/SesionPlenaria.php';
 require_once __DIR__ . '/models/TemaPleno.php';
 require_once __DIR__ . '/models/AsistenciaPleno.php';
+require_once __DIR__ . '/models/ResumenPleno.php';
 require_once __DIR__ . '/controllers/PlenoController.php';
 
 $plenoAuth = plenoRequireAuthorizedUser();
@@ -59,6 +60,7 @@ $plenoEstadoVotacionActual = 'pendiente';
 $plenoAsistenciaUsuario = null;
 $plenoAsistenciaResumen = null;
 $plenoVotoUsuarioActual = null;
+$plenoResumenResultados = [];
 
 if ($plenoAuth['authorized']) {
     try {
@@ -128,6 +130,20 @@ if ($plenoAuth['authorized']) {
             $plenoTotalConsejerosGobernador = $plenoController->contarConsejerosYGobernador();
         }
 
+        if ($vista === 'resumen') {
+            $idSesion = (int)($_GET['id_sesion'] ?? 0);
+            $plenoSesionActual = $idSesion > 0
+                ? $plenoController->obtenerSesion($idSesion)
+                : $plenoController->obtenerUltimaSesionVigente();
+
+            if ($plenoSesionActual) {
+                $idSesionActual = (int)$plenoSesionActual['id_sesion'];
+                $plenoAsistenciaResumen = $plenoAsistencia->obtenerResumenSesion($idSesionActual);
+                $plenoResumen = new ResumenPleno();
+                $plenoResumenResultados = $plenoResumen->obtenerResultadosPuntos($idSesionActual, $plenoSesionActual);
+            }
+        }
+
         if ($vista === 'editar_sesion') {
             $plenoSesionActual = $plenoController->obtenerSesion((int)($_GET['id'] ?? 0));
             if ($plenoSesionActual) {
@@ -165,6 +181,7 @@ $data = [
     'pleno_asistencia_usuario' => $plenoAsistenciaUsuario,
     'pleno_asistencia_resumen' => $plenoAsistenciaResumen,
     'pleno_voto_usuario_actual' => $plenoVotoUsuarioActual,
+    'pleno_resumen_resultados' => $plenoResumenResultados,
     'pleno_crud_error' => $plenoCrudError,
 ];
 
