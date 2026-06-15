@@ -8,6 +8,7 @@ require_once __DIR__ . '/models/SesionPlenaria.php';
 require_once __DIR__ . '/models/TemaPleno.php';
 require_once __DIR__ . '/models/AsistenciaPleno.php';
 require_once __DIR__ . '/models/ResumenPleno.php';
+require_once __DIR__ . '/models/HistorialVotacionesPleno.php';
 require_once __DIR__ . '/controllers/PlenoController.php';
 
 $plenoAuth = plenoRequireAuthorizedUser();
@@ -29,10 +30,11 @@ $vistasPermitidas = [
     'pleno_vivo' => __DIR__ . '/views/pleno_vivo.php',
     'votacion' => __DIR__ . '/views/votacion.php',
     'resumen' => __DIR__ . '/views/resumen.php',
+    'historial_votaciones' => __DIR__ . '/views/historial_votaciones.php',
     'ayuda' => __DIR__ . '/views/ayuda.php',
 ];
 
-$vistasSoloVisualizacion = ['tabla', 'pleno_vivo', 'votacion', 'resumen'];
+$vistasSoloVisualizacion = ['tabla', 'pleno_vivo', 'votacion', 'resumen', 'historial_votaciones'];
 
 if ($tipoUsuarioId === 1 && ($vistaSolicitada === null || $vistaSolicitada === '' || in_array($vista, ['index', 'configuracion', 'tabla'], true))) {
     header('Location: index.php?vista=pleno_vivo');
@@ -61,6 +63,11 @@ $plenoAsistenciaUsuario = null;
 $plenoAsistenciaResumen = null;
 $plenoVotoUsuarioActual = null;
 $plenoResumenResultados = [];
+$plenoHistorialVotaciones = [];
+$plenoHistorialFiltros = [
+    'q' => '',
+    'resultado' => 'todas',
+];
 
 if ($plenoAuth['authorized']) {
     try {
@@ -144,6 +151,15 @@ if ($plenoAuth['authorized']) {
             }
         }
 
+        if ($vista === 'historial_votaciones') {
+            $plenoHistorialFiltros = [
+                'q' => trim((string)($_GET['q'] ?? '')),
+                'resultado' => trim((string)($_GET['resultado'] ?? 'todas')),
+            ];
+            $historialVotaciones = new HistorialVotacionesPleno();
+            $plenoHistorialVotaciones = $historialVotaciones->listar($plenoHistorialFiltros);
+        }
+
         if ($vista === 'editar_sesion') {
             $plenoSesionActual = $plenoController->obtenerSesion((int)($_GET['id'] ?? 0));
             if ($plenoSesionActual) {
@@ -182,6 +198,8 @@ $data = [
     'pleno_asistencia_resumen' => $plenoAsistenciaResumen,
     'pleno_voto_usuario_actual' => $plenoVotoUsuarioActual,
     'pleno_resumen_resultados' => $plenoResumenResultados,
+    'pleno_historial_votaciones' => $plenoHistorialVotaciones,
+    'pleno_historial_filtros' => $plenoHistorialFiltros,
     'pleno_crud_error' => $plenoCrudError,
 ];
 
