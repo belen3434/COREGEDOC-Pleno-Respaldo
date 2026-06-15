@@ -243,6 +243,58 @@ require __DIR__ . '/partials/sidebar_pleno.php';
         font-weight: 700;
     }
 
+    .pleno-vote-exposition {
+        margin-top: 1.25rem;
+        padding: 1.25rem;
+        border: 1px solid #dce8f1;
+        border-radius: 14px;
+        background: #f8fbfd;
+        color: #243d4d;
+    }
+
+    .pleno-vote-exposition-message {
+        margin: 0 0 1rem;
+        color: #5d7180;
+        font-weight: 800;
+    }
+
+    .pleno-vote-timer {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .pleno-vote-timer-ring {
+        width: 96px;
+        height: 96px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: conic-gradient(#f28c18 var(--progress, 100%), #e8eef2 0);
+    }
+
+    .pleno-vote-timer-inner {
+        width: 76px;
+        height: 76px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #203949;
+        font-size: 1.2rem;
+        font-weight: 900;
+    }
+
+    .pleno-vote-timer-label {
+        color: #5d7180;
+        font-size: 0.78rem;
+        font-weight: 850;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
     .pleno-vote-page:fullscreen {
         overflow: auto;
         padding: 1.5rem;
@@ -299,7 +351,7 @@ require __DIR__ . '/partials/sidebar_pleno.php';
             <button type="button" class="pleno-vote-close-btn" id="plenoFullscreenBtn">Pantalla completa</button>
         </div>
 
-        <div class="pleno-vote-counters" aria-label="Conteo visual de votos">
+        <div class="pleno-vote-counters" id="plenoVoteCounters" aria-label="Conteo visual de votos">
             <div class="pleno-vote-counter pleno-vote-counter-si">
                 <span class="pleno-vote-counter-icon"><i class="fas fa-check"></i></span>
                 <div>
@@ -322,11 +374,24 @@ require __DIR__ . '/partials/sidebar_pleno.php';
                 </div>
             </div>
         </div>
+
+        <div class="pleno-vote-exposition d-none" id="plenoVoteExposition">
+            <p class="pleno-vote-exposition-message" id="plenoVoteExpositionMessage">Punto en exposición. No requiere votación.</p>
+            <div class="pleno-vote-timer" aria-label="Cronómetro de exposición">
+                <div class="pleno-vote-timer-ring" id="plenoVoteTimerRing">
+                    <span class="pleno-vote-timer-inner" id="plenoVoteTimerText">02:00</span>
+                </div>
+                <div>
+                    <div class="pleno-vote-timer-label">Tiempo de exposición</div>
+                    <div class="pleno-vote-meta">Cronómetro visual de referencia.</div>
+                </div>
+            </div>
+        </div>
     </section>
 
     <div class="pleno-vote-empty d-none" id="plenoVoteEmpty">No hay votación activa en este momento.</div>
 
-    <div class="pleno-vote-tables">
+    <div class="pleno-vote-tables" id="plenoVoteTables">
         <section class="pleno-vote-table-card">
             <div class="pleno-vote-table-head">
                 <h3 class="pleno-vote-table-title" id="plenoVoteGroupOneTitle">Consejeros/as 1 al 6</h3>
@@ -373,6 +438,12 @@ require __DIR__ . '/partials/sidebar_pleno.php';
         var topicEl = document.getElementById("plenoVoteTopic");
         var metaEl = document.getElementById("plenoVoteMeta");
         var emptyEl = document.getElementById("plenoVoteEmpty");
+        var countersEl = document.getElementById("plenoVoteCounters");
+        var tablesEl = document.getElementById("plenoVoteTables");
+        var expositionEl = document.getElementById("plenoVoteExposition");
+        var expositionMessageEl = document.getElementById("plenoVoteExpositionMessage");
+        var timerRingEl = document.getElementById("plenoVoteTimerRing");
+        var timerTextEl = document.getElementById("plenoVoteTimerText");
         var countSiEl = document.getElementById("plenoVoteCountSi");
         var countNoEl = document.getElementById("plenoVoteCountNo");
         var countAbsEl = document.getElementById("plenoVoteCountAbs");
@@ -383,9 +454,70 @@ require __DIR__ . '/partials/sidebar_pleno.php';
         var groupOneTitle = document.getElementById("plenoVoteGroupOneTitle");
         var groupTwoTitle = document.getElementById("plenoVoteGroupTwoTitle");
         var pollingMs = 3000;
+        var timerSeconds = 120;
+        var timerInterval = null;
+        var timerPoint = "";
+        var timerFinishedPoint = "";
 
         function limpiar(texto) {
             return String(texto || "");
+        }
+
+        function formatoTimer(segundos) {
+            var minutos = Math.floor(segundos / 60);
+            var resto = segundos % 60;
+            return String(minutos).padStart(2, "0") + ":" + String(resto).padStart(2, "0");
+        }
+
+        function detenerTimer() {
+            if (timerInterval) {
+                window.clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function iniciarTimer(punto) {
+            if (timerPoint === punto && timerInterval) {
+                return;
+            }
+
+            if (timerFinishedPoint === punto) {
+                timerPoint = punto;
+                timerSeconds = 0;
+                if (timerTextEl) {
+                    timerTextEl.textContent = "00:00";
+                }
+                if (timerRingEl) {
+                    timerRingEl.style.setProperty("--progress", "0%");
+                }
+                return;
+            }
+
+            detenerTimer();
+            timerPoint = punto;
+            timerFinishedPoint = "";
+            timerSeconds = 120;
+
+            function pintarTimer() {
+                var progreso = Math.max(timerSeconds, 0) / 120 * 100;
+                if (timerTextEl) {
+                    timerTextEl.textContent = formatoTimer(Math.max(timerSeconds, 0));
+                }
+                if (timerRingEl) {
+                    timerRingEl.style.setProperty("--progress", progreso + "%");
+                }
+            }
+
+            pintarTimer();
+            timerInterval = window.setInterval(function () {
+                timerSeconds = Math.max(timerSeconds - 1, 0);
+                pintarTimer();
+
+                if (timerSeconds <= 0) {
+                    timerFinishedPoint = punto;
+                    detenerTimer();
+                }
+            }, 1000);
         }
 
         function etiquetaVoto(voto) {
@@ -451,6 +583,9 @@ require __DIR__ . '/partials/sidebar_pleno.php';
             var participantes = Array.isArray(data.participantes) ? data.participantes : [];
             var punto = limpiar(votacion.punto_numero);
             var estado = limpiar(votacion.estado_votacion);
+            var tituloPunto = punto
+                ? (limpiar(votacion.titulo) + (limpiar(votacion.descripcion) ? " - " + limpiar(votacion.descripcion) : ""))
+                : "Sin votacion registrada";
             var mitad = Math.ceil(participantes.length / 2);
             var grupoUno = participantes.slice(0, mitad);
             var grupoDos = participantes.slice(mitad);
@@ -460,10 +595,16 @@ require __DIR__ . '/partials/sidebar_pleno.php';
             countAbsEl.textContent = Number(conteo.ABSTENCION || 0);
 
             if (data.hay_votacion !== true) {
-                statusEl.textContent = "SIN VOTACIÓN ACTIVA";
-                topicEl.textContent = limpiar(data.mensaje || "No hay votación activa en este momento.");
-                metaEl.textContent = "La pantalla se actualizará automáticamente.";
-                emptyEl.textContent = limpiar(data.mensaje || "No hay votación activa en este momento.");
+                detenerTimer();
+                timerPoint = "";
+                timerFinishedPoint = "";
+                countersEl.classList.remove("d-none");
+                tablesEl.classList.remove("d-none");
+                expositionEl.classList.add("d-none");
+                statusEl.textContent = "SIN VOTACION ACTIVA";
+                topicEl.textContent = limpiar(data.mensaje || "No hay votacion activa en este momento.");
+                metaEl.textContent = "La pantalla se actualizara automaticamente.";
+                emptyEl.textContent = limpiar(data.mensaje || "No hay votacion activa en este momento.");
                 emptyEl.classList.remove("d-none");
                 groupOneTitle.textContent = "Consejeros/as";
                 groupTwoTitle.textContent = "Consejeros/as";
@@ -474,11 +615,28 @@ require __DIR__ . '/partials/sidebar_pleno.php';
                 return;
             }
 
-            statusEl.textContent = estado === "votacion_en_curso" ? "PUNTO ACTUAL EN VOTACIÓN" : "ÚLTIMA VOTACIÓN REGISTRADA";
-            topicEl.textContent = punto
-                ? (limpiar(votacion.titulo) + (limpiar(votacion.descripcion) ? " - " + limpiar(votacion.descripcion) : ""))
-                : "Sin votación registrada";
-            metaEl.textContent = "Pleno " + limpiar(sesion.numero_sesion || sesion.id_sesion || "") + " · " + Number(data.total_votos || 0) + " votos de " + Number(data.total_participantes || 0) + " participantes";
+            if (data.requiere_votacion === false || data.modo === "exposicion") {
+                countersEl.classList.add("d-none");
+                tablesEl.classList.add("d-none");
+                expositionEl.classList.remove("d-none");
+                emptyEl.classList.add("d-none");
+                statusEl.textContent = "PUNTO EN EXPOSICION";
+                topicEl.textContent = tituloPunto || "Punto en exposicion";
+                metaEl.textContent = "Pleno " + limpiar(sesion.numero_sesion || sesion.id_sesion || "") + " - No requiere votacion";
+                expositionMessageEl.textContent = limpiar(data.mensaje || "Punto en exposicion. No requiere votacion.");
+                iniciarTimer(punto);
+                return;
+            }
+
+            detenerTimer();
+            timerPoint = "";
+            timerFinishedPoint = "";
+            countersEl.classList.remove("d-none");
+            tablesEl.classList.remove("d-none");
+            expositionEl.classList.add("d-none");
+            statusEl.textContent = estado === "votacion_en_curso" ? "PUNTO ACTUAL EN VOTACION" : "ULTIMA VOTACION REGISTRADA";
+            topicEl.textContent = tituloPunto;
+            metaEl.textContent = "Pleno " + limpiar(sesion.numero_sesion || sesion.id_sesion || "") + " - " + Number(data.total_votos || 0) + " votos de " + Number(data.total_participantes || 0) + " participantes";
             emptyEl.classList.toggle("d-none", data.hay_votacion === true);
 
             groupOneTitle.textContent = "Consejeros/as 1 al " + grupoUno.length;
@@ -489,7 +647,6 @@ require __DIR__ . '/partials/sidebar_pleno.php';
             renderGrupo(groupOneBody, grupoUno);
             renderGrupo(groupTwoBody, grupoDos);
         }
-
         function cargarEstado() {
             fetch("ajax/votacion_estado.php", {
                 headers: {
