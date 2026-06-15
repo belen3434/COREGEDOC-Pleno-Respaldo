@@ -439,11 +439,6 @@ $detallePuntoActual = $puntoActual;
         font-weight: 850;
     }
 
-    .agenda-chevron {
-        color: #7d93a1;
-        font-size: 0.9rem;
-    }
-
     .agenda-sublist {
         display: grid;
         gap: 0.5rem;
@@ -724,7 +719,6 @@ $detallePuntoActual = $puntoActual;
                                     <?php if ($puntoActual && $puntoActual['numero'] === '1'): ?>
                                         <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
                                     <?php endif; ?>
-                                    <i class="fas fa-chevron-down agenda-chevron"></i>
                                 </div>
                             </article>
 
@@ -737,7 +731,6 @@ $detallePuntoActual = $puntoActual;
                                     <?php if ($puntoActual && $puntoActual['numero'] === '2'): ?>
                                         <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
                                     <?php endif; ?>
-                                    <i class="fas fa-chevron-down agenda-chevron"></i>
                                 </div>
                             </article>
 
@@ -750,7 +743,6 @@ $detallePuntoActual = $puntoActual;
                                     <?php if ($puntoActual && $puntoActual['numero'] === '3'): ?>
                                         <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
                                     <?php endif; ?>
-                                    <i class="fas fa-chevron-down agenda-chevron"></i>
                                 </div>
                                 <div class="agenda-sublist">
                                     <?php if (empty($temasComision)): ?>
@@ -787,7 +779,6 @@ $detallePuntoActual = $puntoActual;
                                     <?php if ($puntoActual && $puntoActual['numero'] === '4'): ?>
                                         <span class="secretaria-badge badge-current" data-current-badge="true">PUNTO ACTUAL</span>
                                     <?php endif; ?>
-                                    <i class="fas fa-chevron-down agenda-chevron"></i>
                                 </div>
                                 <div class="agenda-sublist">
                                     <?php if (empty($puntosVarios)): ?>
@@ -1352,10 +1343,9 @@ $detallePuntoActual = $puntoActual;
 
                 if (elemento.classList.contains("agenda-item")) {
                     var main = elemento.querySelector(".agenda-main");
-                    var chevron = elemento.querySelector(".agenda-chevron");
                     elemento.classList.add("agenda-item-current");
                     if (main) {
-                        main.insertBefore(crearBadgeActual(), chevron || null);
+                        main.appendChild(crearBadgeActual());
                     }
                     return;
                 }
@@ -1723,11 +1713,10 @@ $detallePuntoActual = $puntoActual;
 
                 if (elemento.classList.contains("agenda-item")) {
                     var main = elemento.querySelector(".agenda-main");
-                    var chevron = elemento.querySelector(".agenda-chevron");
                     elemento.classList.add("agenda-item-current");
 
                     if (main) {
-                        main.insertBefore(crearBadgeActual(), chevron || null);
+                        main.appendChild(crearBadgeActual());
                     }
                     return;
                 }
