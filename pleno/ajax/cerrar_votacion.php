@@ -71,6 +71,12 @@ try {
         ':punto_numero' => $puntoActual,
     ]);
 
+    $votacion = plenoObtenerCabeceraVotacion($conn, $idSesion, $puntoActual);
+    if ($votacion) {
+        $stmtCerrarCabecera = $conn->prepare('UPDATE t_votacion SET habilitada = 0 WHERE idVotacion = :id');
+        $stmtCerrarCabecera->execute([':id' => (int)$votacion['idVotacion']]);
+    }
+
     echo json_encode([
         'success' => true,
         'punto_actual' => $puntoActual,

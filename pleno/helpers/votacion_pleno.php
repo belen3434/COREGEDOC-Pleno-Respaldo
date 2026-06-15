@@ -110,3 +110,139 @@ if (!function_exists('plenoObtenerEstadosVotacion')) {
         return $estados;
     }
 }
+
+if (!function_exists('plenoNombreVotacionPunto')) {
+    function plenoNombreVotacionPunto(int $idSesion, string $puntoNumero): string
+    {
+        return 'Pleno ' . $idSesion . ' - Punto ' . trim($puntoNumero);
+    }
+}
+
+if (!function_exists('plenoObtenerDescripcionPunto')) {
+    function plenoObtenerDescripcionPunto($conn, int $idSesion, string $puntoNumero): string
+    {
+        $puntoNumero = trim($puntoNumero);
+
+        if ($puntoNumero === '1') {
+            $stmt = $conn->prepare('SELECT aprobacion_actas FROM sesiones_plenarias WHERE id_sesion = :id LIMIT 1');
+            $stmt->execute([':id' => $idSesion]);
+            $descripcion = trim((string)$stmt->fetchColumn());
+
+            return $descripcion !== '' ? $descripcion : 'Aprobación de acta';
+        }
+
+        if (preg_match('/^3\.(\d+)$/', $puntoNumero, $matches) === 1) {
+            $orden = (int)$matches[1];
+            $stmt = $conn->prepare(
+                "SELECT
+                    COALESCE(NULLIF(TRIM(spt.titulo_punto), ''), NULLIF(TRIM(t.nombreTema), ''), NULLIF(TRIM(c.nombreComision), ''), 'Punto de comisión') AS titulo,
+                    COALESCE(NULLIF(TRIM(spt.descripcion_punto), ''), NULLIF(TRIM(t.objetivo), ''), '') AS descripcion
+                 FROM sesion_plenaria_temas spt
+                 LEFT JOIN t_tema t ON t.idTema = spt.id_tema
+                 LEFT JOIN t_comision c ON c.idComision = spt.id_comision
+                 WHERE spt.id_sesion = :id_sesion
+                   AND spt.vigente = 1
+                   AND COALESCE(NULLIF(TRIM(spt.seccion_orden), ''), 'varios') = 'cuenta_comisiones'
+                 ORDER BY spt.orden ASC, spt.id ASC
+                 LIMIT 1 OFFSET " . max(0, $orden - 1)
+            );
+            $stmt->execute([':id_sesion' => $idSesion]);
+            $row = $stmt->fetch();
+
+            if (is_array($row)) {
+                $titulo = trim((string)($row['titulo'] ?? ''));
+                $descripcion = trim((string)($row['descripcion'] ?? ''));
+
+                return trim($titulo . ($descripcion !== '' ? ' - ' . $descripcion : ''));
+            }
+        }
+
+        return 'Punto ' . $puntoNumero;
+    }
+}
+
+if (!function_exists('plenoObtenerCabeceraVotacion')) {
+    function plenoObtenerCabeceraVotacion($conn, int $idSesion, string $puntoNumero): ?array
+    {
+        $stmt = $conn->prepare(
+            'SELECT idVotacion, nombreVotacion, descripcion, habilitada
+             FROM t_votacion
+             WHERE nombreVotacion = :nombre
+             ORDER BY idVotacion DESC
+             LIMIT 1'
+        );
+        $stmt->execute([':nombre' => plenoNombreVotacionPunto($idSesion, $puntoNumero)]);
+        $votacion = $stmt->fetch();
+
+        return is_array($votacion) ? $votacion : null;
+    }
+}
+
+if (!function_exists('plenoObtenerOCrearCabeceraVotacion')) {
+    function plenoObtenerOCrearCabeceraVotacion($conn, int $idSesion, string $puntoNumero): array
+    {
+        $nombre = plenoNombreVotacionPunto($idSesion, $puntoNumero);
+        $descripcion = plenoObtenerDescripcionPunto($conn, $idSesion, $puntoNumero);
+        $votacion = plenoObtenerCabeceraVotacion($conn, $idSesion, $puntoNumero);
+
+        if ($votacion) {
+            $stmt = $conn->prepare(
+                'UPDATE t_votacion
+                 SET descripcion = :descripcion,
+                     habilitada = 1
+                 WHERE idVotacion = :id'
+            );
+            $stmt->execute([
+                ':descripcion' => $descripcion,
+                ':id' => (int)$votacion['idVotacion'],
+            ]);
+
+            $votacion['descripcion'] = $descripcion;
+            $votacion['habilitada'] = 1;
+            return $votacion;
+        }
+
+        $stmt = $conn->prepare(
+            'INSERT INTO t_votacion
+                (nombreVotacion, descripcion, fechaCreacion, habilitada)
+             VALUES
+                (:nombre, :descripcion, NOW(), 1)'
+        );
+        $stmt->execute([
+            ':nombre' => $nombre,
+            ':descripcion' => $descripcion,
+        ]);
+
+        return [
+            'idVotacion' => (int)$conn->lastInsertId(),
+            'nombreVotacion' => $nombre,
+            'descripcion' => $descripcion,
+            'habilitada' => 1,
+        ];
+    }
+}
+
+if (!function_exists('plenoObtenerVotoUsuarioPunto')) {
+    function plenoObtenerVotoUsuarioPunto($conn, int $idSesion, string $puntoNumero, int $idUsuario): ?array
+    {
+        $votacion = plenoObtenerCabeceraVotacion($conn, $idSesion, $puntoNumero);
+        if (!$votacion) {
+            return null;
+        }
+
+        $stmt = $conn->prepare(
+            'SELECT idVoto, opcionVoto, fechaVoto, fechaHoraVoto
+             FROM t_voto
+             WHERE t_votacion_idVotacion = :id_votacion
+               AND t_usuario_idUsuario = :id_usuario
+             LIMIT 1'
+        );
+        $stmt->execute([
+            ':id_votacion' => (int)$votacion['idVotacion'],
+            ':id_usuario' => $idUsuario,
+        ]);
+        $voto = $stmt->fetch();
+
+        return is_array($voto) ? $voto : null;
+    }
+}

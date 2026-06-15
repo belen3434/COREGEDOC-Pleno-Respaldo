@@ -11,6 +11,8 @@ $asistenciaUsuarioPleno = $data['pleno_asistencia_usuario'] ?? null;
 $asistenciaMarcadaPleno = is_array($asistenciaUsuarioPleno) && !empty($asistenciaUsuarioPleno['ya_marco']);
 $esConsejeroRegional = $rolUsuario === 1;
 $bloquearPlenoPorAsistencia = $esConsejeroRegional && !$asistenciaMarcadaPleno;
+$votoUsuarioActual = $data['pleno_voto_usuario_actual'] ?? null;
+$votoRegistradoPleno = is_array($votoUsuarioActual) && !empty($votoUsuarioActual['opcionVoto']);
 
 $h = static function ($valor): string {
     return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
@@ -408,10 +410,13 @@ if ($estadoVotacionActual === 'no_vota') {
                             <?php if (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)): ?>
                                 <div class="alert alert-warning mt-3 mb-0 pleno-vote-attendance-warning">Debe registrar su asistencia antes de votar.</div>
                             <?php endif; ?>
+                            <?php if ($votoRegistradoPleno): ?>
+                                <div class="alert alert-success mt-3 mb-0 pleno-vote-registered-message">Voto registrado.</div>
+                            <?php endif; ?>
                             <div class="pleno-live-actions">
-                                <button class="pleno-live-option pleno-live-option-favor" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>><span>A Favor</span></button>
-                                <button class="pleno-live-option pleno-live-option-against" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>><span>En Contra</span></button>
-                                <button class="pleno-live-option pleno-live-option-abstain" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>><span>Abstención</span></button>
+                                <button class="pleno-live-option pleno-live-option-favor pleno-live-vote-btn" type="button" data-vote-option="SI" <?php echo ((!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) || $votoRegistradoPleno) ? 'disabled' : ''; ?>><span>A Favor</span></button>
+                                <button class="pleno-live-option pleno-live-option-against pleno-live-vote-btn" type="button" data-vote-option="NO" <?php echo ((!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) || $votoRegistradoPleno) ? 'disabled' : ''; ?>><span>En Contra</span></button>
+                                <button class="pleno-live-option pleno-live-option-abstain pleno-live-vote-btn" type="button" data-vote-option="ABSTENCION" <?php echo ((!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) || $votoRegistradoPleno) ? 'disabled' : ''; ?>><span>Abstención</span></button>
                             </div>
                             <?php elseif ($estadoVotacionActual === 'votacion_cerrada'): ?>
                                 <div class="alert alert-warning mt-3 mb-0">La votación de este punto se encuentra cerrada.</div>
@@ -442,10 +447,13 @@ if ($estadoVotacionActual === 'no_vota') {
                                         <?php if (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)): ?>
                                             <div class="alert alert-warning mb-3 pleno-vote-attendance-warning">Debe registrar su asistencia antes de votar.</div>
                                         <?php endif; ?>
+                                        <?php if ($votoRegistradoPleno): ?>
+                                            <div class="alert alert-success mb-3 pleno-vote-registered-message">Voto registrado.</div>
+                                        <?php endif; ?>
                                         <div class="pleno-live-actions">
-                                            <button class="btn btn-success" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>>Aprobar</button>
-                                            <button class="btn btn-outline-danger" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>>Rechazar</button>
-                                            <button class="btn btn-outline-secondary" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>>Abstención</button>
+                                            <button class="btn btn-success pleno-live-vote-btn" type="button" data-vote-option="SI" <?php echo ((!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) || $votoRegistradoPleno) ? 'disabled' : ''; ?>>Aprobar</button>
+                                            <button class="btn btn-outline-danger pleno-live-vote-btn" type="button" data-vote-option="NO" <?php echo ((!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) || $votoRegistradoPleno) ? 'disabled' : ''; ?>>Rechazar</button>
+                                            <button class="btn btn-outline-secondary pleno-live-vote-btn" type="button" data-vote-option="ABSTENCION" <?php echo ((!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) || $votoRegistradoPleno) ? 'disabled' : ''; ?>>Abstención</button>
                                         </div>
                                         <?php elseif ($puntoActualGuardado === $subpuntoNumero && $estadoVotacionActual === 'votacion_cerrada'): ?>
                                             <div class="alert alert-warning mb-0">La votación de este punto se encuentra cerrada.</div>
@@ -532,5 +540,119 @@ if ($estadoVotacionActual === 'no_vota') {
 
         document.addEventListener("pleno:asistencia-registrada", plenoMostrarContenidoEnVivo);
         document.addEventListener("pleno:asistencia-confirmada", plenoMostrarContenidoEnVivo);
+
+        (function () {
+            var idSesion = <?php echo (int)($sesion['id_sesion'] ?? 0); ?>;
+            var puntoNumero = <?php echo json_encode($puntoActualGuardado, JSON_UNESCAPED_UNICODE); ?>;
+
+            function textoOpcion(opcion) {
+                if (opcion === "SI") {
+                    return "A Favor";
+                }
+                if (opcion === "NO") {
+                    return "En Contra";
+                }
+                return "Abstención";
+            }
+
+            function mostrarVotoRegistrado() {
+                document.querySelectorAll(".pleno-live-vote-btn").forEach(function (button) {
+                    button.disabled = true;
+                });
+
+                if (!document.querySelector(".pleno-vote-registered-message")) {
+                    var acciones = document.querySelector(".pleno-live-actions");
+                    if (acciones && acciones.parentNode) {
+                        var alerta = document.createElement("div");
+                        alerta.className = "alert alert-success mt-3 mb-0 pleno-vote-registered-message";
+                        alerta.textContent = "Voto registrado.";
+                        acciones.parentNode.insertBefore(alerta, acciones);
+                    }
+                }
+            }
+
+            function registrarVoto(opcion) {
+                var texto = textoOpcion(opcion);
+                var confirmar = Promise.resolve({ isConfirmed: window.confirm("¿Confirmar voto? Su voto será: " + texto) });
+
+                if (window.Swal && typeof window.Swal.fire === "function") {
+                    confirmar = window.Swal.fire({
+                        title: "¿Confirmar voto?",
+                        text: "Su voto será: " + texto,
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonText: "Votar",
+                        cancelButtonText: "Cancelar"
+                    });
+                }
+
+                confirmar.then(function (result) {
+                    if (!result || !result.isConfirmed) {
+                        return;
+                    }
+
+                    document.querySelectorAll(".pleno-live-vote-btn").forEach(function (button) {
+                        button.disabled = true;
+                    });
+
+                    fetch("ajax/emitir_voto.php", {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            id_sesion: idSesion,
+                            punto_numero: puntoNumero,
+                            opcion: opcion
+                        })
+                    })
+                        .then(function (response) {
+                            return response.json().then(function (payload) {
+                                return { ok: response.ok, payload: payload };
+                            });
+                        })
+                        .then(function (result) {
+                            if (!result.ok || !result.payload || result.payload.success !== true) {
+                                throw new Error(result.payload && result.payload.mensaje ? result.payload.mensaje : "No fue posible registrar el voto.");
+                            }
+
+                            mostrarVotoRegistrado();
+
+                            if (window.Swal && typeof window.Swal.fire === "function") {
+                                window.Swal.fire({
+                                    icon: "success",
+                                    title: "Voto registrado",
+                                    text: "Su voto fue registrado correctamente.",
+                                    confirmButtonColor: "#00a650",
+                                    timer: 1800,
+                                    timerProgressBar: true
+                                });
+                            }
+                        })
+                        .catch(function (error) {
+                            if (window.Swal && typeof window.Swal.fire === "function") {
+                                window.Swal.fire("Error", error && error.message ? error.message : "No fue posible registrar el voto.", "error");
+                            } else {
+                                window.alert(error && error.message ? error.message : "No fue posible registrar el voto.");
+                            }
+
+                            document.querySelectorAll(".pleno-live-vote-btn").forEach(function (button) {
+                                button.disabled = false;
+                            });
+                        });
+                });
+            }
+
+            document.querySelectorAll(".pleno-live-vote-btn").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    if (button.disabled) {
+                        return;
+                    }
+
+                    registrarVoto(String(button.getAttribute("data-vote-option") || ""));
+                });
+            });
+        }());
     </script>
 <?php endif; ?>

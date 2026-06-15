@@ -65,14 +65,21 @@ try {
     }
 
     if ($estadoActual === 'votacion_en_curso') {
+        $votacion = plenoObtenerOCrearCabeceraVotacion($conn, $idSesion, $puntoActual);
+
         echo json_encode([
             'success' => true,
             'punto_actual' => $puntoActual,
+            'id_votacion' => (int)$votacion['idVotacion'],
             'estado_votacion' => 'votacion_en_curso',
             'mensaje' => 'VotaciÃ³n en curso.',
         ], JSON_UNESCAPED_UNICODE);
         exit();
     }
+
+    $conn->beginTransaction();
+
+    $votacion = plenoObtenerOCrearCabeceraVotacion($conn, $idSesion, $puntoActual);
 
     $stmt = $conn->prepare(
         "INSERT INTO pleno_votacion_punto
@@ -90,13 +97,20 @@ try {
         ':punto_numero' => $puntoActual,
     ]);
 
+    $conn->commit();
+
     echo json_encode([
         'success' => true,
         'punto_actual' => $puntoActual,
+        'id_votacion' => (int)$votacion['idVotacion'],
         'estado_votacion' => 'votacion_en_curso',
         'mensaje' => 'Votación en curso.',
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    if (isset($conn) && $conn instanceof PDO && $conn->inTransaction()) {
+        $conn->rollBack();
+    }
+
     http_response_code(500);
     echo json_encode(['success' => false, 'mensaje' => 'No fue posible iniciar la votación.'], JSON_UNESCAPED_UNICODE);
 }
