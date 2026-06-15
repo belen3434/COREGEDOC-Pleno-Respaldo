@@ -6,6 +6,8 @@ $perfilActivo = $data['pleno_auth']['perfilNombre'] ?? 'No detectado';
 $crudError = $data['pleno_crud_error'] ?? null;
 $sesion = $data['pleno_sesion_actual'] ?? null;
 $puntosSesion = $data['pleno_puntos_sesion'] ?? [];
+$rolUsuario = (int)($data['usuario']['rol'] ?? $_SESSION['tipoUsuario_id'] ?? 0);
+$puedeRegistrarAsistenciaPleno = in_array($rolUsuario, [1, 22], true);
 
 $formatearFecha = static function (?string $fecha): string {
     if (!$fecha) {
@@ -149,6 +151,10 @@ unset($puntosSeccion);
             No existe una sesión plenaria registrada para hoy.
         </div>
     <?php elseif ($sesion): ?>
+        <?php if ($puedeRegistrarAsistenciaPleno && trim((string)($sesion['estado'] ?? '')) === 'en_curso'): ?>
+            <?php require __DIR__ . '/partials/asistencia_autoregistro.php'; ?>
+        <?php endif; ?>
+
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="row g-3">

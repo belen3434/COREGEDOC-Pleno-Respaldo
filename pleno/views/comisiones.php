@@ -5,6 +5,7 @@ $sesion = $data['pleno_sesion_actual'] ?? null;
 $temasComision = $data['pleno_temas_comision_sesion'] ?? [];
 $puntosVarios = $data['pleno_puntos_varios_sesion'] ?? [];
 $crudError = $data['pleno_crud_error'] ?? null;
+$asistenciaResumen = $data['pleno_asistencia_resumen'] ?? null;
 
 $formatearFecha = static function (?string $fecha): string {
     if (!$fecha) {
@@ -611,6 +612,56 @@ $detallePuntoActual = $puntoActual;
         font-weight: 620;
     }
 
+    .secretaria-attendance-summary {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .secretaria-attendance-count {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .secretaria-attendance-count strong {
+        color: #17324d;
+        font-size: 2rem;
+        line-height: 1;
+    }
+
+    .secretaria-attendance-count span {
+        color: #657987;
+        font-weight: 760;
+    }
+
+    .secretaria-attendance-table {
+        margin: 0;
+    }
+
+    .secretaria-attendance-table th {
+        color: #627787;
+        font-size: 0.72rem;
+        font-weight: 850;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .secretaria-attendance-table td {
+        color: #273f4f;
+        font-size: 0.88rem;
+        font-weight: 650;
+        vertical-align: middle;
+    }
+
+    .secretaria-attendance-action {
+        color: #657987;
+        font-size: 0.78rem;
+        font-weight: 760;
+        white-space: nowrap;
+    }
+
     @media (max-width: 1199.98px) {
         .secretaria-grid {
             grid-template-columns: 1fr;
@@ -886,12 +937,68 @@ $detallePuntoActual = $puntoActual;
                                 ASISTENCIA
                             </h2>
                         </div>
-                        <div class="pending-state">
-                            <span class="pending-state-icon"><i class="fas fa-user-clock"></i></span>
-                            <div>
-                                <div class="pending-state-title">Asistencia pendiente</div>
-                                <p class="pending-state-text">Aún no se han registrado asistentes para esta sesión.</p>
+                        <?php
+                        $presentes = (int)($asistenciaResumen['presentes'] ?? 0);
+                        $totalParticipantes = (int)($asistenciaResumen['total'] ?? 0);
+                        $participantesAsistencia = is_array($asistenciaResumen['participantes'] ?? null) ? $asistenciaResumen['participantes'] : [];
+                        $porcentajeAsistencia = $totalParticipantes > 0 ? min(100, round(($presentes / $totalParticipantes) * 100)) : 0;
+                        ?>
+                        <div class="secretaria-attendance-summary">
+                            <div class="secretaria-attendance-count">
+                                <div>
+                                    <strong id="plenoAttendancePresentCount"><?php echo $presentes; ?></strong>
+                                    <span>/ <span id="plenoAttendanceTotalCount"><?php echo $totalParticipantes; ?></span> presentes</span>
+                                </div>
+                                <span class="secretaria-badge badge-info" id="plenoAttendancePercent"><?php echo $porcentajeAsistencia; ?>%</span>
                             </div>
+                            <div class="progress pleno-progress">
+                                <div
+                                    class="progress-bar bg-success"
+                                    id="plenoAttendanceProgress"
+                                    role="progressbar"
+                                    style="width: <?php echo $porcentajeAsistencia; ?>%;"
+                                    aria-valuenow="<?php echo $porcentajeAsistencia; ?>"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                ></div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover secretaria-attendance-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Consejero</th>
+                                        <th>Hora Registro</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="plenoAttendanceTableBody">
+                                    <?php if (empty($participantesAsistencia)): ?>
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-3">No hay participantes habilitados.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($participantesAsistencia as $participante): ?>
+                                            <?php
+                                            $estadoAsistencia = strtoupper((string)($participante['estadoAsistencia'] ?? 'AUSENTE'));
+                                            $esPresente = $estadoAsistencia === 'PRESENTE';
+                                            $horaRegistro = !empty($participante['fechaRegistroAsistencia']) ? date('H:i', strtotime((string)$participante['fechaRegistroAsistencia'])) : '--:--';
+                                            ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars((string)$participante['nombreCompleto'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                                <td><?php echo htmlspecialchars($horaRegistro, ENT_QUOTES, 'UTF-8'); ?></td>
+                                                <td>
+                                                    <span class="badge <?php echo $esPresente ? 'bg-success' : 'bg-secondary'; ?>">
+                                                        <?php echo $esPresente ? 'Presente' : 'Ausente'; ?>
+                                                    </span>
+                                                </td>
+                                                <td><span class="secretaria-attendance-action"><?php echo $esPresente ? 'Autoregistro confirmado' : 'Sin registro'; ?></span></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
@@ -1002,6 +1109,92 @@ $detallePuntoActual = $puntoActual;
                     mostrarMensaje(error.message || "No fue posible iniciar el pleno.", "error");
                 });
             });
+        }());
+    </script>
+    <script>
+        (function () {
+            "use strict";
+
+            var idSesion = <?php echo (int)($sesion['id_sesion'] ?? 0); ?>;
+            var tbody = document.getElementById("plenoAttendanceTableBody");
+            var presentCount = document.getElementById("plenoAttendancePresentCount");
+            var totalCount = document.getElementById("plenoAttendanceTotalCount");
+            var percentBadge = document.getElementById("plenoAttendancePercent");
+            var progress = document.getElementById("plenoAttendanceProgress");
+
+            if (!idSesion || !tbody || !presentCount || !totalCount || !percentBadge || !progress) {
+                return;
+            }
+
+            function escapeHtml(value) {
+                return String(value === null || value === undefined ? "" : value)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            function formatHora(fecha) {
+                if (!fecha || typeof fecha !== "string" || fecha.indexOf(" ") === -1) {
+                    return "--:--";
+                }
+
+                return fecha.split(" ")[1].substring(0, 5);
+            }
+
+            function renderParticipantes(participantes) {
+                if (!Array.isArray(participantes) || participantes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No hay participantes habilitados.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = participantes.map(function (participante) {
+                    var estado = String(participante.estadoAsistencia || "AUSENTE").toUpperCase();
+                    var presente = estado === "PRESENTE";
+                    var badgeClass = presente ? "bg-success" : "bg-secondary";
+                    var estadoTexto = presente ? "Presente" : "Ausente";
+                    var accion = presente ? "Autoregistro confirmado" : "Sin registro";
+
+                    return [
+                        "<tr>",
+                        "<td>", escapeHtml(participante.nombreCompleto || ""), "</td>",
+                        "<td>", escapeHtml(formatHora(participante.fechaRegistroAsistencia || "")), "</td>",
+                        '<td><span class="badge ', badgeClass, '">', estadoTexto, "</span></td>",
+                        '<td><span class="secretaria-attendance-action">', accion, "</span></td>",
+                        "</tr>"
+                    ].join("");
+                }).join("");
+            }
+
+            function actualizarResumen(resumen) {
+                var presentes = parseInt(resumen.presentes || 0, 10);
+                var total = parseInt(resumen.total || 0, 10);
+                var porcentaje = total > 0 ? Math.min(100, Math.round((presentes / total) * 100)) : 0;
+
+                presentCount.textContent = String(presentes);
+                totalCount.textContent = String(total);
+                percentBadge.textContent = porcentaje + "%";
+                progress.style.width = porcentaje + "%";
+                progress.setAttribute("aria-valuenow", String(porcentaje));
+                renderParticipantes(resumen.participantes || []);
+            }
+
+            function cargarAsistencia() {
+                fetch("ajax/asistencia_resumen.php?id_sesion=" + encodeURIComponent(idSesion), {
+                    headers: { "Accept": "application/json" }
+                })
+                    .then(function (response) { return response.json(); })
+                    .then(function (payload) {
+                        if (payload && payload.success === true && payload.resumen) {
+                            actualizarResumen(payload.resumen);
+                        }
+                    })
+                    .catch(function () {});
+            }
+
+            cargarAsistencia();
+            window.setInterval(cargarAsistencia, 5000);
         }());
     </script>
 <?php endif; ?>
