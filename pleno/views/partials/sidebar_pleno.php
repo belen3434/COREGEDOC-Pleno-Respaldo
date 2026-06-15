@@ -35,6 +35,11 @@ $plenoMenuPrincipal += [
         'icon' => 'fas fa-chart-pie',
         'href' => 'index.php?vista=resumen',
     ],
+    'historial_votaciones' => [
+        'label' => 'Historial de Votaciones',
+        'icon' => 'fas fa-history',
+        'href' => 'index.php?vista=historial_votaciones',
+    ],
 ];
 
 $plenoMenuInferior = [
