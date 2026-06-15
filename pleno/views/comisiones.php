@@ -916,6 +916,10 @@ $detallePuntoActual = $puntoActual;
                                 <i class="fas fa-stop"></i>
                                 Cerrar votación
                             </button>
+                            <button type="button" class="btn btn-warning secretaria-control-btn pleno-session-action-btn" id="plenoReopenVoteBtn" hidden <?php echo $estadoSesion !== 'en_curso' ? 'disabled' : ''; ?>>
+                                <i class="fas fa-redo"></i>
+                                Reabrir votación
+                            </button>
                             <button type="button" class="btn btn-outline-secondary secretaria-control-btn pleno-session-action-btn" id="plenoFinishSessionBtn" data-id-sesion="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>" <?php echo $estadoSesion !== 'en_curso' ? 'disabled' : ''; ?>>
                                 <i class="fas fa-flag-checkered"></i>
                                 Finalizar pleno
@@ -1211,6 +1215,7 @@ $detallePuntoActual = $puntoActual;
             var actualizarPuntoUrl = "ajax/actualizar_punto_actual.php";
             var iniciarVotacionUrl = "ajax/iniciar_votacion.php";
             var cerrarVotacionUrl = "ajax/cerrar_votacion.php";
+            var reabrirVotacionUrl = "ajax/reabrir_votacion.php";
 
             function limpiarListeners(id) {
                 var original = document.getElementById(id);
@@ -1226,6 +1231,7 @@ $detallePuntoActual = $puntoActual;
             var btnSiguiente = limpiarListeners("plenoNextPointBtn");
             var btnIniciarVotacion = limpiarListeners("plenoStartVoteBtn");
             var btnCerrarVotacion = limpiarListeners("plenoCloseVoteBtn");
+            var btnReabrirVotacion = limpiarListeners("plenoReopenVoteBtn");
             var mensajeVotacion = document.getElementById("plenoVoteControlMessage");
             var detalleNumero = document.getElementById("plenoCurrentPointNumber");
             var detalleTitulo = document.getElementById("plenoCurrentPointTitle");
@@ -1309,6 +1315,11 @@ $detallePuntoActual = $puntoActual;
                 var permiteVotacion = puntoPermiteVotacion(punto);
                 var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "pendiente";
 
+                if (btnReabrirVotacion) {
+                    btnReabrirVotacion.hidden = true;
+                    btnReabrirVotacion.disabled = true;
+                }
+
                 if (btnAnterior) {
                     btnAnterior.disabled = indiceActual <= 0;
                 }
@@ -1339,6 +1350,10 @@ $detallePuntoActual = $puntoActual;
                 if (estadoVotacion === "votacion_cerrada") {
                     btnIniciarVotacion.disabled = true;
                     btnCerrarVotacion.disabled = true;
+                    if (btnReabrirVotacion) {
+                        btnReabrirVotacion.hidden = false;
+                        btnReabrirVotacion.disabled = false;
+                    }
                     mostrarMensajeVotacion("Votación cerrada.", "alert-warning");
                     return;
                 }
@@ -1443,6 +1458,56 @@ $detallePuntoActual = $puntoActual;
                 });
             }
 
+            function confirmarReabrirVotacion() {
+                if (window.Swal && typeof window.Swal.fire === "function") {
+                    return window.Swal.fire({
+                        title: "Reabrir votación",
+                        html: "¿Desea reabrir esta votación?<br><br>Los votos ya emitidos se conservarán.<br>Los participantes que aún no han votado podrán hacerlo.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Reabrir votación",
+                        cancelButtonText: "Cancelar",
+                        confirmButtonColor: "#f28c18"
+                    }).then(function (result) {
+                        return !!(result && result.isConfirmed);
+                    });
+                }
+
+                return Promise.resolve(window.confirm("Reabrir votación\n\n¿Desea reabrir esta votación?\n\nLos votos ya emitidos se conservarán.\nLos participantes que aún no han votado podrán hacerlo."));
+            }
+
+            function reabrirVotacion() {
+                var punto = obtenerPuntoActual();
+                if (!punto || punto.estado_votacion !== "votacion_cerrada") {
+                    mostrarMensajeVotacion("No hay una votación cerrada para reabrir.", "alert-warning");
+                    return;
+                }
+
+                confirmarReabrirVotacion().then(function (confirmado) {
+                    if (!confirmado) {
+                        return;
+                    }
+                    if (btnReabrirVotacion) {
+                        btnReabrirVotacion.disabled = true;
+                    }
+                    ejecutarAccionVotacion(reabrirVotacionUrl, "No fue posible reabrir la votación.").then(function (payload) {
+                        punto.estado_votacion = "votacion_en_curso";
+                        mostrarMensajeVotacion(payload.mensaje || "Votación reabierta correctamente.", "alert-success");
+                        if (typeof actualizarControlesVotacion === "function") {
+                            actualizarControlesVotacion();
+                        } else {
+                            actualizarControles();
+                        }
+                    }).catch(function (error) {
+                        mostrarMensajeVotacion(error.message || "No fue posible reabrir la votación.", "alert-danger");
+                        if (typeof actualizarControlesVotacion === "function") {
+                            actualizarControlesVotacion();
+                        } else {
+                            actualizarControles();
+                        }
+                    });
+                });
+            }
             if (btnAnterior) {
                 btnAnterior.addEventListener("click", function () { navegarPunto(-1); });
             }
@@ -1454,6 +1519,9 @@ $detallePuntoActual = $puntoActual;
             }
             if (btnCerrarVotacion) {
                 btnCerrarVotacion.addEventListener("click", cerrarVotacion);
+            }
+            if (btnReabrirVotacion) {
+                btnReabrirVotacion.addEventListener("click", reabrirVotacion);
             }
             document.addEventListener("pleno:estado-en-curso", function () {
                 sesionEnCurso = true;
@@ -1476,6 +1544,7 @@ $detallePuntoActual = $puntoActual;
             var actualizarPuntoUrl = "ajax/actualizar_punto_actual.php";
             var iniciarVotacionUrl = "ajax/iniciar_votacion.php";
             var cerrarVotacionUrl = "ajax/cerrar_votacion.php";
+            var reabrirVotacionUrl = "ajax/reabrir_votacion.php";
 
             function limpiarListeners(id) {
                 var original = document.getElementById(id);
@@ -1491,6 +1560,7 @@ $detallePuntoActual = $puntoActual;
             var btnSiguiente = limpiarListeners("plenoNextPointBtn");
             var btnIniciarVotacion = limpiarListeners("plenoStartVoteBtn");
             var btnCerrarVotacion = limpiarListeners("plenoCloseVoteBtn");
+            var btnReabrirVotacion = limpiarListeners("plenoReopenVoteBtn");
             var mensajeVotacion = document.getElementById("plenoVoteControlMessage");
             var detalleNumero = document.getElementById("plenoCurrentPointNumber");
             var detalleTitulo = document.getElementById("plenoCurrentPointTitle");
@@ -1607,6 +1677,11 @@ $detallePuntoActual = $puntoActual;
                 var permiteVotacion = puntoPermiteVotacion(punto);
                 var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "pendiente";
 
+                if (btnReabrirVotacion) {
+                    btnReabrirVotacion.hidden = true;
+                    btnReabrirVotacion.disabled = true;
+                }
+
                 if (!btnIniciarVotacion || !btnCerrarVotacion) {
                     return;
                 }
@@ -1635,6 +1710,10 @@ $detallePuntoActual = $puntoActual;
                 if (estadoVotacion === "votacion_cerrada") {
                     btnIniciarVotacion.disabled = true;
                     btnCerrarVotacion.disabled = true;
+                    if (btnReabrirVotacion) {
+                        btnReabrirVotacion.hidden = false;
+                        btnReabrirVotacion.disabled = false;
+                    }
                     mostrarMensajeVotacion("Votación cerrada.", "alert-warning");
                     return;
                 }
@@ -1746,6 +1825,56 @@ $detallePuntoActual = $puntoActual;
                 });
             }
 
+            function confirmarReabrirVotacion() {
+                if (window.Swal && typeof window.Swal.fire === "function") {
+                    return window.Swal.fire({
+                        title: "Reabrir votación",
+                        html: "¿Desea reabrir esta votación?<br><br>Los votos ya emitidos se conservarán.<br>Los participantes que aún no han votado podrán hacerlo.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Reabrir votación",
+                        cancelButtonText: "Cancelar",
+                        confirmButtonColor: "#f28c18"
+                    }).then(function (result) {
+                        return !!(result && result.isConfirmed);
+                    });
+                }
+
+                return Promise.resolve(window.confirm("Reabrir votación\n\n¿Desea reabrir esta votación?\n\nLos votos ya emitidos se conservarán.\nLos participantes que aún no han votado podrán hacerlo."));
+            }
+
+            function reabrirVotacion() {
+                var punto = obtenerPuntoActual();
+                if (!punto || punto.estado_votacion !== "votacion_cerrada") {
+                    mostrarMensajeVotacion("No hay una votación cerrada para reabrir.", "alert-warning");
+                    return;
+                }
+
+                confirmarReabrirVotacion().then(function (confirmado) {
+                    if (!confirmado) {
+                        return;
+                    }
+                    if (btnReabrirVotacion) {
+                        btnReabrirVotacion.disabled = true;
+                    }
+                    ejecutarAccionVotacion(reabrirVotacionUrl, "No fue posible reabrir la votación.").then(function (payload) {
+                        punto.estado_votacion = "votacion_en_curso";
+                        mostrarMensajeVotacion(payload.mensaje || "Votación reabierta correctamente.", "alert-success");
+                        if (typeof actualizarControlesVotacion === "function") {
+                            actualizarControlesVotacion();
+                        } else {
+                            actualizarControles();
+                        }
+                    }).catch(function (error) {
+                        mostrarMensajeVotacion(error.message || "No fue posible reabrir la votación.", "alert-danger");
+                        if (typeof actualizarControlesVotacion === "function") {
+                            actualizarControlesVotacion();
+                        } else {
+                            actualizarControles();
+                        }
+                    });
+                });
+            }
             if (!Array.isArray(puntosOrdenDia) || puntosOrdenDia.length === 0) {
                 return;
             }
@@ -1760,6 +1889,9 @@ $detallePuntoActual = $puntoActual;
             }
             if (btnCerrarVotacion) {
                 btnCerrarVotacion.addEventListener("click", cerrarVotacion);
+            }
+            if (btnReabrirVotacion) {
+                btnReabrirVotacion.addEventListener("click", reabrirVotacion);
             }
             document.addEventListener("pleno:estado-en-curso", function () {
                 sesionEnCurso = true;
@@ -2038,6 +2170,7 @@ $detallePuntoActual = $puntoActual;
             var actualizarPuntoUrl = "ajax/actualizar_punto_actual.php";
             var iniciarVotacionUrl = "ajax/iniciar_votacion.php";
             var cerrarVotacionUrl = "ajax/cerrar_votacion.php";
+            var reabrirVotacionUrl = "ajax/reabrir_votacion.php";
 
             function limpiarListeners(id) {
                 var original = document.getElementById(id);
@@ -2053,6 +2186,7 @@ $detallePuntoActual = $puntoActual;
             var btnSiguiente = limpiarListeners("plenoNextPointBtn");
             var btnIniciarVotacion = limpiarListeners("plenoStartVoteBtn");
             var btnCerrarVotacion = limpiarListeners("plenoCloseVoteBtn");
+            var btnReabrirVotacion = limpiarListeners("plenoReopenVoteBtn");
             var mensajeVotacion = document.getElementById("plenoVoteControlMessage");
             var detalleNumero = document.getElementById("plenoCurrentPointNumber");
             var detalleTitulo = document.getElementById("plenoCurrentPointTitle");
@@ -2152,6 +2286,10 @@ $detallePuntoActual = $puntoActual;
                 var punto = obtenerPuntoActual();
                 var permiteVotacion = puntoPermiteVotacion(punto);
                 var estadoVotacion = punto && punto.estado_votacion ? punto.estado_votacion : "pendiente";
+                if (btnReabrirVotacion) {
+                    btnReabrirVotacion.hidden = true;
+                    btnReabrirVotacion.disabled = true;
+                }
                 if (btnAnterior) {
                     btnAnterior.disabled = indiceActual <= 0;
                 }
@@ -2182,6 +2320,10 @@ $detallePuntoActual = $puntoActual;
                 if (estadoVotacion === "votacion_cerrada") {
                     btnIniciarVotacion.disabled = true;
                     btnCerrarVotacion.disabled = true;
+                    if (btnReabrirVotacion) {
+                        btnReabrirVotacion.hidden = false;
+                        btnReabrirVotacion.disabled = false;
+                    }
                     mostrarMensajeVotacion("Votación cerrada.", "alert-warning");
                     return;
                 }
@@ -2265,6 +2407,56 @@ $detallePuntoActual = $puntoActual;
                 });
             }
 
+            function confirmarReabrirVotacion() {
+                if (window.Swal && typeof window.Swal.fire === "function") {
+                    return window.Swal.fire({
+                        title: "Reabrir votación",
+                        html: "¿Desea reabrir esta votación?<br><br>Los votos ya emitidos se conservarán.<br>Los participantes que aún no han votado podrán hacerlo.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Reabrir votación",
+                        cancelButtonText: "Cancelar",
+                        confirmButtonColor: "#f28c18"
+                    }).then(function (result) {
+                        return !!(result && result.isConfirmed);
+                    });
+                }
+
+                return Promise.resolve(window.confirm("Reabrir votación\n\n¿Desea reabrir esta votación?\n\nLos votos ya emitidos se conservarán.\nLos participantes que aún no han votado podrán hacerlo."));
+            }
+
+            function reabrirVotacion() {
+                var punto = obtenerPuntoActual();
+                if (!punto || punto.estado_votacion !== "votacion_cerrada") {
+                    mostrarMensajeVotacion("No hay una votación cerrada para reabrir.", "alert-warning");
+                    return;
+                }
+
+                confirmarReabrirVotacion().then(function (confirmado) {
+                    if (!confirmado) {
+                        return;
+                    }
+                    if (btnReabrirVotacion) {
+                        btnReabrirVotacion.disabled = true;
+                    }
+                    ejecutarAccionVotacion(reabrirVotacionUrl, "No fue posible reabrir la votación.").then(function (payload) {
+                        punto.estado_votacion = "votacion_en_curso";
+                        mostrarMensajeVotacion(payload.mensaje || "Votación reabierta correctamente.", "alert-success");
+                        if (typeof actualizarControlesVotacion === "function") {
+                            actualizarControlesVotacion();
+                        } else {
+                            actualizarControles();
+                        }
+                    }).catch(function (error) {
+                        mostrarMensajeVotacion(error.message || "No fue posible reabrir la votación.", "alert-danger");
+                        if (typeof actualizarControlesVotacion === "function") {
+                            actualizarControlesVotacion();
+                        } else {
+                            actualizarControles();
+                        }
+                    });
+                });
+            }
             if (btnAnterior) {
                 btnAnterior.addEventListener("click", function () { navegarPunto(-1); });
             }
@@ -2276,6 +2468,9 @@ $detallePuntoActual = $puntoActual;
             }
             if (btnCerrarVotacion) {
                 btnCerrarVotacion.addEventListener("click", cerrarVotacion);
+            }
+            if (btnReabrirVotacion) {
+                btnReabrirVotacion.addEventListener("click", reabrirVotacion);
             }
             document.addEventListener("pleno:estado-en-curso", function () {
                 sesionEnCurso = true;
