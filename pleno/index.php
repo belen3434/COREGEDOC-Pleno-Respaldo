@@ -6,11 +6,13 @@ require_once __DIR__ . '/helpers/auth.php';
 require_once __DIR__ . '/helpers/votacion_pleno.php';
 require_once __DIR__ . '/models/SesionPlenaria.php';
 require_once __DIR__ . '/models/TemaPleno.php';
+require_once __DIR__ . '/models/AsistenciaPleno.php';
 require_once __DIR__ . '/controllers/PlenoController.php';
 
 $plenoAuth = plenoRequireAuthorizedUser();
 
-$vista = $_GET['vista'] ?? 'index';
+$vistaSolicitada = $_GET['vista'] ?? null;
+$vista = $vistaSolicitada ?? 'index';
 $action = $_GET['action'] ?? null;
 $tipoUsuarioId = (int)($plenoAuth['tipoUsuarioId'] ?? 0);
 $rolesSoloVisualizacion = [1, 21, 22];
@@ -31,6 +33,11 @@ $vistasPermitidas = [
 
 $vistasSoloVisualizacion = ['tabla', 'pleno_vivo', 'votacion', 'resumen'];
 
+if ($tipoUsuarioId === 1 && ($vistaSolicitada === null || $vistaSolicitada === '' || in_array($vista, ['index', 'configuracion', 'tabla'], true))) {
+    header('Location: index.php?vista=pleno_vivo');
+    exit();
+}
+
 if (in_array($tipoUsuarioId, $rolesSoloVisualizacion, true) && !in_array($vista, $vistasSoloVisualizacion, true)) {
     header('Location: index.php?vista=tabla');
     exit();
@@ -49,10 +56,13 @@ $plenoTemasComisionSesion = [];
 $plenoPuntosVariosSesion = [];
 $plenoTotalConsejerosGobernador = 0;
 $plenoEstadoVotacionActual = 'pendiente';
+$plenoAsistenciaUsuario = null;
+$plenoAsistenciaResumen = null;
 
 if ($plenoAuth['authorized']) {
     try {
         $plenoController = new PlenoController(new SesionPlenaria(), new TemaPleno(), $plenoAuth);
+        $plenoAsistencia = new AsistenciaPleno();
 
         if ($action === 'listar_temas_comision') {
             header('Content-Type: application/json; charset=utf-8');
@@ -80,6 +90,10 @@ if ($plenoAuth['authorized']) {
             if ($plenoSesionActual) {
                 $plenoPuntosSesion = $plenoController->listarPuntosSesion((int)$plenoSesionActual['id_sesion']);
             }
+
+            if (in_array((int)$tipoUsuarioId, [1, 22], true)) {
+                $plenoAsistenciaUsuario = $plenoAsistencia->obtenerEstadoUsuario((int)($_SESSION['idUsuario'] ?? 0));
+            }
         }
 
         if ($vista === 'pleno_vivo' && $plenoSesionActual) {
@@ -101,6 +115,7 @@ if ($plenoAuth['authorized']) {
             if ($plenoSesionActual) {
                 $plenoTemasComisionSesion = $plenoController->listarTemasComisionSesion((int)$plenoSesionActual['id_sesion']);
                 $plenoPuntosVariosSesion = $plenoController->listarPuntosVariosSesion((int)$plenoSesionActual['id_sesion']);
+                $plenoAsistenciaResumen = $plenoAsistencia->obtenerResumenSesion((int)$plenoSesionActual['id_sesion']);
             }
 
             $plenoTotalConsejerosGobernador = $plenoController->contarConsejerosYGobernador();
@@ -140,6 +155,8 @@ $data = [
     'pleno_puntos_varios_sesion' => $plenoPuntosVariosSesion,
     'pleno_total_consejeros_gobernador' => $plenoTotalConsejerosGobernador,
     'pleno_estado_votacion_actual' => $plenoEstadoVotacionActual,
+    'pleno_asistencia_usuario' => $plenoAsistenciaUsuario,
+    'pleno_asistencia_resumen' => $plenoAsistenciaResumen,
     'pleno_crud_error' => $plenoCrudError,
 ];
 

@@ -7,6 +7,10 @@ $puntosVarios = $data['pleno_puntos_varios_sesion'] ?? [];
 $estadoVotacionActual = (string)($data['pleno_estado_votacion_actual'] ?? 'pendiente');
 $rolUsuario = (int)($data['usuario']['rol'] ?? $_SESSION['tipoUsuario_id'] ?? 0);
 $puedeControlarPunto = in_array($rolUsuario, [6, 20], true);
+$asistenciaUsuarioPleno = $data['pleno_asistencia_usuario'] ?? null;
+$asistenciaMarcadaPleno = is_array($asistenciaUsuarioPleno) && !empty($asistenciaUsuarioPleno['ya_marco']);
+$esConsejeroRegional = $rolUsuario === 1;
+$bloquearPlenoPorAsistencia = $esConsejeroRegional && !$asistenciaMarcadaPleno;
 
 $h = static function ($valor): string {
     return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
@@ -265,6 +269,27 @@ if ($estadoVotacionActual === 'no_vota') {
         gap: 0.75rem;
     }
 
+    .pleno-live-option:disabled,
+    .pleno-live-actions .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .pleno-live-attendance-gate {
+        min-height: calc(100vh - 230px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem 0;
+    }
+
+    .pleno-live-attendance-gate .pleno-attendance-self-card {
+        width: min(100%, 620px);
+        margin-bottom: 0 !important;
+    }
+
     @media (max-width: 992px) {
         .pleno-live-session-grid,
         .pleno-live-meta,
@@ -341,6 +366,15 @@ if ($estadoVotacionActual === 'no_vota') {
             </div>
         </div>
     <?php elseif ($estadoSesion === 'en_curso'): ?>
+        <?php if ($bloquearPlenoPorAsistencia): ?>
+            <div class="pleno-live-attendance-gate" id="plenoLiveAttendanceGate">
+                <?php require __DIR__ . '/partials/asistencia_autoregistro.php'; ?>
+            </div>
+        <?php elseif ($rolUsuario === 22): ?>
+            <?php require __DIR__ . '/partials/asistencia_autoregistro.php'; ?>
+        <?php endif; ?>
+
+        <div id="plenoLiveContent" <?php echo $bloquearPlenoPorAsistencia ? 'hidden' : ''; ?>>
         <div class="pleno-live-header">
             <div>
                 <p class="pleno-live-status mb-2"><span aria-hidden="true">&bull;</span> PLENO EN VIVO</p>
@@ -371,10 +405,13 @@ if ($estadoVotacionActual === 'no_vota') {
                             <div class="alert alert-light border mb-3">Documento del acta: no hay documento asociado.</div>
                             <div class="alert <?php echo $h($claseEstadoVotacion); ?> mb-0"><?php echo $h($mensajeEstadoVotacion); ?></div>
                             <?php if ($estadoVotacionActual === 'votacion_en_curso'): ?>
+                            <?php if (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)): ?>
+                                <div class="alert alert-warning mt-3 mb-0 pleno-vote-attendance-warning">Debe registrar su asistencia antes de votar.</div>
+                            <?php endif; ?>
                             <div class="pleno-live-actions">
-                                <button class="pleno-live-option pleno-live-option-favor" type="button"><span>A Favor</span></button>
-                                <button class="pleno-live-option pleno-live-option-against" type="button"><span>En Contra</span></button>
-                                <button class="pleno-live-option pleno-live-option-abstain" type="button"><span>Abstención</span></button>
+                                <button class="pleno-live-option pleno-live-option-favor" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>><span>A Favor</span></button>
+                                <button class="pleno-live-option pleno-live-option-against" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>><span>En Contra</span></button>
+                                <button class="pleno-live-option pleno-live-option-abstain" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>><span>Abstención</span></button>
                             </div>
                             <?php elseif ($estadoVotacionActual === 'votacion_cerrada'): ?>
                                 <div class="alert alert-warning mt-3 mb-0">La votación de este punto se encuentra cerrada.</div>
@@ -402,10 +439,13 @@ if ($estadoVotacionActual === 'no_vota') {
                                             <div class="alert <?php echo $h($claseEstadoVotacion); ?> mb-3"><?php echo $h($mensajeEstadoVotacion); ?></div>
                                         <?php endif; ?>
                                         <?php if ($puntoActualGuardado === $subpuntoNumero && $estadoVotacionActual === 'votacion_en_curso'): ?>
+                                        <?php if (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)): ?>
+                                            <div class="alert alert-warning mb-3 pleno-vote-attendance-warning">Debe registrar su asistencia antes de votar.</div>
+                                        <?php endif; ?>
                                         <div class="pleno-live-actions">
-                                            <button class="btn btn-success" type="button">Aprobar</button>
-                                            <button class="btn btn-outline-danger" type="button">Rechazar</button>
-                                            <button class="btn btn-outline-secondary" type="button">Abstención</button>
+                                            <button class="btn btn-success" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>>Aprobar</button>
+                                            <button class="btn btn-outline-danger" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>>Rechazar</button>
+                                            <button class="btn btn-outline-secondary" type="button" <?php echo (!$asistenciaMarcadaPleno && in_array($rolUsuario, [1, 22], true)) ? 'disabled' : ''; ?>>Abstención</button>
                                         </div>
                                         <?php elseif ($puntoActualGuardado === $subpuntoNumero && $estadoVotacionActual === 'votacion_cerrada'): ?>
                                             <div class="alert alert-warning mb-0">La votación de este punto se encuentra cerrada.</div>
@@ -454,6 +494,7 @@ if ($estadoVotacionActual === 'no_vota') {
                 </section>
             </aside>
         </div>
+        </div>
     <?php else: ?>
         <div class="pleno-live-session-card">
             <div class="pleno-live-session-body">
@@ -465,3 +506,31 @@ if ($estadoVotacionActual === 'no_vota') {
         </div>
     <?php endif; ?>
 </div>
+
+<?php if ($estadoSesion === 'en_curso' && in_array($rolUsuario, [1, 22], true)): ?>
+    <script>
+        function plenoMostrarContenidoEnVivo() {
+            var gate = document.getElementById("plenoLiveAttendanceGate");
+            var content = document.getElementById("plenoLiveContent");
+
+            if (gate) {
+                gate.hidden = true;
+            }
+
+            if (content) {
+                content.hidden = false;
+            }
+
+            document.querySelectorAll(".pleno-live-actions button:disabled").forEach(function (button) {
+                button.disabled = false;
+            });
+
+            document.querySelectorAll(".pleno-vote-attendance-warning").forEach(function (alert) {
+                alert.hidden = true;
+            });
+        }
+
+        document.addEventListener("pleno:asistencia-registrada", plenoMostrarContenidoEnVivo);
+        document.addEventListener("pleno:asistencia-confirmada", plenoMostrarContenidoEnVivo);
+    </script>
+<?php endif; ?>
