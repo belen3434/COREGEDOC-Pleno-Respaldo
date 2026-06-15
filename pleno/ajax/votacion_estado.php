@@ -12,6 +12,8 @@ function plenoVotacionRespuestaSinActiva(): void
     echo json_encode([
         'success' => true,
         'hay_votacion' => false,
+        'requiere_votacion' => false,
+        'modo' => 'sin_votacion',
         'mensaje' => 'No hay votación activa en este momento.',
         'sesion' => null,
         'votacion' => [
@@ -28,7 +30,7 @@ function plenoVotacionRespuestaSinActiva(): void
     ], JSON_UNESCAPED_UNICODE);
 }
 
-function plenoVotacionObtenerTituloPunto($conn, int $idSesion, string $puntoNumero): string
+function plenoVotacionResolverDetallePunto($conn, int $idSesion, string $puntoNumero): array
 {
     $puntoNumero = trim($puntoNumero);
 
@@ -37,7 +39,12 @@ function plenoVotacionObtenerTituloPunto($conn, int $idSesion, string $puntoNume
         $stmt->execute([':id_sesion' => $idSesion]);
         $titulo = trim((string)$stmt->fetchColumn());
 
-        return $titulo !== '' ? $titulo : 'Aprobacion de acta';
+        return [
+            'titulo' => $titulo !== '' ? $titulo : 'Aprobación de acta',
+            'descripcion' => '',
+            'tipo_punto' => 'ACTA',
+            'seccion_orden' => '',
+        ];
     }
 
     $seccion = '';
@@ -54,15 +61,24 @@ function plenoVotacionObtenerTituloPunto($conn, int $idSesion, string $puntoNume
     }
 
     if ($seccion === '' || $orden <= 0) {
-        return 'Punto de comisión';
+        return [
+            'titulo' => 'Punto de comisión',
+            'descripcion' => '',
+            'tipo_punto' => 'COMISION',
+            'seccion_orden' => '',
+        ];
     }
 
     $stmt = $conn->prepare(
         "SELECT
             spt.tipo_punto,
             spt.nombre_imprevista,
+            spt.observacion_imprevista,
             spt.titulo_punto,
-            t.nombreTema
+            spt.descripcion_punto,
+            COALESCE(NULLIF(TRIM(spt.seccion_orden), ''), 'varios') AS seccion_orden,
+            t.nombreTema,
+            t.objetivo
          FROM sesion_plenaria_temas spt
          LEFT JOIN t_tema t ON t.idTema = spt.id_tema
          WHERE spt.id_sesion = :id_sesion
@@ -80,23 +96,35 @@ function plenoVotacionObtenerTituloPunto($conn, int $idSesion, string $puntoNume
     $punto = $stmt->fetch();
 
     if (!is_array($punto)) {
-        return 'Punto de comisión';
+        return [
+            'titulo' => 'Punto de comisión',
+            'descripcion' => '',
+            'tipo_punto' => 'COMISION',
+            'seccion_orden' => $seccion,
+        ];
     }
 
     $tipoPunto = strtoupper(trim((string)($punto['tipo_punto'] ?? 'COMISION')));
+    $titulo = '';
+    $descripcion = '';
 
     if ($tipoPunto === 'IMPREVISTA') {
         $titulo = trim((string)($punto['nombre_imprevista'] ?? ''));
-        return $titulo !== '' ? $titulo : 'Punto de comisión';
-    }
-
-    if ($tipoPunto === 'TABLA') {
+        $descripcion = trim((string)($punto['observacion_imprevista'] ?? ''));
+    } elseif ($tipoPunto === 'TABLA') {
         $titulo = trim((string)($punto['titulo_punto'] ?? ''));
-        return $titulo !== '' ? $titulo : 'Punto de comisión';
+        $descripcion = trim((string)($punto['descripcion_punto'] ?? ''));
+    } else {
+        $titulo = trim((string)($punto['nombreTema'] ?? ''));
+        $descripcion = trim((string)($punto['objetivo'] ?? $punto['descripcion_punto'] ?? ''));
     }
 
-    $titulo = trim((string)($punto['nombreTema'] ?? ''));
-    return $titulo !== '' ? $titulo : 'Punto de comisión';
+    return [
+        'titulo' => $titulo !== '' ? $titulo : 'Punto de comisión',
+        'descripcion' => $descripcion,
+        'tipo_punto' => $tipoPunto,
+        'seccion_orden' => (string)($punto['seccion_orden'] ?? $seccion),
+    ];
 }
 
 try {
@@ -112,41 +140,78 @@ try {
     $idSesionSolicitada = (int)($_GET['id_sesion'] ?? 0);
 
     if ($idSesionSolicitada > 0) {
-        $stmtVotacion = $conn->prepare(
-            "SELECT
-                s.id_sesion,
-                s.numero_sesion,
-                s.estado AS estado_sesion,
-                p.punto_numero,
-                p.estado_votacion
-             FROM pleno_votacion_punto p
-             INNER JOIN sesiones_plenarias s ON s.id_sesion = p.id_sesion
-             WHERE s.id_sesion = :id_sesion
-               AND s.vigencia = 1
-               AND s.estado = 'en_curso'
-               AND p.estado_votacion = 'votacion_en_curso'
-             ORDER BY COALESCE(p.fecha_inicio_votacion, p.fecha_actualizacion) DESC, p.id DESC
+        $stmtSesion = $conn->prepare(
+            "SELECT id_sesion, numero_sesion, estado, punto_actual
+             FROM sesiones_plenarias
+             WHERE id_sesion = :id_sesion
+               AND vigencia = 1
+               AND estado = 'en_curso'
              LIMIT 1"
         );
-        $stmtVotacion->execute([':id_sesion' => $idSesionSolicitada]);
+        $stmtSesion->execute([':id_sesion' => $idSesionSolicitada]);
     } else {
-        $stmtVotacion = $conn->prepare(
-            "SELECT
-                s.id_sesion,
-                s.numero_sesion,
-                s.estado AS estado_sesion,
-                p.punto_numero,
-                p.estado_votacion
-             FROM pleno_votacion_punto p
-             INNER JOIN sesiones_plenarias s ON s.id_sesion = p.id_sesion
-             WHERE s.vigencia = 1
-               AND s.estado = 'en_curso'
-               AND p.estado_votacion = 'votacion_en_curso'
-             ORDER BY COALESCE(p.fecha_inicio_votacion, p.fecha_actualizacion) DESC, p.id DESC
+        $stmtSesion = $conn->prepare(
+            "SELECT id_sesion, numero_sesion, estado, punto_actual
+             FROM sesiones_plenarias
+             WHERE vigencia = 1
+               AND estado = 'en_curso'
+             ORDER BY fecha DESC, hora DESC, id_sesion DESC
              LIMIT 1"
         );
-        $stmtVotacion->execute();
+        $stmtSesion->execute();
     }
+
+    $sesionActiva = $stmtSesion->fetch();
+    if (!is_array($sesionActiva)) {
+        plenoVotacionRespuestaSinActiva();
+        exit();
+    }
+
+    $idSesion = (int)$sesionActiva['id_sesion'];
+    $puntoActual = trim((string)($sesionActiva['punto_actual'] ?? ''));
+
+    if (preg_match('/^4\.\d+$/', $puntoActual) === 1) {
+        $detallePunto = plenoVotacionResolverDetallePunto($conn, $idSesion, $puntoActual);
+
+        echo json_encode([
+            'success' => true,
+            'hay_votacion' => true,
+            'requiere_votacion' => false,
+            'modo' => 'exposicion',
+            'mensaje' => 'Punto en exposición. No requiere votación.',
+            'sesion' => [
+                'id_sesion' => $idSesion,
+                'numero_sesion' => $sesionActiva['numero_sesion'] ?? '',
+                'estado' => $sesionActiva['estado'] ?? '',
+            ],
+            'votacion' => [
+                'id_votacion' => 0,
+                'punto_numero' => $puntoActual,
+                'estado_votacion' => 'no_vota',
+                'titulo' => $detallePunto['titulo'],
+                'descripcion' => $detallePunto['descripcion'],
+                'tipo_punto' => $detallePunto['tipo_punto'],
+                'seccion_orden' => 'varios',
+            ],
+            'conteo' => ['SI' => 0, 'NO' => 0, 'ABSTENCION' => 0],
+            'total_participantes' => 0,
+            'total_votos' => 0,
+            'participantes' => [],
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    $stmtVotacion = $conn->prepare(
+        "SELECT
+            p.punto_numero,
+            p.estado_votacion
+         FROM pleno_votacion_punto p
+         WHERE p.id_sesion = :id_sesion
+           AND p.estado_votacion = 'votacion_en_curso'
+         ORDER BY COALESCE(p.fecha_inicio_votacion, p.fecha_actualizacion) DESC, p.id DESC
+         LIMIT 1"
+    );
+    $stmtVotacion->execute([':id_sesion' => $idSesion]);
 
     $votacionActiva = $stmtVotacion->fetch();
     if (!is_array($votacionActiva)) {
@@ -154,7 +219,6 @@ try {
         exit();
     }
 
-    $idSesion = (int)$votacionActiva['id_sesion'];
     $puntoNumero = trim((string)$votacionActiva['punto_numero']);
     $votacion = plenoObtenerCabeceraVotacion($conn, $idSesion, $puntoNumero);
 
@@ -206,22 +270,26 @@ try {
         ];
     }
 
-    $tituloPunto = plenoVotacionObtenerTituloPunto($conn, $idSesion, $puntoNumero);
+    $detallePunto = plenoVotacionResolverDetallePunto($conn, $idSesion, $puntoNumero);
 
     echo json_encode([
         'success' => true,
         'hay_votacion' => true,
+        'requiere_votacion' => true,
+        'modo' => 'votacion',
         'sesion' => [
             'id_sesion' => $idSesion,
-            'numero_sesion' => $votacionActiva['numero_sesion'] ?? '',
-            'estado' => $votacionActiva['estado_sesion'] ?? '',
+            'numero_sesion' => $sesionActiva['numero_sesion'] ?? '',
+            'estado' => $sesionActiva['estado'] ?? '',
         ],
         'votacion' => [
             'id_votacion' => $idVotacion,
             'punto_numero' => $puntoNumero,
             'estado_votacion' => 'votacion_en_curso',
-            'titulo' => $tituloPunto,
-            'descripcion' => '',
+            'titulo' => $detallePunto['titulo'],
+            'descripcion' => $detallePunto['descripcion'],
+            'tipo_punto' => $detallePunto['tipo_punto'],
+            'seccion_orden' => $detallePunto['seccion_orden'],
         ],
         'conteo' => $conteo,
         'total_participantes' => count($participantes),
