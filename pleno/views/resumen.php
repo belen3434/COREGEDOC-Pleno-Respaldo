@@ -55,8 +55,12 @@ $claseResultado = static function (string $resultado): string {
         return 'pleno-result-rejected';
     }
 
-    if ($resultado === 'Empate' || $resultado === 'Sin votos') {
+    if ($resultado === 'Sin votos') {
         return 'pleno-result-warning';
+    }
+
+    if ($resultado === 'Empate') {
+        return 'pleno-result-neutral';
     }
 
     if ($resultado === 'Exposición' || $resultado === 'Votación en curso') {
@@ -97,8 +101,10 @@ $totalVotosEmitidos = 0;
 
 foreach ($resultados as $resultadoResumen) {
     $esInformativoResumen = !empty($resultadoResumen['es_informativo']) || (string)($resultadoResumen['resultado'] ?? '') === 'Exposición';
+    $estadoVotacionResumen = (string)($resultadoResumen['estado_votacion'] ?? '');
     $tuvoVotacionResumen = !empty($resultadoResumen['tuvo_votacion'])
-        || in_array((string)($resultadoResumen['estado_votacion'] ?? ''), ['votacion_en_curso', 'votacion_cerrada'], true);
+        || in_array($estadoVotacionResumen, ['votacion_en_curso', 'votacion_cerrada'], true);
+    $votacionCerradaResumen = $estadoVotacionResumen === 'votacion_cerrada';
 
     if ($esInformativoResumen) {
         $totalPuntosInformativos++;
@@ -108,11 +114,13 @@ foreach ($resultados as $resultadoResumen) {
         $totalPuntosVotados++;
     }
 
-    if ($tuvoVotacionResumen) {
+    if ($votacionCerradaResumen) {
         $totalVotacionesRealizadas++;
     }
 
-    $totalVotosEmitidos += (int)($resultadoResumen['total'] ?? 0);
+    if ($votacionCerradaResumen) {
+        $totalVotosEmitidos += (int)($resultadoResumen['total'] ?? 0);
+    }
 }
 
 $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durante la sesión. '
@@ -678,6 +686,14 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                     <div class="pleno-session-value"><?php echo (int)$ausentes; ?></div>
                 </div>
                 <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Participación</div>
+                    <div class="pleno-session-value"><?php echo $h(number_format($porcentajeParticipacion, 1, ',', '.')); ?>%</div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Ausentismo</div>
+                    <div class="pleno-session-value"><?php echo $h(number_format($porcentajeAusentismo, 1, ',', '.')); ?>%</div>
+                </div>
+                <div class="pleno-session-summary-item">
                     <div class="pleno-session-label">Puntos tratados</div>
                     <div class="pleno-session-value"><?php echo (int)$totalPuntosTratados; ?></div>
                 </div>
@@ -732,7 +748,7 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                             <?php if ($estadoSesionResumen === 'finalizada'): ?>
                                 <?php echo $h($formatearFechaHora($sesion['fecha_actualizacion'] ?? null)); ?>
                             <?php elseif ($estadoSesionResumen === 'en_curso'): ?>
-                                En curso
+                                -
                             <?php else: ?>
                                 Sin cierre
                             <?php endif; ?>
