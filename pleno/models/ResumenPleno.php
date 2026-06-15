@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Config\Database;
 
@@ -30,6 +30,7 @@ class ResumenPleno
         foreach ($puntos as $punto) {
             $numero = (string)$punto['numero'];
             $estadoVotacion = $votaciones[$numero]['estado_votacion'] ?? 'no_vota';
+            $esInformativo = !plenoPuntoPermiteVotacion($numero);
             $idVotacion = $this->obtenerIdVotacion($idSesion, $numero);
             $conteo = ['SI' => 0, 'NO' => 0, 'ABSTENCION' => 0];
             $votos = [];
@@ -40,9 +41,9 @@ class ResumenPleno
             }
 
             $total = (int)$conteo['SI'] + (int)$conteo['NO'] + (int)$conteo['ABSTENCION'];
-            $resultado = 'Tratado sin votación';
+            $resultado = $esInformativo ? 'Exposición' : 'Sin votos';
 
-            if ($estadoVotacion === 'votacion_cerrada') {
+            if ($estadoVotacion === 'votacion_cerrada' && !$esInformativo) {
                 if ($total === 0) {
                     $resultado = 'Sin votos';
                 } elseif ((int)$conteo['SI'] > (int)$conteo['NO']) {
@@ -52,7 +53,7 @@ class ResumenPleno
                 } else {
                     $resultado = 'Empate';
                 }
-            } elseif ($estadoVotacion === 'votacion_en_curso') {
+            } elseif ($estadoVotacion === 'votacion_en_curso' && !$esInformativo) {
                 $resultado = 'Votación en curso';
             }
 
@@ -61,6 +62,8 @@ class ResumenPleno
                 'titulo' => $punto['titulo'],
                 'resultado' => $resultado,
                 'estado_votacion' => $estadoVotacion,
+                'es_informativo' => $esInformativo,
+                'tuvo_votacion' => $idVotacion > 0,
                 'si' => (int)$conteo['SI'],
                 'no' => (int)$conteo['NO'],
                 'abstencion' => (int)$conteo['ABSTENCION'],

@@ -55,12 +55,70 @@ $claseResultado = static function (string $resultado): string {
         return 'pleno-result-rejected';
     }
 
+    if ($resultado === 'Empate' || $resultado === 'Sin votos') {
+        return 'pleno-result-warning';
+    }
+
+    if ($resultado === 'Exposición' || $resultado === 'Votación en curso') {
+        return 'pleno-result-info';
+    }
+
     return 'pleno-result-neutral';
+};
+
+$claseBadgeVoto = static function (?string $voto): string {
+    $voto = strtoupper(trim((string)$voto));
+    if ($voto === 'SI') {
+        return 'pleno-status-badge pleno-vote-badge-si';
+    }
+
+    if ($voto === 'NO') {
+        return 'pleno-status-badge pleno-vote-badge-no';
+    }
+
+    if ($voto === 'ABSTENCION') {
+        return 'pleno-status-badge pleno-vote-badge-abstencion';
+    }
+
+    return 'pleno-status-badge pleno-result-neutral';
 };
 
 $presentes = is_array($asistenciaResumen) ? (int)($asistenciaResumen['presentes'] ?? 0) : 0;
 $ausentes = is_array($asistenciaResumen) ? (int)($asistenciaResumen['ausentes'] ?? 0) : 0;
 $totalHabilitados = is_array($asistenciaResumen) ? (int)($asistenciaResumen['total'] ?? 0) : 0;
+$estadoSesionResumen = strtolower(trim((string)($sesion['estado'] ?? '')));
+$porcentajeParticipacion = $totalHabilitados > 0 ? round(($presentes / $totalHabilitados) * 100, 1) : 0;
+$porcentajeAusentismo = $totalHabilitados > 0 ? round(($ausentes / $totalHabilitados) * 100, 1) : 0;
+$totalPuntosTratados = count($resultados);
+$totalPuntosVotados = 0;
+$totalPuntosInformativos = 0;
+$totalVotacionesRealizadas = 0;
+$totalVotosEmitidos = 0;
+
+foreach ($resultados as $resultadoResumen) {
+    $esInformativoResumen = !empty($resultadoResumen['es_informativo']) || (string)($resultadoResumen['resultado'] ?? '') === 'Exposición';
+    $tuvoVotacionResumen = !empty($resultadoResumen['tuvo_votacion'])
+        || in_array((string)($resultadoResumen['estado_votacion'] ?? ''), ['votacion_en_curso', 'votacion_cerrada'], true);
+
+    if ($esInformativoResumen) {
+        $totalPuntosInformativos++;
+    }
+
+    if ($tuvoVotacionResumen) {
+        $totalPuntosVotados++;
+    }
+
+    if ($tuvoVotacionResumen) {
+        $totalVotacionesRealizadas++;
+    }
+
+    $totalVotosEmitidos += (int)($resultadoResumen['total'] ?? 0);
+}
+
+$textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durante la sesión. '
+    . $totalPuntosVotados . ' puntos fueron sometidos a votación y '
+    . $totalPuntosInformativos . ' fueron informativos. Participaron '
+    . $presentes . ' de ' . $totalHabilitados . ' consejeros habilitados.';
 ?>
 <style>
     .pleno-resumen-page {
@@ -327,6 +385,53 @@ $totalHabilitados = is_array($asistenciaResumen) ? (int)($asistenciaResumen['tot
         color: #5d7180;
     }
 
+    .pleno-result-warning {
+        background: #fff6e8;
+        color: #b86b11;
+    }
+
+    .pleno-result-info {
+        background: #eaf3ff;
+        color: #0d6efd;
+    }
+
+    .pleno-status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 26px;
+        padding: 0.22rem 0.62rem;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    .pleno-status-present {
+        background: #e8f7ee;
+        color: #0f8f4c;
+    }
+
+    .pleno-status-absent {
+        background: #fdecef;
+        color: #d72638;
+    }
+
+    .pleno-vote-badge-si {
+        background: #e8f7ee;
+        color: #0f8f4c;
+    }
+
+    .pleno-vote-badge-no {
+        background: #fdecef;
+        color: #d72638;
+    }
+
+    .pleno-vote-badge-abstencion {
+        background: #fff6e8;
+        color: #b86b11;
+    }
+
     .pleno-vote-favor,
     .pleno-vote-contra,
     .pleno-vote-abstencion {
@@ -537,6 +642,66 @@ $totalHabilitados = is_array($asistenciaResumen) ? (int)($asistenciaResumen['tot
             </div>
         </section>
     <?php else: ?>
+    <section class="pleno-resumen-card">
+        <div class="pleno-resumen-card-body">
+            <h2 class="pleno-resumen-card-title">
+                <i class="fas fa-chart-line"></i>
+                Resumen Ejecutivo
+            </h2>
+            <div class="pleno-session-summary-grid">
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Tipo de sesión</div>
+                    <div class="pleno-session-value"><?php echo $h($formatearTipo($sesion['tipo_pleno'] ?? null)); ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Número de sesión</div>
+                    <div class="pleno-session-value"><?php echo $h($sesion['numero_sesion'] ?? 'Sin número'); ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Fecha</div>
+                    <div class="pleno-session-value"><?php echo $h($formatearFecha($sesion['fecha'] ?? null)); ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Estado</div>
+                    <div class="pleno-session-value"><span class="pleno-badge-finalizado"><?php echo $h($formatearEstado($sesion['estado'] ?? null)); ?></span></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Habilitados</div>
+                    <div class="pleno-session-value"><?php echo (int)$totalHabilitados; ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Presentes</div>
+                    <div class="pleno-session-value"><?php echo (int)$presentes; ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Ausentes</div>
+                    <div class="pleno-session-value"><?php echo (int)$ausentes; ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Puntos tratados</div>
+                    <div class="pleno-session-value"><?php echo (int)$totalPuntosTratados; ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Puntos votados</div>
+                    <div class="pleno-session-value"><?php echo (int)$totalPuntosVotados; ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Puntos informativos</div>
+                    <div class="pleno-session-value"><?php echo (int)$totalPuntosInformativos; ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Votaciones realizadas</div>
+                    <div class="pleno-session-value"><?php echo (int)$totalVotacionesRealizadas; ?></div>
+                </div>
+                <div class="pleno-session-summary-item">
+                    <div class="pleno-session-label">Votos emitidos</div>
+                    <div class="pleno-session-value"><?php echo (int)$totalVotosEmitidos; ?></div>
+                </div>
+            </div>
+            <p class="pleno-observation-text mt-3"><?php echo $h($textoResumenEjecutivo); ?></p>
+        </div>
+    </section>
+
     <div class="pleno-resumen-grid">
         <section class="pleno-resumen-card">
             <div class="pleno-resumen-card-body">
@@ -558,8 +723,20 @@ $totalHabilitados = is_array($asistenciaResumen) ? (int)($asistenciaResumen['tot
                         <div class="pleno-session-value"><?php echo $h($formatearFecha($sesion['fecha'] ?? null)); ?></div>
                     </div>
                     <div class="pleno-session-summary-item">
-                        <div class="pleno-session-label">Hora</div>
+                        <div class="pleno-session-label">Hora inicio</div>
                         <div class="pleno-session-value"><?php echo $h($formatearHora($sesion['hora'] ?? null)); ?></div>
+                    </div>
+                    <div class="pleno-session-summary-item">
+                        <div class="pleno-session-label">Hora término</div>
+                        <div class="pleno-session-value">
+                            <?php if ($estadoSesionResumen === 'finalizada'): ?>
+                                <?php echo $h($formatearFechaHora($sesion['fecha_actualizacion'] ?? null)); ?>
+                            <?php elseif ($estadoSesionResumen === 'en_curso'): ?>
+                                En curso
+                            <?php else: ?>
+                                Sin cierre
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <div class="pleno-session-summary-item">
                         <div class="pleno-session-label">Estado</div>
@@ -605,6 +782,20 @@ $totalHabilitados = is_array($asistenciaResumen) ? (int)($asistenciaResumen['tot
                             <div class="pleno-attendance-text">Total habilitados</div>
                         </div>
                     </div>
+                    <div class="pleno-attendance-tile pleno-attendance-blue">
+                        <span class="pleno-attendance-icon"><i class="fas fa-percent"></i></span>
+                        <div>
+                            <div class="pleno-attendance-number"><?php echo $h(number_format($porcentajeParticipacion, 1, ',', '.')); ?>%</div>
+                            <div class="pleno-attendance-text">Participación</div>
+                        </div>
+                    </div>
+                    <div class="pleno-attendance-tile pleno-attendance-orange">
+                        <span class="pleno-attendance-icon"><i class="fas fa-chart-pie"></i></span>
+                        <div>
+                            <div class="pleno-attendance-number"><?php echo $h(number_format($porcentajeAusentismo, 1, ',', '.')); ?>%</div>
+                            <div class="pleno-attendance-text">Ausentismo</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -634,7 +825,11 @@ $totalHabilitados = is_array($asistenciaResumen) ? (int)($asistenciaResumen['tot
                                 <?php $estadoAsistencia = strtoupper(trim((string)($participante['estadoAsistencia'] ?? 'AUSENTE'))) ?: 'AUSENTE'; ?>
                                 <tr>
                                     <td><?php echo $h($participante['nombreCompleto'] ?? 'Sin nombre'); ?></td>
-                                    <td><?php echo $h($estadoAsistencia); ?></td>
+                                    <td>
+                                        <span class="pleno-status-badge <?php echo $estadoAsistencia === 'PRESENTE' ? 'pleno-status-present' : 'pleno-status-absent'; ?>">
+                                            <?php echo $h($estadoAsistencia === 'PRESENTE' ? 'Presente' : 'Ausente'); ?>
+                                        </span>
+                                    </td>
                                     <td><?php echo $h($formatearFechaHora($participante['fechaRegistroAsistencia'] ?? null)); ?></td>
                                     <td><?php echo $h(trim((string)($participante['origenAsistencia'] ?? '')) ?: 'Sin origen'); ?></td>
                                 </tr>
@@ -699,7 +894,11 @@ $totalHabilitados = is_array($asistenciaResumen) ? (int)($asistenciaResumen['tot
                                                             <?php foreach ($resultado['votos'] as $voto): ?>
                                                                 <tr>
                                                                     <td><?php echo $h($voto['consejero'] ?? 'Sin nombre'); ?></td>
-                                                                    <td><?php echo $h($voto['opcionVoto'] ?? 'Sin voto'); ?></td>
+                                                                    <td>
+                                                                        <span class="<?php echo $h($claseBadgeVoto($voto['opcionVoto'] ?? '')); ?>">
+                                                                            <?php echo $h($voto['opcionVoto'] ?? 'Sin voto'); ?>
+                                                                        </span>
+                                                                    </td>
                                                                     <td><?php echo $h($formatearFechaHora($voto['hora'] ?? null)); ?></td>
                                                                 </tr>
                                                             <?php endforeach; ?>
