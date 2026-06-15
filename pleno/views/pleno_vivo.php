@@ -107,7 +107,9 @@ if ($sesion && !array_key_exists('cuenta_presidente', $sesion)) {
     }
 }
 
-$cuentaPresidente = trim((string)($sesion['cuenta_presidente'] ?? $sesion['observaciones'] ?? ''));
+$observaciones = trim((string)($sesion['observaciones'] ?? ''));
+$observacionesTexto = $observaciones !== '' ? $observaciones : 'Sin observaciones registradas para esta sesión.';
+$cuentaPresidente = trim((string)($sesion['cuenta_presidente'] ?? ''));
 $estadoSesion = strtolower(trim((string)($sesion['estado'] ?? 'programada')));
 $estadoVotacionActual = in_array($estadoVotacionActual, ['sin_votacion', 'pendiente', 'votacion_en_curso', 'votacion_cerrada', 'no_vota'], true)
     ? $estadoVotacionActual
@@ -173,6 +175,26 @@ if ($estadoVotacionActual === 'no_vota') {
     .pleno-live-meta-item strong {
         color: #17324d;
         font-size: 0.95rem;
+    }
+
+    .pleno-live-observations {
+        margin: 0 0 1rem;
+        padding: 1rem;
+        border: 1px solid #dceee4;
+        border-radius: 12px;
+        color: #526979;
+        background: #f6faf8;
+        line-height: 1.45;
+        font-weight: 620;
+    }
+
+    .pleno-live-observations strong {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: #17324d;
+        font-size: 0.82rem;
+        font-weight: 850;
+        text-transform: uppercase;
     }
 
     .pleno-live-actions {
@@ -281,6 +303,10 @@ if ($estadoVotacionActual === 'no_vota') {
                     <div class="pleno-live-meta-item"><span>Hora</span><strong><?php echo $h($formatearHora($sesion['hora'] ?? null)); ?></strong></div>
                     <div class="pleno-live-meta-item"><span>Lugar</span><strong><?php echo $h($sesion['lugar'] ?? 'Sin lugar'); ?></strong></div>
                 </div>
+                <div class="pleno-live-observations">
+                    <strong>Observaciones</strong>
+                    <?php echo nl2br($h($observacionesTexto)); ?>
+                </div>
                 <div class="alert alert-info mb-0">
                     <?php echo $puedeControlarPunto ? 'Debe iniciar el pleno desde la vista Sesión del Día.' : 'Espere a que la Secretaría inicie el pleno.'; ?>
                 </div>
@@ -307,6 +333,10 @@ if ($estadoVotacionActual === 'no_vota') {
                     <div class="pleno-live-meta-item"><span>Hora</span><strong><?php echo $h($formatearHora($sesion['hora'] ?? null)); ?></strong></div>
                     <div class="pleno-live-meta-item"><span>Lugar</span><strong><?php echo $h($sesion['lugar'] ?? 'Sin lugar'); ?></strong></div>
                 </div>
+                <div class="pleno-live-observations">
+                    <strong>Observaciones</strong>
+                    <?php echo nl2br($h($observacionesTexto)); ?>
+                </div>
                 <a href="index.php?vista=resumen" class="btn btn-success mt-3">Ir a Resumen</a>
             </div>
         </div>
@@ -329,6 +359,10 @@ if ($estadoVotacionActual === 'no_vota') {
                             <div class="pleno-live-meta-item"><span>Fecha</span><strong><?php echo $h($formatearFecha($sesion['fecha'] ?? null)); ?></strong></div>
                             <div class="pleno-live-meta-item"><span>Hora</span><strong><?php echo $h($formatearHora($sesion['hora'] ?? null)); ?></strong></div>
                             <div class="pleno-live-meta-item"><span>Lugar</span><strong><?php echo $h($sesion['lugar'] ?? 'Sin lugar'); ?></strong></div>
+                        </div>
+                        <div class="pleno-live-observations">
+                            <strong>Observaciones</strong>
+                            <?php echo nl2br($h($observacionesTexto)); ?>
                         </div>
 
                         <?php if ($puntoActual === 1): ?>

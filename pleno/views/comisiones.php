@@ -689,12 +689,10 @@ $detallePuntoActual = $puntoActual;
                     <span><i class="fas fa-clock"></i><?php echo htmlspecialchars($formatearHora($sesion['hora'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                     <span><i class="fas fa-map-marker-alt"></i><?php echo htmlspecialchars((string)($sesion['lugar'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
-                <?php if ($observaciones !== ''): ?>
-                    <div class="secretaria-observations">
-                        <strong>Observaciones:</strong>
-                        <?php echo nl2br(htmlspecialchars($observaciones, ENT_QUOTES, 'UTF-8')); ?>
-                    </div>
-                <?php endif; ?>
+                <div class="secretaria-observations">
+                    <strong>Observaciones:</strong>
+                    <?php echo nl2br(htmlspecialchars($observaciones !== '' ? $observaciones : 'Sin observaciones registradas para esta sesión.', ENT_QUOTES, 'UTF-8')); ?>
+                </div>
             </div>
         </div>
 
