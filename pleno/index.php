@@ -9,6 +9,7 @@ require_once __DIR__ . '/models/TemaPleno.php';
 require_once __DIR__ . '/models/AsistenciaPleno.php';
 require_once __DIR__ . '/models/ResumenPleno.php';
 require_once __DIR__ . '/models/HistorialVotacionesPleno.php';
+require_once __DIR__ . '/models/AcuerdoPleno.php';
 require_once __DIR__ . '/controllers/PlenoController.php';
 
 $plenoAuth = plenoRequireAuthorizedUser();
@@ -63,6 +64,8 @@ $plenoAsistenciaUsuario = null;
 $plenoAsistenciaResumen = null;
 $plenoVotoUsuarioActual = null;
 $plenoResumenResultados = [];
+$plenoAcuerdos = [];
+$plenoPuntosAcuerdo = [];
 $plenoHistorialVotaciones = [];
 $plenoHistorialFiltros = [
     'numero_sesion' => '',
@@ -150,6 +153,9 @@ if ($plenoAuth['authorized']) {
                 $plenoAsistenciaResumen = $plenoAsistencia->obtenerResumenSesion($idSesionActual);
                 $plenoResumen = new ResumenPleno();
                 $plenoResumenResultados = $plenoResumen->obtenerResultadosPuntos($idSesionActual, $plenoSesionActual);
+                $plenoAcuerdosModelo = new AcuerdoPleno();
+                $plenoAcuerdos = $plenoAcuerdosModelo->listarPorSesion($idSesionActual);
+                $plenoPuntosAcuerdo = $plenoAcuerdosModelo->listarPuntosSesion($idSesionActual, $plenoSesionActual);
             }
         }
 
@@ -203,6 +209,8 @@ $data = [
     'pleno_asistencia_resumen' => $plenoAsistenciaResumen,
     'pleno_voto_usuario_actual' => $plenoVotoUsuarioActual,
     'pleno_resumen_resultados' => $plenoResumenResultados,
+    'pleno_acuerdos' => $plenoAcuerdos,
+    'pleno_puntos_acuerdo' => $plenoPuntosAcuerdo,
     'pleno_historial_votaciones' => $plenoHistorialVotaciones,
     'pleno_historial_filtros' => $plenoHistorialFiltros,
     'pleno_crud_error' => $plenoCrudError,

@@ -4,6 +4,9 @@ require __DIR__ . '/partials/sidebar_pleno.php';
 $sesion = $data['pleno_sesion_actual'] ?? null;
 $asistenciaResumen = $data['pleno_asistencia_resumen'] ?? null;
 $resultados = $data['pleno_resumen_resultados'] ?? [];
+$acuerdos = $data['pleno_acuerdos'] ?? [];
+$puntosAcuerdo = $data['pleno_puntos_acuerdo'] ?? [];
+$puedeGestionar = (bool)($data['pleno_puede_gestionar'] ?? false);
 $participantes = is_array($asistenciaResumen) ? ($asistenciaResumen['participantes'] ?? []) : [];
 
 $h = static function ($valor): string {
@@ -507,6 +510,54 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
         line-height: 1.4;
     }
 
+    .pleno-agreement-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .pleno-agreement-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem 0.85rem;
+        margin-top: 0.55rem;
+        color: #657987;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .pleno-agreement-point {
+        margin: 0.1rem 0 0.45rem;
+        color: #203949;
+        font-weight: 800;
+    }
+
+    .pleno-agreement-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 0.75rem;
+    }
+
+    .pleno-agreement-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .pleno-agreement-header .pleno-resumen-card-title {
+        margin-bottom: 0;
+    }
+
+    .pleno-agreement-form-label {
+        margin-bottom: 0.35rem;
+        color: #657987;
+        font-size: 0.76rem;
+        font-weight: 850;
+        text-transform: uppercase;
+    }
+
     .pleno-view-all-btn,
     .pleno-certificate-actions .btn {
         min-height: 40px;
@@ -817,6 +868,69 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
         </section>
     </div>
 
+    <?php if ($puedeGestionar): ?>
+        <div class="modal fade" id="plenoAcuerdoModal" tabindex="-1" aria-labelledby="plenoAcuerdoModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="plenoAcuerdoForm">
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="plenoAcuerdoModalLabel">Registrar Acuerdo</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="id_sesion" value="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>">
+                            <div class="mb-3">
+                                <label class="pleno-agreement-form-label" for="plenoAcuerdoPunto">Punto asociado</label>
+                                <select class="form-select" id="plenoAcuerdoPunto" name="punto_numero" required>
+                                    <option value="">Seleccione un punto</option>
+                                    <?php foreach ($puntosAcuerdo as $puntoAcuerdo): ?>
+                                        <option value="<?php echo $h($puntoAcuerdo['punto_numero'] ?? ''); ?>">
+                                            Punto <?php echo $h($puntoAcuerdo['punto_numero'] ?? ''); ?> - <?php echo $h($puntoAcuerdo['titulo_punto'] ?? 'Sin titulo'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="pleno-agreement-form-label" for="plenoAcuerdoTexto">Texto del acuerdo</label>
+                                <textarea class="form-control" id="plenoAcuerdoTexto" name="texto_acuerdo" rows="5" required></textarea>
+                            </div>
+                            <div class="alert alert-danger d-none mt-3 mb-0" id="plenoAcuerdoError" role="alert"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Guardar acuerdo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="plenoEditarAcuerdoModal" tabindex="-1" aria-labelledby="plenoEditarAcuerdoModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="plenoEditarAcuerdoForm">
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="plenoEditarAcuerdoModalLabel">Editar Acuerdo</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="id_acuerdo" id="plenoEditarAcuerdoId">
+                            <div>
+                                <label class="pleno-agreement-form-label" for="plenoEditarAcuerdoTexto">Texto del acuerdo</label>
+                                <textarea class="form-control" id="plenoEditarAcuerdoTexto" name="texto_acuerdo" rows="5" required></textarea>
+                            </div>
+                            <div class="alert alert-danger d-none mt-3 mb-0" id="plenoEditarAcuerdoError" role="alert"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Actualizar acuerdo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <section class="pleno-resumen-card">
         <div class="pleno-resumen-card-body">
             <h2 class="pleno-resumen-card-title">
@@ -936,11 +1050,65 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
     <div class="pleno-resumen-lower-grid">
         <section class="pleno-resumen-card">
             <div class="pleno-resumen-card-body">
-                <h2 class="pleno-resumen-card-title">
-                    <i class="fas fa-check-double"></i>
-                    Acuerdos Adoptados
-                </h2>
-                <p class="pleno-observation-text">No hay acuerdos registrados para esta sesión.</p>
+                <div class="pleno-agreement-header">
+                    <h2 class="pleno-resumen-card-title">
+                        <i class="fas fa-check-double"></i>
+                        Acuerdos Adoptados
+                    </h2>
+                    <?php if ($puedeGestionar): ?>
+                        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#plenoAcuerdoModal">
+                            <i class="fas fa-plus me-1"></i>
+                            Registrar Acuerdo
+                        </button>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (empty($acuerdos)): ?>
+                    <p class="pleno-observation-text" id="plenoAcuerdosEmpty">No hay acuerdos registrados para esta sesión.</p>
+                <?php else: ?>
+                    <ul class="pleno-agreements-list" id="plenoAcuerdosList">
+                        <?php foreach ($acuerdos as $indiceAcuerdo => $acuerdo): ?>
+                            <li class="pleno-agreement-card">
+                                <span class="pleno-agreement-check"><i class="fas fa-check"></i></span>
+                                <div class="pleno-agreement-content">
+                                    <div class="pleno-agreement-number">Acuerdo N° <?php echo (int)$indiceAcuerdo + 1; ?></div>
+                                    <div class="pleno-agreement-point">
+                                        Punto <?php echo $h($acuerdo['punto_numero'] ?? 'Sin punto'); ?> -
+                                        <?php echo $h($acuerdo['titulo_punto'] ?? 'Sin título'); ?>
+                                    </div>
+                                    <div class="pleno-agreement-text"><?php echo nl2br($h($acuerdo['texto_acuerdo'] ?? '')); ?></div>
+                                    <div class="pleno-agreement-meta">
+                                        <span>Fecha creación: <?php echo $h($formatearFechaHora($acuerdo['fecha_creacion'] ?? null)); ?></span>
+                                        <span>Estado: <?php echo $h(ucfirst((string)($acuerdo['estado'] ?? 'vigente'))); ?></span>
+                                    </div>
+                                    <?php if ($puedeGestionar): ?>
+                                        <div class="pleno-agreement-actions">
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-success btn-sm pleno-edit-agreement-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#plenoEditarAcuerdoModal"
+                                                data-id-acuerdo="<?php echo (int)($acuerdo['id_acuerdo'] ?? 0); ?>"
+                                                data-texto="<?php echo $h($acuerdo['texto_acuerdo'] ?? ''); ?>"
+                                            >
+                                                <i class="fas fa-pen me-1"></i>
+                                                Editar
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-danger btn-sm pleno-delete-agreement-btn"
+                                                data-id-acuerdo="<?php echo (int)($acuerdo['id_acuerdo'] ?? 0); ?>"
+                                            >
+                                                <i class="fas fa-trash me-1"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
             </div>
         </section>
 
@@ -974,5 +1142,115 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
             </div>
         </div>
     </section>
+    <?php if ($puedeGestionar): ?>
+        <script>
+            (function () {
+                "use strict";
+
+                function mostrarError(elemento, mensaje) {
+                    if (!elemento) {
+                        return;
+                    }
+                    elemento.textContent = mensaje || "No fue posible completar la acciÃ³n.";
+                    elemento.classList.remove("d-none");
+                }
+
+                function limpiarError(elemento) {
+                    if (!elemento) {
+                        return;
+                    }
+                    elemento.textContent = "";
+                    elemento.classList.add("d-none");
+                }
+
+                function enviarJson(url, data) {
+                    return fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(data)
+                    }).then(function (response) {
+                        return response.json().then(function (payload) {
+                            if (!response.ok || !payload || payload.success !== true) {
+                                throw new Error(payload && payload.mensaje ? payload.mensaje : "No fue posible completar la acciÃ³n.");
+                            }
+                            return payload;
+                        });
+                    });
+                }
+
+                function recargarResumen() {
+                    window.location.reload();
+                }
+
+                var crearForm = document.getElementById("plenoAcuerdoForm");
+                var crearError = document.getElementById("plenoAcuerdoError");
+                var editarForm = document.getElementById("plenoEditarAcuerdoForm");
+                var editarError = document.getElementById("plenoEditarAcuerdoError");
+                var editarId = document.getElementById("plenoEditarAcuerdoId");
+                var editarTexto = document.getElementById("plenoEditarAcuerdoTexto");
+
+                if (crearForm) {
+                    crearForm.addEventListener("submit", function (event) {
+                        event.preventDefault();
+                        limpiarError(crearError);
+
+                        enviarJson("ajax/guardar_acuerdo.php", {
+                            id_sesion: parseInt(crearForm.elements.id_sesion.value || "0", 10),
+                            punto_numero: crearForm.elements.punto_numero.value,
+                            texto_acuerdo: crearForm.elements.texto_acuerdo.value
+                        }).then(recargarResumen).catch(function (error) {
+                            mostrarError(crearError, error.message);
+                        });
+                    });
+                }
+
+                document.querySelectorAll(".pleno-edit-agreement-btn").forEach(function (boton) {
+                    boton.addEventListener("click", function () {
+                        limpiarError(editarError);
+                        if (editarId) {
+                            editarId.value = boton.getAttribute("data-id-acuerdo") || "";
+                        }
+                        if (editarTexto) {
+                            editarTexto.value = boton.getAttribute("data-texto") || "";
+                        }
+                    });
+                });
+
+                if (editarForm) {
+                    editarForm.addEventListener("submit", function (event) {
+                        event.preventDefault();
+                        limpiarError(editarError);
+
+                        enviarJson("ajax/actualizar_acuerdo.php", {
+                            id_acuerdo: parseInt(editarForm.elements.id_acuerdo.value || "0", 10),
+                            texto_acuerdo: editarForm.elements.texto_acuerdo.value
+                        }).then(recargarResumen).catch(function (error) {
+                            mostrarError(editarError, error.message);
+                        });
+                    });
+                }
+
+                document.querySelectorAll(".pleno-delete-agreement-btn").forEach(function (boton) {
+                    boton.addEventListener("click", function () {
+                        var idAcuerdo = parseInt(boton.getAttribute("data-id-acuerdo") || "0", 10);
+                        if (!idAcuerdo || !window.confirm("Â¿Desea eliminar este acuerdo?")) {
+                            return;
+                        }
+
+                        boton.disabled = true;
+                        enviarJson("ajax/eliminar_acuerdo.php", {
+                            id_acuerdo: idAcuerdo
+                        }).then(recargarResumen).catch(function (error) {
+                            boton.disabled = false;
+                            window.alert(error.message || "No fue posible eliminar el acuerdo.");
+                        });
+                    });
+                });
+            }());
+        </script>
+    <?php endif; ?>
     <?php endif; ?>
 </div>
