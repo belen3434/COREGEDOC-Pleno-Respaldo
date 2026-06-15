@@ -1,52 +1,5 @@
 <?php
 require __DIR__ . '/partials/sidebar_pleno.php';
-
-$consejerosGrupoUno = [
-    'Ana Morales Rojas',
-    'Carlos Soto Reyes',
-    'Evelyn Mansilla Contreras',
-    'Manuel Millones Tapia',
-    'Paola Zamorano Alvarado',
-    'Rodrigo Mena Flores',
-];
-
-$consejerosGrupoDos = [
-    'Isabel Nunez Tapia',
-    'Jorge Valdes Farias',
-    'Leonardo Contreras Silva',
-    'María Delgado Vergara',
-    'Sebastián Balbontín Álvarez',
-    'Viviana Ponce Domínguez',
-];
-
-$renderTablaConsejeros = static function (string $titulo, array $consejeros): void {
-    ?>
-    <section class="pleno-vote-table-card">
-        <div class="pleno-vote-table-head">
-            <h3 class="pleno-vote-table-title"><?php echo htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8'); ?></h3>
-            <span class="pleno-vote-participants">6 PARTICIPANTES</span>
-        </div>
-        <div class="pleno-vote-table-wrap">
-            <table class="pleno-vote-table">
-                <thead>
-                    <tr>
-                        <th>Consejero</th>
-                        <th>Voto</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($consejeros as $consejero): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($consejero, ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td><span class="pleno-vote-status">Sin votar</span></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </section>
-    <?php
-};
 ?>
 <style>
     .pleno-vote-page {
@@ -110,6 +63,13 @@ $renderTablaConsejeros = static function (string $titulo, array $consejeros): vo
         font-size: 1.28rem;
         font-weight: 800;
         line-height: 1.3;
+    }
+
+    .pleno-vote-meta {
+        margin: 0.45rem 0 0;
+        color: #6b7d88;
+        font-size: 0.9rem;
+        font-weight: 650;
     }
 
     .pleno-vote-close-btn {
@@ -247,7 +207,7 @@ $renderTablaConsejeros = static function (string $titulo, array $consejeros): vo
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 78px;
+        min-width: 88px;
         min-height: 28px;
         padding: 0.25rem 0.6rem;
         border-radius: 999px;
@@ -256,6 +216,37 @@ $renderTablaConsejeros = static function (string $titulo, array $consejeros): vo
         font-size: 0.78rem;
         font-weight: 750;
         white-space: nowrap;
+    }
+
+    .pleno-vote-status-si {
+        background: #e5f6eb;
+        color: #147a34;
+    }
+
+    .pleno-vote-status-no {
+        background: #fde8eb;
+        color: #b51f2f;
+    }
+
+    .pleno-vote-status-abs {
+        background: #fff0db;
+        color: #9b5b08;
+    }
+
+    .pleno-vote-empty {
+        margin-top: 1.25rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid #dce8f1;
+        border-radius: 12px;
+        background: #f8fbfd;
+        color: #5d7180;
+        font-weight: 700;
+    }
+
+    .pleno-vote-page:fullscreen {
+        overflow: auto;
+        padding: 1.5rem;
+        background: #f6f8fa;
     }
 
     @media (max-width: 991.98px) {
@@ -294,17 +285,18 @@ $renderTablaConsejeros = static function (string $titulo, array $consejeros): vo
     }
 </style>
 
-<div class="container-fluid mt-4 pleno-vote-page">
+<div class="container-fluid mt-4 pleno-vote-page" id="plenoVoteMonitor">
     <div class="pleno-vote-eyebrow">• VOTACIÓN EN VIVO</div>
     <h1 class="pleno-vote-title">Votación</h1>
 
     <section class="pleno-vote-main-card">
         <div class="pleno-vote-card-header">
             <div>
-                <span class="pleno-vote-pill">PUNTO ACTUAL EN VOTACIÓN</span>
-                <h2 class="pleno-vote-topic">Comisión Prueba - Tema: Agua en la comuna de Olmué</h2>
+                <span class="pleno-vote-pill" id="plenoVoteStatus">CARGANDO VOTACIÓN</span>
+                <h2 class="pleno-vote-topic" id="plenoVoteTopic">Consultando datos del pleno...</h2>
+                <p class="pleno-vote-meta" id="plenoVoteMeta">Actualización automática cada 3 segundos.</p>
             </div>
-            <button type="button" class="pleno-vote-close-btn">Cerrar Votación</button>
+            <button type="button" class="pleno-vote-close-btn" id="plenoFullscreenBtn">Pantalla completa</button>
         </div>
 
         <div class="pleno-vote-counters" aria-label="Conteo visual de votos">
@@ -312,28 +304,231 @@ $renderTablaConsejeros = static function (string $titulo, array $consejeros): vo
                 <span class="pleno-vote-counter-icon"><i class="fas fa-check"></i></span>
                 <div>
                     <div class="pleno-vote-counter-label">SÍ</div>
-                    <div class="pleno-vote-counter-number">0</div>
+                    <div class="pleno-vote-counter-number" id="plenoVoteCountSi">0</div>
                 </div>
             </div>
             <div class="pleno-vote-counter pleno-vote-counter-no">
                 <span class="pleno-vote-counter-icon"><i class="fas fa-times"></i></span>
                 <div>
                     <div class="pleno-vote-counter-label">NO</div>
-                    <div class="pleno-vote-counter-number">0</div>
+                    <div class="pleno-vote-counter-number" id="plenoVoteCountNo">0</div>
                 </div>
             </div>
             <div class="pleno-vote-counter pleno-vote-counter-abs">
                 <span class="pleno-vote-counter-icon"><i class="fas fa-hand-paper"></i></span>
                 <div>
                     <div class="pleno-vote-counter-label">ABS</div>
-                    <div class="pleno-vote-counter-number">0</div>
+                    <div class="pleno-vote-counter-number" id="plenoVoteCountAbs">0</div>
                 </div>
             </div>
         </div>
     </section>
 
+    <div class="pleno-vote-empty d-none" id="plenoVoteEmpty">No hay votación activa en este momento.</div>
+
     <div class="pleno-vote-tables">
-        <?php $renderTablaConsejeros('Consejeros 1 al 6', $consejerosGrupoUno); ?>
-        <?php $renderTablaConsejeros('Consejeros 7 al 12', $consejerosGrupoDos); ?>
+        <section class="pleno-vote-table-card">
+            <div class="pleno-vote-table-head">
+                <h3 class="pleno-vote-table-title" id="plenoVoteGroupOneTitle">Consejeros/as 1 al 6</h3>
+                <span class="pleno-vote-participants" id="plenoVoteGroupOneCount">0 PARTICIPANTES</span>
+            </div>
+            <div class="pleno-vote-table-wrap">
+                <table class="pleno-vote-table">
+                    <thead>
+                        <tr>
+                            <th>Consejero/a</th>
+                            <th>Voto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="plenoVoteGroupOneBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="pleno-vote-table-card">
+            <div class="pleno-vote-table-head">
+                <h3 class="pleno-vote-table-title" id="plenoVoteGroupTwoTitle">Consejeros/as 7 al 12</h3>
+                <span class="pleno-vote-participants" id="plenoVoteGroupTwoCount">0 PARTICIPANTES</span>
+            </div>
+            <div class="pleno-vote-table-wrap">
+                <table class="pleno-vote-table">
+                    <thead>
+                        <tr>
+                            <th>Consejero/a</th>
+                            <th>Voto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="plenoVoteGroupTwoBody"></tbody>
+                </table>
+            </div>
+        </section>
     </div>
 </div>
+
+<script>
+    (function () {
+        var monitor = document.getElementById("plenoVoteMonitor");
+        var fullscreenBtn = document.getElementById("plenoFullscreenBtn");
+        var statusEl = document.getElementById("plenoVoteStatus");
+        var topicEl = document.getElementById("plenoVoteTopic");
+        var metaEl = document.getElementById("plenoVoteMeta");
+        var emptyEl = document.getElementById("plenoVoteEmpty");
+        var countSiEl = document.getElementById("plenoVoteCountSi");
+        var countNoEl = document.getElementById("plenoVoteCountNo");
+        var countAbsEl = document.getElementById("plenoVoteCountAbs");
+        var groupOneBody = document.getElementById("plenoVoteGroupOneBody");
+        var groupTwoBody = document.getElementById("plenoVoteGroupTwoBody");
+        var groupOneCount = document.getElementById("plenoVoteGroupOneCount");
+        var groupTwoCount = document.getElementById("plenoVoteGroupTwoCount");
+        var groupOneTitle = document.getElementById("plenoVoteGroupOneTitle");
+        var groupTwoTitle = document.getElementById("plenoVoteGroupTwoTitle");
+        var pollingMs = 3000;
+
+        function limpiar(texto) {
+            return String(texto || "");
+        }
+
+        function etiquetaVoto(voto) {
+            if (voto === "SI") {
+                return "Sí";
+            }
+            if (voto === "NO") {
+                return "No";
+            }
+            if (voto === "ABSTENCION") {
+                return "Abstención";
+            }
+            return "Sin votar";
+        }
+
+        function claseVoto(voto) {
+            if (voto === "SI") {
+                return " pleno-vote-status-si";
+            }
+            if (voto === "NO") {
+                return " pleno-vote-status-no";
+            }
+            if (voto === "ABSTENCION") {
+                return " pleno-vote-status-abs";
+            }
+            return "";
+        }
+
+        function renderGrupo(tbody, participantes) {
+            tbody.innerHTML = "";
+
+            if (!participantes.length) {
+                var filaVacia = document.createElement("tr");
+                var celda = document.createElement("td");
+                celda.colSpan = 2;
+                celda.textContent = "Sin participantes para mostrar.";
+                filaVacia.appendChild(celda);
+                tbody.appendChild(filaVacia);
+                return;
+            }
+
+            participantes.forEach(function (participante) {
+                var fila = document.createElement("tr");
+                var nombre = document.createElement("td");
+                var voto = document.createElement("td");
+                var estado = document.createElement("span");
+
+                nombre.textContent = limpiar(participante.nombre);
+                estado.className = "pleno-vote-status" + claseVoto(participante.voto);
+                estado.textContent = etiquetaVoto(participante.voto);
+
+                voto.appendChild(estado);
+                fila.appendChild(nombre);
+                fila.appendChild(voto);
+                tbody.appendChild(fila);
+            });
+        }
+
+        function renderEstado(data) {
+            var votacion = data.votacion || {};
+            var sesion = data.sesion || {};
+            var conteo = data.conteo || {};
+            var participantes = Array.isArray(data.participantes) ? data.participantes : [];
+            var punto = limpiar(votacion.punto_numero);
+            var estado = limpiar(votacion.estado_votacion);
+            var mitad = Math.ceil(participantes.length / 2);
+            var grupoUno = participantes.slice(0, mitad);
+            var grupoDos = participantes.slice(mitad);
+
+            countSiEl.textContent = Number(conteo.SI || 0);
+            countNoEl.textContent = Number(conteo.NO || 0);
+            countAbsEl.textContent = Number(conteo.ABSTENCION || 0);
+
+            if (data.hay_votacion !== true) {
+                statusEl.textContent = "SIN VOTACIÓN ACTIVA";
+                topicEl.textContent = limpiar(data.mensaje || "No hay votación activa en este momento.");
+                metaEl.textContent = "La pantalla se actualizará automáticamente.";
+                emptyEl.textContent = limpiar(data.mensaje || "No hay votación activa en este momento.");
+                emptyEl.classList.remove("d-none");
+                groupOneTitle.textContent = "Consejeros/as";
+                groupTwoTitle.textContent = "Consejeros/as";
+                groupOneCount.textContent = "0 PARTICIPANTES";
+                groupTwoCount.textContent = "0 PARTICIPANTES";
+                renderGrupo(groupOneBody, []);
+                renderGrupo(groupTwoBody, []);
+                return;
+            }
+
+            statusEl.textContent = estado === "votacion_en_curso" ? "PUNTO ACTUAL EN VOTACIÓN" : "ÚLTIMA VOTACIÓN REGISTRADA";
+            topicEl.textContent = punto
+                ? (limpiar(votacion.titulo) + (limpiar(votacion.descripcion) ? " - " + limpiar(votacion.descripcion) : ""))
+                : "Sin votación registrada";
+            metaEl.textContent = "Pleno " + limpiar(sesion.numero_sesion || sesion.id_sesion || "") + " · " + Number(data.total_votos || 0) + " votos de " + Number(data.total_participantes || 0) + " participantes";
+            emptyEl.classList.toggle("d-none", data.hay_votacion === true);
+
+            groupOneTitle.textContent = "Consejeros/as 1 al " + grupoUno.length;
+            groupTwoTitle.textContent = "Consejeros/as " + (grupoUno.length + 1) + " al " + participantes.length;
+            groupOneCount.textContent = grupoUno.length + " PARTICIPANTES";
+            groupTwoCount.textContent = grupoDos.length + " PARTICIPANTES";
+
+            renderGrupo(groupOneBody, grupoUno);
+            renderGrupo(groupTwoBody, grupoDos);
+        }
+
+        function cargarEstado() {
+            fetch("ajax/votacion_estado.php", {
+                headers: {
+                    "Accept": "application/json"
+                }
+            })
+                .then(function (response) {
+                    return response.json().then(function (payload) {
+                        return { ok: response.ok, payload: payload };
+                    });
+                })
+                .then(function (result) {
+                    if (!result.ok || !result.payload || result.payload.success !== true) {
+                        throw new Error(result.payload && result.payload.mensaje ? result.payload.mensaje : "No fue posible cargar la votación.");
+                    }
+
+                    renderEstado(result.payload);
+                })
+                .catch(function (error) {
+                    statusEl.textContent = "SIN CONEXIÓN";
+                    topicEl.textContent = error && error.message ? error.message : "No fue posible cargar la votación.";
+                    metaEl.textContent = "Se reintentará automáticamente.";
+                });
+        }
+
+        fullscreenBtn.addEventListener("click", function () {
+            var target = monitor || document.documentElement;
+
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+                return;
+            }
+
+            if (target.requestFullscreen) {
+                target.requestFullscreen();
+            }
+        });
+
+        cargarEstado();
+        window.setInterval(cargarEstado, pollingMs);
+    }());
+</script>
