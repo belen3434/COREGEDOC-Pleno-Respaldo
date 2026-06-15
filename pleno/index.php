@@ -65,7 +65,9 @@ $plenoVotoUsuarioActual = null;
 $plenoResumenResultados = [];
 $plenoHistorialVotaciones = [];
 $plenoHistorialFiltros = [
-    'q' => '',
+    'numero_sesion' => '',
+    'fecha' => '',
+    'tipo_pleno' => 'todas',
     'resultado' => 'todas',
 ];
 
@@ -153,8 +155,11 @@ if ($plenoAuth['authorized']) {
 
         if ($vista === 'historial_votaciones') {
             $plenoHistorialFiltros = [
-                'q' => trim((string)($_GET['q'] ?? '')),
+                'numero_sesion' => trim((string)($_GET['numero_sesion'] ?? '')),
+                'fecha' => trim((string)($_GET['fecha'] ?? '')),
+                'tipo_pleno' => trim((string)($_GET['tipo_pleno'] ?? 'todas')),
                 'resultado' => trim((string)($_GET['resultado'] ?? 'todas')),
+                'q' => trim((string)($_GET['q'] ?? '')),
             ];
             $historialVotaciones = new HistorialVotacionesPleno();
             $plenoHistorialVotaciones = $historialVotaciones->listar($plenoHistorialFiltros);

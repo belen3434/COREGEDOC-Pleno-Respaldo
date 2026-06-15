@@ -2,7 +2,12 @@
 require __DIR__ . '/partials/sidebar_pleno.php';
 
 $historial = $data['pleno_historial_votaciones'] ?? [];
-$filtros = $data['pleno_historial_filtros'] ?? ['q' => '', 'resultado' => 'todas'];
+$filtros = $data['pleno_historial_filtros'] ?? [
+    'numero_sesion' => '',
+    'fecha' => '',
+    'tipo_pleno' => 'todas',
+    'resultado' => 'todas',
+];
 
 $h = static function ($valor): string {
     return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
@@ -24,6 +29,23 @@ $formatearFechaHora = static function (?string $fecha): string {
 
     $timestamp = strtotime($fecha);
     return $timestamp ? date('d/m/Y H:i', $timestamp) . ' hrs.' : $fecha;
+};
+
+$valorFechaInput = static function (?string $fecha): string {
+    $fecha = trim((string)$fecha);
+    if ($fecha === '') {
+        return '';
+    }
+
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) === 1) {
+        return $fecha;
+    }
+
+    if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $fecha, $matches) === 1) {
+        return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+    }
+
+    return '';
 };
 
 $claseResultado = static function (string $resultado): string {
@@ -65,6 +87,12 @@ $opcionesResultado = [
     'rechazadas' => 'Rechazadas',
     'empatadas' => 'Empatadas',
     'sin_votos' => 'Sin votos',
+];
+
+$opcionesTipoPleno = [
+    'todas' => 'Todas',
+    'ordinario' => 'Ordinario',
+    'extraordinario' => 'Extraordinario',
 ];
 ?>
 <style>
@@ -121,7 +149,7 @@ $opcionesResultado = [
 
     .historial-filters {
         display: grid;
-        grid-template-columns: minmax(240px, 1fr) minmax(190px, 260px) auto;
+        grid-template-columns: minmax(180px, 1fr) minmax(160px, 210px) minmax(170px, 230px) minmax(170px, 230px) auto;
         gap: 0.85rem;
         align-items: end;
     }
@@ -285,15 +313,35 @@ $opcionesResultado = [
             <form class="historial-filters" method="get" action="index.php">
                 <input type="hidden" name="vista" value="historial_votaciones">
                 <div>
-                    <label class="historial-label" for="historialSearch">Buscar sesión</label>
+                    <label class="historial-label" for="historialNumeroSesion">Número de sesión</label>
                     <input
                         class="historial-input"
-                        id="historialSearch"
-                        name="q"
-                        type="search"
-                        value="<?php echo $h($filtros['q'] ?? ''); ?>"
-                        placeholder="PL-2026-070, Ordinario, 15/06/2026"
+                        id="historialNumeroSesion"
+                        name="numero_sesion"
+                        type="text"
+                        value="<?php echo $h($filtros['numero_sesion'] ?? ''); ?>"
+                        placeholder="PL-2026-034"
                     >
+                </div>
+                <div>
+                    <label class="historial-label" for="historialFecha">Fecha</label>
+                    <input
+                        class="historial-input"
+                        id="historialFecha"
+                        name="fecha"
+                        type="date"
+                        value="<?php echo $h($valorFechaInput($filtros['fecha'] ?? '')); ?>"
+                    >
+                </div>
+                <div>
+                    <label class="historial-label" for="historialTipoPleno">Tipo de pleno</label>
+                    <select class="historial-select" id="historialTipoPleno" name="tipo_pleno">
+                        <?php foreach ($opcionesTipoPleno as $valor => $label): ?>
+                            <option value="<?php echo $h($valor); ?>" <?php echo ($filtros['tipo_pleno'] ?? 'todas') === $valor ? 'selected' : ''; ?>>
+                                <?php echo $h($label); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div>
                     <label class="historial-label" for="historialResultado">Resultado</label>
@@ -315,7 +363,7 @@ $opcionesResultado = [
     <section class="historial-card">
         <div class="historial-card-body">
             <?php if (empty($historial)): ?>
-                <p class="mb-0 text-muted">No existen votaciones históricas para los filtros seleccionados.</p>
+                <p class="mb-0 text-muted">No se encontraron votaciones con los filtros seleccionados.</p>
             <?php else: ?>
                 <div class="historial-table-wrap">
                     <table class="historial-table">

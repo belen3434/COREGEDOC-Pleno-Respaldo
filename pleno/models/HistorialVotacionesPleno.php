@@ -20,6 +20,9 @@ class HistorialVotacionesPleno
     public function listar(array $filtros = []): array
     {
         $busqueda = trim((string)($filtros['q'] ?? ''));
+        $numeroSesion = trim((string)($filtros['numero_sesion'] ?? ''));
+        $fechaFiltro = trim((string)($filtros['fecha'] ?? ''));
+        $tipoPlenoFiltro = strtolower(trim((string)($filtros['tipo_pleno'] ?? 'todas')));
         $resultadoFiltro = trim((string)($filtros['resultado'] ?? 'todas'));
 
         $sql = "SELECT
@@ -38,6 +41,27 @@ class HistorialVotacionesPleno
                 INNER JOIN sesiones_plenarias s ON s.id_sesion = p.id_sesion
                 WHERE p.estado_votacion = 'votacion_cerrada'";
         $params = [];
+
+        if ($numeroSesion !== '') {
+            $sql .= ' AND s.numero_sesion LIKE :numero_sesion';
+            $params[':numero_sesion'] = '%' . $numeroSesion . '%';
+        }
+
+        if ($fechaFiltro !== '') {
+            $fechaNormalizada = $this->normalizarFechaBusqueda($fechaFiltro);
+            if ($fechaNormalizada !== '') {
+                $sql .= ' AND s.fecha = :fecha';
+                $params[':fecha'] = $fechaNormalizada;
+            } else {
+                $sql .= " AND (DATE_FORMAT(s.fecha, '%d/%m/%Y') LIKE :fecha_texto OR s.fecha LIKE :fecha_texto)";
+                $params[':fecha_texto'] = '%' . $fechaFiltro . '%';
+            }
+        }
+
+        if (in_array($tipoPlenoFiltro, ['ordinario', 'extraordinario'], true)) {
+            $sql .= ' AND LOWER(TRIM(s.tipo_pleno)) = :tipo_pleno';
+            $params[':tipo_pleno'] = $tipoPlenoFiltro;
+        }
 
         if ($busqueda !== '') {
             $fechaBusqueda = $this->normalizarFechaBusqueda($busqueda);
@@ -111,11 +135,17 @@ class HistorialVotacionesPleno
 
     private function normalizarFechaBusqueda(string $busqueda): string
     {
-        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $busqueda, $matches) !== 1) {
-            return '';
+        $busqueda = trim($busqueda);
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $busqueda, $matches) === 1) {
+            return $matches[1] . '-' . $matches[2] . '-' . $matches[3];
         }
 
-        return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $busqueda, $matches) === 1) {
+            return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+        }
+
+        return '';
     }
 
     private function obtenerIdVotacion(int $idSesion, string $puntoNumero): int
