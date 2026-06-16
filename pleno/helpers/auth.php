@@ -61,3 +61,10 @@ if (!function_exists('plenoGetTipoUsuarioDescripcion')) {
         return 'Tipo de usuario #' . $tipoUsuarioId;
     }
 }
+
+if (!function_exists('plenoPuedeGenerarCertificados')) {
+    function plenoPuedeGenerarCertificados($tipoUsuarioId): bool
+    {
+        return in_array((int)$tipoUsuarioId, [6, 20], true);
+    }
+}
