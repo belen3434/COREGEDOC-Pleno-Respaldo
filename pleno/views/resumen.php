@@ -13,6 +13,7 @@ $certificadoAcuerdos = $data['pleno_certificado_acuerdos'] ?? [
     'existe_certificado' => false,
 ];
 $puedeGestionar = (bool)($data['pleno_puede_gestionar'] ?? false);
+$puedeGenerarCertificados = (bool)($data['pleno_puede_generar_certificados'] ?? false);
 $participantes = is_array($asistenciaResumen) ? ($asistenciaResumen['participantes'] ?? []) : [];
 
 $h = static function ($valor): string {
@@ -1186,6 +1187,7 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                     <i class="fas fa-file-signature"></i>
                     Certificado de Acuerdos
                 </h2>
+                <div class="alert d-none mb-3 pleno-certificate-feedback" role="alert"></div>
                 <?php if (!$existenAcuerdosCertificado): ?>
                     <div class="pleno-certificate-box">
                         <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
@@ -1194,12 +1196,14 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                             <div class="pleno-certificate-date">Total acuerdos: 0</div>
                         </div>
                     </div>
-                    <div class="pleno-certificate-actions">
-                        <button type="button" class="btn btn-success" disabled>
-                            <i class="fas fa-file-export me-1"></i>
-                            Generar Certificado
-                        </button>
-                    </div>
+                    <?php if ($puedeGenerarCertificados): ?>
+                        <div class="pleno-certificate-actions">
+                            <button type="button" class="btn btn-success" disabled>
+                                <i class="fas fa-file-export me-1"></i>
+                                Generar Certificado
+                            </button>
+                        </div>
+                    <?php endif; ?>
                 <?php elseif (!$existeCertificadoAcuerdos): ?>
                     <div class="pleno-certificate-box">
                         <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
@@ -1208,12 +1212,14 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                             <div class="pleno-certificate-date">Total acuerdos: <?php echo (int)$totalAcuerdosCertificado; ?></div>
                         </div>
                     </div>
-                    <div class="pleno-certificate-actions">
-                        <button type="button" class="btn btn-success pleno-certificate-generate-btn">
-                            <i class="fas fa-file-export me-1"></i>
-                            Generar Certificado
-                        </button>
-                    </div>
+                    <?php if ($puedeGenerarCertificados): ?>
+                        <div class="pleno-certificate-actions">
+                            <button type="button" class="btn btn-success pleno-certificate-generate-btn" data-certificate-mode="first">
+                                <i class="fas fa-file-export me-1"></i>
+                                Generar Certificado
+                            </button>
+                        </div>
+                    <?php endif; ?>
                 <?php else: ?>
                     <div class="pleno-certificate-box">
                         <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
@@ -1243,10 +1249,12 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                             <i class="fas fa-download me-1"></i>
                             Descargar
                         </a>
-                        <button type="button" class="btn btn-success pleno-certificate-generate-btn">
-                            <i class="fas fa-plus me-1"></i>
-                            Generar nueva versi&oacute;n
-                        </button>
+                        <?php if ($puedeGenerarCertificados): ?>
+                            <button type="button" class="btn btn-success pleno-certificate-generate-btn" data-certificate-mode="version">
+                                <i class="fas fa-plus me-1"></i>
+                                Generar nueva versi&oacute;n
+                            </button>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -1315,6 +1323,7 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
             "use strict";
 
             var certificadoCard = document.getElementById("plenoCertificadoAcuerdosCard");
+            var puedeGenerarCertificados = <?php echo $puedeGenerarCertificados ? 'true' : 'false'; ?>;
 
             function htmlEscape(valor) {
                 return String(valor === null || valor === undefined ? "" : valor)
@@ -1333,6 +1342,64 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                 }
 
                 return partes[3] + "/" + partes[2] + "/" + partes[1] + " " + partes[4] + ":" + partes[5] + " hrs.";
+            }
+
+            function obtenerFeedbackCertificado() {
+                if (!certificadoCard) {
+                    return null;
+                }
+
+                var feedback = certificadoCard.querySelector(".pleno-certificate-feedback");
+                if (feedback) {
+                    return feedback;
+                }
+
+                var titulo = certificadoCard.querySelector(".pleno-resumen-card-title");
+                if (!titulo) {
+                    return null;
+                }
+
+                feedback = document.createElement("div");
+                feedback.className = "alert d-none mb-3 pleno-certificate-feedback";
+                feedback.setAttribute("role", "alert");
+                titulo.insertAdjacentElement("afterend", feedback);
+
+                return feedback;
+            }
+
+            function mostrarFeedbackCertificado(tipo, mensaje) {
+                var feedback = obtenerFeedbackCertificado();
+                if (!feedback) {
+                    return;
+                }
+
+                feedback.className = "alert mb-3 pleno-certificate-feedback alert-" + tipo;
+                feedback.textContent = mensaje;
+            }
+
+            function limpiarFeedbackCertificado() {
+                var feedback = obtenerFeedbackCertificado();
+                if (!feedback) {
+                    return;
+                }
+
+                feedback.className = "alert d-none mb-3 pleno-certificate-feedback";
+                feedback.textContent = "";
+            }
+
+            function ponerBotonGenerando(boton) {
+                boton.setAttribute("data-original-html", boton.innerHTML);
+                boton.disabled = true;
+                boton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Generando...';
+            }
+
+            function restaurarBotonGenerar(boton) {
+                var original = boton.getAttribute("data-original-html");
+                boton.disabled = false;
+                if (original) {
+                    boton.innerHTML = original;
+                    boton.removeAttribute("data-original-html");
+                }
             }
 
             function mostrarMensajeTemporal() {
@@ -1362,12 +1429,16 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                 var idCertificado = parseInt(certificado.id_certificado || "0", 10);
                 var verHref = "certificados/ver.php?id_certificado=" + encodeURIComponent(idCertificado);
                 var descargarHref = "certificados/descargar.php?id_certificado=" + encodeURIComponent(idCertificado);
+                var botonGenerar = puedeGenerarCertificados
+                    ? '<button type="button" class="btn btn-success pleno-certificate-generate-btn" data-certificate-mode="version"><i class="fas fa-plus me-1"></i>Generar nueva versi&oacute;n</button>'
+                    : '';
 
                 body.innerHTML = ''
                     + '<h2 class="pleno-resumen-card-title">'
                     + '<i class="fas fa-file-signature"></i>'
                     + 'Certificado de Acuerdos'
                     + '</h2>'
+                    + '<div class="alert d-none mb-3 pleno-certificate-feedback" role="alert"></div>'
                     + '<div class="pleno-certificate-box">'
                     + '<span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>'
                     + '<div>'
@@ -1382,7 +1453,7 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                     + '<div class="pleno-certificate-actions">'
                     + '<a class="btn btn-outline-success" href="' + htmlEscape(verHref) + '" target="_blank" rel="noopener"><i class="fas fa-eye me-1"></i>Ver</a>'
                     + '<a class="btn btn-outline-success" href="' + htmlEscape(descargarHref) + '"><i class="fas fa-download me-1"></i>Descargar</a>'
-                    + '<button type="button" class="btn btn-success pleno-certificate-generate-btn"><i class="fas fa-plus me-1"></i>Generar nueva versi&oacute;n</button>'
+                    + botonGenerar
                     + '</div>';
 
                 enlazarBotonesCertificado();
@@ -1393,9 +1464,24 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                     return;
                 }
 
+                if (!puedeGenerarCertificados) {
+                    mostrarFeedbackCertificado("danger", "No tiene permisos para generar certificados.");
+                    return;
+                }
+
                 var boton = this;
+                var modo = boton.getAttribute("data-certificate-mode") || "version";
+                var mensajeConfirmacion = modo === "first"
+                    ? "¿Desea generar el certificado de acuerdos para esta sesión?"
+                    : "¿Desea generar una nueva versión del certificado de acuerdos? La versión vigente actual será marcada como reemplazada.";
+
+                if (!window.confirm(mensajeConfirmacion)) {
+                    return;
+                }
+
                 var idSesion = parseInt(certificadoCard.getAttribute("data-id-sesion") || "0", 10);
-                boton.disabled = true;
+                limpiarFeedbackCertificado();
+                ponerBotonGenerando(boton);
 
                 fetch("ajax/generar_certificado_acuerdos.php", {
                     method: "POST",
@@ -1409,16 +1495,22 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                 }).then(function (response) {
                     return response.json().then(function (payload) {
                         if (!response.ok || !payload || payload.success !== true) {
-                            throw new Error(payload && payload.mensaje ? payload.mensaje : "No fue posible generar el certificado.");
+                            var errorBackend = new Error(payload && payload.mensaje ? payload.mensaje : "No fue posible generar el certificado.");
+                            errorBackend.esRespuestaBackend = true;
+                            throw errorBackend;
                         }
 
                         return payload;
                     });
                 }).then(function (payload) {
                     renderCertificado(payload.certificado);
+                    mostrarFeedbackCertificado("success", "Certificado generado correctamente.");
                 }).catch(function (error) {
-                    boton.disabled = false;
-                    window.alert(error.message || "No fue posible generar el certificado.");
+                    restaurarBotonGenerar(boton);
+                    mostrarFeedbackCertificado(
+                        "danger",
+                        error && error.esRespuestaBackend ? error.message : "No se pudo generar el certificado. Intente nuevamente."
+                    );
                 });
             }
 
