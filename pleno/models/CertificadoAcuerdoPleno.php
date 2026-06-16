@@ -111,25 +111,34 @@ class CertificadoAcuerdoPleno
 
     public function generarCertificado(int $idSesion, int $idUsuario): array
     {
+        error_log('[CertificadoModelo] generarCertificado id_sesion=' . $idSesion . ' id_usuario=' . $idUsuario);
+
         if ($idSesion <= 0) {
+            error_log('[CertificadoModelo] id_sesion_invalido');
             return ['success' => false, 'mensaje' => 'No se pudo identificar la sesion plenaria.'];
         }
 
         if (!$this->tablaExiste('pleno_certificados_acuerdos')) {
+            error_log('[CertificadoModelo] tabla pleno_certificados_acuerdos no disponible');
             return ['success' => false, 'mensaje' => 'La tabla de certificados no esta disponible.'];
         }
 
+        $rutaFisicaGenerada = null;
+
         try {
             $this->conn->beginTransaction();
+            error_log('[CertificadoModelo] transaccion_iniciada');
 
             $sesion = $this->obtenerSesionParaCertificado($idSesion, true);
             if (!$sesion) {
+                error_log('[CertificadoModelo] sesion_no_encontrada id_sesion=' . $idSesion);
                 $this->conn->rollBack();
                 return ['success' => false, 'mensaje' => 'La sesion plenaria no existe.'];
             }
 
             $acuerdos = $this->listarAcuerdosVigentes($idSesion);
             $totalAcuerdos = count($acuerdos);
+            error_log('[CertificadoModelo] total_acuerdos=' . $totalAcuerdos);
             if ($totalAcuerdos === 0) {
                 $this->conn->rollBack();
                 return ['success' => false, 'mensaje' => 'No existen acuerdos para certificar.'];
@@ -139,6 +148,7 @@ class CertificadoAcuerdoPleno
             $numeroCertificado = 'CERT-' . trim((string)$sesion['numero_sesion']) . '-V' . $version;
             $usuario = $this->obtenerUsuario($idUsuario);
             $fechaGeneracion = date('Y-m-d H:i:s');
+            error_log('[CertificadoModelo] version=' . $version . ' numero_certificado=' . $numeroCertificado . ' fecha_generacion=' . $fechaGeneracion);
 
             $snapshot = [
                 'datos_sesion' => $sesion,
@@ -154,6 +164,7 @@ class CertificadoAcuerdoPleno
             }
 
             $hashValidacion = hash('sha256', $snapshotJson);
+            error_log('[CertificadoModelo] snapshot_length=' . strlen($snapshotJson) . ' hash=' . $hashValidacion);
 
             $stmt = $this->conn->prepare(
                 "INSERT INTO pleno_certificados_acuerdos
@@ -172,23 +183,68 @@ class CertificadoAcuerdoPleno
                 ':snapshot_json' => $snapshotJson,
             ]);
 
+            $idCertificado = (int)$this->conn->lastInsertId();
+            error_log('[CertificadoModelo] insert_ok id_certificado=' . $idCertificado);
+            $certificadoPdf = [
+                'id_certificado' => $idCertificado,
+                'version' => $version,
+                'numero_certificado' => $numeroCertificado,
+                'hash_validacion' => $hashValidacion,
+                'total_acuerdos' => $totalAcuerdos,
+                'usuario_generador' => trim((string)($usuario['nombre_completo'] ?? '')) ?: 'Sin registro',
+                'fecha_generacion' => $fechaGeneracion,
+            ];
+
+            if (!class_exists('CertificadoAcuerdoPdfService')) {
+                require_once dirname(__DIR__) . '/services/CertificadoAcuerdoPdfService.php';
+            }
+
+            $archivoPdf = (new CertificadoAcuerdoPdfService())->generar($snapshot, $certificadoPdf);
+            $rutaFisicaGenerada = $archivoPdf['ruta_fisica'] ?? null;
+            error_log('[CertificadoModelo] pdf_service_result=' . json_encode($archivoPdf, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            error_log('[CertificadoModelo] pdf_file_exists_model=' . ($rutaFisicaGenerada && file_exists($rutaFisicaGenerada) ? 'true' : 'false'));
+
+            $stmtArchivo = $this->conn->prepare(
+                'UPDATE pleno_certificados_acuerdos
+                 SET nombre_archivo = :nombre_archivo,
+                     path_archivo = :path_archivo
+                 WHERE id_certificado = :id_certificado'
+            );
+            $stmtArchivo->execute([
+                ':nombre_archivo' => $archivoPdf['nombre_archivo'],
+                ':path_archivo' => $archivoPdf['path_archivo'],
+                ':id_certificado' => $idCertificado,
+            ]);
+            error_log('[CertificadoModelo] update_archivo_rowcount=' . $stmtArchivo->rowCount() . ' id_certificado=' . $idCertificado);
+
             $this->conn->commit();
+            error_log('[CertificadoModelo] commit_ok id_certificado=' . $idCertificado);
 
             return [
                 'success' => true,
                 'mensaje' => 'Certificado registrado correctamente.',
                 'certificado' => [
+                    'id_certificado' => $idCertificado,
                     'version' => $version,
                     'numero_certificado' => $numeroCertificado,
                     'hash_validacion' => $hashValidacion,
                     'total_acuerdos' => $totalAcuerdos,
                     'usuario_generador' => trim((string)($usuario['nombre_completo'] ?? '')) ?: 'Sin registro',
                     'fecha_generacion' => $fechaGeneracion,
+                    'nombre_archivo' => $archivoPdf['nombre_archivo'],
+                    'path_archivo' => $archivoPdf['path_archivo'],
                 ],
             ];
         } catch (Throwable $e) {
+            error_log('[CertificadoModelo] exception=' . $e->getMessage() . ' file=' . $e->getFile() . ' line=' . $e->getLine());
             if ($this->conn->inTransaction()) {
                 $this->conn->rollBack();
+                error_log('[CertificadoModelo] rollback_ok');
+            }
+
+            if ($rutaFisicaGenerada && is_file($rutaFisicaGenerada)) {
+                $unlinkResult = @unlink($rutaFisicaGenerada);
+                error_log('[CertificadoModelo] unlink_pdf_after_rollback path=' . $rutaFisicaGenerada . ' result=' . ($unlinkResult ? 'true' : 'false'));
             }
 
             return ['success' => false, 'mensaje' => 'No fue posible registrar el certificado.'];
