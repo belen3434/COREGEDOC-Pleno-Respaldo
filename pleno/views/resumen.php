@@ -1179,10 +1179,13 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                             <i class="fas fa-eye me-1"></i>
                             Ver
                         </a>
-                        <button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn">
+                        <a
+                            class="btn btn-outline-success"
+                            href="certificados/descargar.php?id_certificado=<?php echo (int)$idCertificadoActual; ?>"
+                        >
                             <i class="fas fa-download me-1"></i>
                             Descargar
-                        </button>
+                        </a>
                         <button type="button" class="btn btn-success pleno-certificate-generate-btn">
                             <i class="fas fa-plus me-1"></i>
                             Generar nueva versión
@@ -1257,6 +1260,7 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
 
                 var idCertificado = parseInt(certificado.id_certificado || "0", 10);
                 var verHref = "certificados/ver.php?id_certificado=" + encodeURIComponent(idCertificado);
+                var descargarHref = "certificados/descargar.php?id_certificado=" + encodeURIComponent(idCertificado);
 
                 body.innerHTML = ''
                     + '<h2 class="pleno-resumen-card-title">'
@@ -1276,7 +1280,7 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                     + '</div>'
                     + '<div class="pleno-certificate-actions">'
                     + '<a class="btn btn-outline-success" href="' + htmlEscape(verHref) + '" target="_blank" rel="noopener"><i class="fas fa-eye me-1"></i>Ver</a>'
-                    + '<button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn"><i class="fas fa-download me-1"></i>Descargar</button>'
+                    + '<a class="btn btn-outline-success" href="' + htmlEscape(descargarHref) + '"><i class="fas fa-download me-1"></i>Descargar</a>'
                     + '<button type="button" class="btn btn-success pleno-certificate-generate-btn"><i class="fas fa-plus me-1"></i>Generar nueva versión</button>'
                     + '</div>';
 
