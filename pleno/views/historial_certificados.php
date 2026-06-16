@@ -64,6 +64,7 @@ $claseEstado = static function (?string $estado): string {
 $opcionesEstado = [
     'todos' => 'Todos',
     'vigente' => 'Vigente',
+    'reemplazado' => 'Reemplazado',
     'anulado' => 'Anulado',
 ];
 ?>
