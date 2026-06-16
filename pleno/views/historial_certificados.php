@@ -348,6 +348,13 @@ $opcionesEstado = [
                                             <a class="btn btn-outline-success btn-sm" href="certificados/descargar.php?id_certificado=<?php echo $idCertificado; ?>">
                                                 <i class="fas fa-download me-1"></i>Descargar
                                             </a>
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-danger btn-sm historial-delete-certificado-btn"
+                                                data-id-certificado="<?php echo $idCertificado; ?>"
+                                            >
+                                                <i class="fas fa-trash me-1"></i>Eliminar
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -359,3 +366,54 @@ $opcionesEstado = [
         </div>
     </section>
 </div>
+
+<script>
+    (function () {
+        "use strict";
+
+        function eliminarCertificado(boton) {
+            var idCertificado = parseInt(boton.getAttribute("data-id-certificado") || "0", 10);
+            if (!idCertificado) {
+                window.alert("No se pudo identificar el certificado.");
+                return;
+            }
+
+            if (!window.confirm("¿Está seguro de eliminar este certificado del historial?")) {
+                return;
+            }
+
+            boton.disabled = true;
+
+            fetch("ajax/eliminar_certificado_acuerdos.php", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id_certificado: idCertificado
+                })
+            }).then(function (response) {
+                return response.json().then(function (payload) {
+                    if (!response.ok || !payload || payload.success !== true) {
+                        throw new Error(payload && payload.mensaje ? payload.mensaje : "No fue posible eliminar el certificado.");
+                    }
+
+                    return payload;
+                });
+            }).then(function () {
+                window.alert("Certificado eliminado correctamente.");
+                window.location.reload();
+            }).catch(function (error) {
+                boton.disabled = false;
+                window.alert(error.message || "No fue posible eliminar el certificado.");
+            });
+        }
+
+        document.querySelectorAll(".historial-delete-certificado-btn").forEach(function (boton) {
+            boton.addEventListener("click", function () {
+                eliminarCertificado(boton);
+            });
+        });
+    }());
+</script>
