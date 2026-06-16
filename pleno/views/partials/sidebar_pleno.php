@@ -35,10 +35,10 @@ $plenoMenuPrincipal += [
         'icon' => 'fas fa-chart-pie',
         'href' => 'index.php?vista=resumen',
     ],
-    'historial_votaciones' => [
-        'label' => 'Historial de Votaciones',
+    'historiales' => [
+        'label' => 'Historiales',
         'icon' => 'fas fa-history',
-        'href' => 'index.php?vista=historial_votaciones',
+        'href' => 'index.php?vista=historiales',
     ],
 ];
 
@@ -62,7 +62,7 @@ $plenoMenuInferior = [
         <div class="pleno-sidebar-section">
             <p class="pleno-sidebar-label mb-2">Módulo Pleno</p>
             <?php foreach ($plenoMenuPrincipal as $key => $item) : ?>
-                <?php $isActive = $plenoVistaActual === $key; ?>
+                <?php $isActive = $plenoVistaActual === $key || ($key === 'historiales' && in_array($plenoVistaActual, ['historial_votaciones', 'historial_certificados'], true)); ?>
                 <a
                     class="pleno-sidebar-link<?php echo $isActive ? ' active' : ''; ?>"
                     href="<?php echo htmlspecialchars($item['href'], ENT_QUOTES, 'UTF-8'); ?>"

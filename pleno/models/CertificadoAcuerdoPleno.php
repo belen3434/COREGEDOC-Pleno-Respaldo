@@ -109,6 +109,82 @@ class CertificadoAcuerdoPleno
         return $this->obtenerUltimoCertificado($idSesion) !== null;
     }
 
+    public function listarHistorial(array $filtros = []): array
+    {
+        if (!$this->tablaExiste('pleno_certificados_acuerdos') || !$this->tablaExiste('sesiones_plenarias')) {
+            return [];
+        }
+
+        $numeroSesion = trim((string)($filtros['numero_sesion'] ?? ''));
+        $fechaFiltro = trim((string)($filtros['fecha'] ?? ''));
+        $estado = strtolower(trim((string)($filtros['estado'] ?? 'todos')));
+        $numeroCertificado = trim((string)($filtros['numero_certificado'] ?? ''));
+        $joinUsuario = $this->tablaExiste('t_usuario');
+
+        $selectUsuario = $joinUsuario
+            ? ", TRIM(CONCAT(u.pNombre, ' ', COALESCE(NULLIF(u.sNombre, ''), ''), ' ', u.aPaterno, ' ', u.aMaterno)) AS usuario_generador_nombre"
+            : ", NULL AS usuario_generador_nombre";
+        $joinUsuarioSql = $joinUsuario
+            ? ' LEFT JOIN t_usuario u ON u.idUsuario = c.usuario_generador'
+            : '';
+
+        $sql = "SELECT
+                    c.id_certificado,
+                    c.id_sesion,
+                    c.version,
+                    c.numero_certificado,
+                    c.total_acuerdos,
+                    c.usuario_generador,
+                    c.fecha_generacion,
+                    c.estado,
+                    c.nombre_archivo,
+                    c.path_archivo,
+                    s.numero_sesion,
+                    s.tipo_pleno,
+                    s.fecha AS fecha_sesion
+                    $selectUsuario
+                FROM pleno_certificados_acuerdos c
+                INNER JOIN sesiones_plenarias s ON s.id_sesion = c.id_sesion
+                $joinUsuarioSql
+                WHERE 1 = 1";
+        $params = [];
+
+        if ($numeroSesion !== '') {
+            $sql .= ' AND s.numero_sesion LIKE :numero_sesion';
+            $params[':numero_sesion'] = '%' . $numeroSesion . '%';
+        }
+
+        if ($numeroCertificado !== '') {
+            $sql .= ' AND c.numero_certificado LIKE :numero_certificado';
+            $params[':numero_certificado'] = '%' . $numeroCertificado . '%';
+        }
+
+        if ($fechaFiltro !== '') {
+            $fechaNormalizada = $this->normalizarFechaBusqueda($fechaFiltro);
+            if ($fechaNormalizada !== '') {
+                $sql .= ' AND s.fecha = :fecha';
+                $params[':fecha'] = $fechaNormalizada;
+            }
+        }
+
+        if ($estado !== '' && $estado !== 'todos') {
+            $sql .= ' AND LOWER(TRIM(c.estado)) = :estado';
+            $params[':estado'] = $estado;
+        }
+
+        $sql .= ' ORDER BY c.fecha_generacion DESC, c.id_certificado DESC';
+
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll();
+        } catch (Throwable $e) {
+            return [];
+        }
+
+        return is_array($rows) ? $rows : [];
+    }
+
     public function generarCertificado(int $idSesion, int $idUsuario): array
     {
         error_log('[CertificadoModelo] generarCertificado id_sesion=' . $idSesion . ' id_usuario=' . $idUsuario);
@@ -273,6 +349,21 @@ class CertificadoAcuerdoPleno
         $stmt->execute([':id_sesion' => $idSesion]);
 
         return max(1, (int)$stmt->fetchColumn());
+    }
+
+    private function normalizarFechaBusqueda(string $busqueda): string
+    {
+        $busqueda = trim($busqueda);
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $busqueda, $matches) === 1) {
+            return $matches[1] . '-' . $matches[2] . '-' . $matches[3];
+        }
+
+        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $busqueda, $matches) === 1) {
+            return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+        }
+
+        return '';
     }
 
     private function obtenerSesionParaCertificado(int $idSesion, bool $bloquear = false): ?array
