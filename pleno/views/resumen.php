@@ -111,6 +111,7 @@ $totalAcuerdosCertificado = (int)($certificadoAcuerdos['total_acuerdos'] ?? 0);
 $existenAcuerdosCertificado = !empty($certificadoAcuerdos['existen_acuerdos']);
 $certificadoActual = is_array($certificadoAcuerdos['certificado'] ?? null) ? $certificadoAcuerdos['certificado'] : null;
 $existeCertificadoAcuerdos = !empty($certificadoAcuerdos['existe_certificado']) && $certificadoActual !== null;
+$idCertificadoActual = (int)($certificadoActual['id_certificado'] ?? ($certificadoActual['raw']['id_certificado'] ?? 0));
 
 foreach ($resultados as $resultadoResumen) {
     $esInformativoResumen = !empty($resultadoResumen['es_informativo']) || (string)($resultadoResumen['resultado'] ?? '') === 'Exposición';
@@ -1169,10 +1170,15 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                         </div>
                     </div>
                     <div class="pleno-certificate-actions">
-                        <button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn">
+                        <a
+                            class="btn btn-outline-success"
+                            href="certificados/ver.php?id_certificado=<?php echo (int)$idCertificadoActual; ?>"
+                            target="_blank"
+                            rel="noopener"
+                        >
                             <i class="fas fa-eye me-1"></i>
                             Ver
-                        </button>
+                        </a>
                         <button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn">
                             <i class="fas fa-download me-1"></i>
                             Descargar
@@ -1249,6 +1255,9 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                     return;
                 }
 
+                var idCertificado = parseInt(certificado.id_certificado || "0", 10);
+                var verHref = "certificados/ver.php?id_certificado=" + encodeURIComponent(idCertificado);
+
                 body.innerHTML = ''
                     + '<h2 class="pleno-resumen-card-title">'
                     + '<i class="fas fa-file-signature"></i>'
@@ -1266,7 +1275,7 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                     + '</div>'
                     + '</div>'
                     + '<div class="pleno-certificate-actions">'
-                    + '<button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn"><i class="fas fa-eye me-1"></i>Ver</button>'
+                    + '<a class="btn btn-outline-success" href="' + htmlEscape(verHref) + '" target="_blank" rel="noopener"><i class="fas fa-eye me-1"></i>Ver</a>'
                     + '<button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn"><i class="fas fa-download me-1"></i>Descargar</button>'
                     + '<button type="button" class="btn btn-success pleno-certificate-generate-btn"><i class="fas fa-plus me-1"></i>Generar nueva versión</button>'
                     + '</div>';
