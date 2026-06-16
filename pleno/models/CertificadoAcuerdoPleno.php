@@ -226,6 +226,20 @@ class CertificadoAcuerdoPleno
             $fechaGeneracion = date('Y-m-d H:i:s');
             error_log('[CertificadoModelo] version=' . $version . ' numero_certificado=' . $numeroCertificado . ' fecha_generacion=' . $fechaGeneracion);
 
+            $stmtReemplazar = $this->conn->prepare(
+                "UPDATE pleno_certificados_acuerdos
+                 SET estado = 'reemplazado',
+                     usuario_actualizador = :usuario_actualizador,
+                     fecha_actualizacion = NOW()
+                 WHERE id_sesion = :id_sesion
+                   AND estado = 'vigente'"
+            );
+            $stmtReemplazar->execute([
+                ':usuario_actualizador' => $idUsuario > 0 ? $idUsuario : null,
+                ':id_sesion' => $idSesion,
+            ]);
+            error_log('[CertificadoModelo] certificados_reemplazados=' . $stmtReemplazar->rowCount() . ' id_sesion=' . $idSesion);
+
             $snapshot = [
                 'datos_sesion' => $sesion,
                 'acuerdos' => $acuerdos,

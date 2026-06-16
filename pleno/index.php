@@ -268,6 +268,7 @@ $data = [
     'pagina_actual' => 'pleno',
     'pleno_auth' => $plenoAuth,
     'pleno_puede_gestionar' => $plenoController ? $plenoController->puedeGestionar() : false,
+    'pleno_puede_generar_certificados' => plenoPuedeGenerarCertificados($plenoAuth['tipoUsuarioId'] ?? 0),
     'pleno_flash' => $plenoFlash,
     'pleno_sesiones' => $plenoSesiones,
     'pleno_sesion_actual' => $plenoSesionActual,

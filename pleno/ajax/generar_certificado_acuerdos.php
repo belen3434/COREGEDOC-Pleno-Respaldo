@@ -13,7 +13,7 @@ try {
     $auth = plenoRequireAuthorizedUser();
     error_log('[CertificadoAjax] request_start method=' . ($_SERVER['REQUEST_METHOD'] ?? ''));
 
-    if (!$auth['authorized'] || !in_array((int)($auth['tipoUsuarioId'] ?? 0), [6, 20], true)) {
+    if (!$auth['authorized'] || !plenoPuedeGenerarCertificados($auth['tipoUsuarioId'] ?? 0)) {
         error_log('[CertificadoAjax] forbidden tipo_usuario=' . (int)($auth['tipoUsuarioId'] ?? 0));
         http_response_code(403);
         echo json_encode(['success' => false, 'mensaje' => 'No tiene permisos para generar certificados.'], JSON_UNESCAPED_UNICODE);

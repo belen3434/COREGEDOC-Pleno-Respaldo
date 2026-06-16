@@ -40,8 +40,9 @@ try {
         certificadoDescargaMensaje('El certificado solicitado no existe.', 404);
     }
 
-    if ((string)($certificado['estado'] ?? '') !== 'vigente') {
-        certificadoDescargaMensaje('El certificado solicitado no esta vigente.', 403);
+    $estadoCertificado = strtolower(trim((string)($certificado['estado'] ?? '')));
+    if (!in_array($estadoCertificado, ['vigente', 'reemplazado'], true)) {
+        certificadoDescargaMensaje('El certificado solicitado no esta disponible.', 403);
     }
 
     $pathArchivo = trim((string)($certificado['path_archivo'] ?? ''));
