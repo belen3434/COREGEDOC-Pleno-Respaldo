@@ -82,11 +82,13 @@ $vistasPermitidas = [
     'pleno_vivo' => __DIR__ . '/views/pleno_vivo.php',
     'votacion' => __DIR__ . '/views/votacion.php',
     'resumen' => __DIR__ . '/views/resumen.php',
+    'historiales' => __DIR__ . '/views/historiales.php',
     'historial_votaciones' => __DIR__ . '/views/historial_votaciones.php',
+    'historial_certificados' => __DIR__ . '/views/historial_certificados.php',
     'ayuda' => __DIR__ . '/views/ayuda.php',
 ];
 
-$vistasSoloVisualizacion = ['tabla', 'pleno_vivo', 'votacion', 'resumen', 'historial_votaciones'];
+$vistasSoloVisualizacion = ['tabla', 'pleno_vivo', 'votacion', 'resumen', 'historiales', 'historial_votaciones', 'historial_certificados'];
 
 if ($tipoUsuarioId === 1 && ($vistaSolicitada === null || $vistaSolicitada === '' || in_array($vista, ['index', 'configuracion', 'tabla'], true))) {
     header('Location: index.php?vista=pleno_vivo');
@@ -129,6 +131,13 @@ $plenoHistorialFiltros = [
     'fecha' => '',
     'tipo_pleno' => 'todas',
     'resultado' => 'todas',
+];
+$plenoHistorialCertificados = [];
+$plenoHistorialCertificadosFiltros = [
+    'numero_sesion' => '',
+    'fecha' => '',
+    'estado' => 'todos',
+    'numero_certificado' => '',
 ];
 
 if ($plenoAuth['authorized']) {
@@ -224,6 +233,17 @@ if ($plenoAuth['authorized']) {
             $plenoHistorialVotaciones = $historialVotaciones->listar($plenoHistorialFiltros);
         }
 
+        if ($vista === 'historial_certificados') {
+            $plenoHistorialCertificadosFiltros = [
+                'numero_sesion' => trim((string)($_GET['numero_sesion'] ?? '')),
+                'fecha' => trim((string)($_GET['fecha'] ?? '')),
+                'estado' => trim((string)($_GET['estado'] ?? 'todos')),
+                'numero_certificado' => trim((string)($_GET['numero_certificado'] ?? '')),
+            ];
+            $historialCertificados = new CertificadoAcuerdoPleno();
+            $plenoHistorialCertificados = $historialCertificados->listarHistorial($plenoHistorialCertificadosFiltros);
+        }
+
         if ($vista === 'editar_sesion') {
             $plenoSesionActual = $plenoController->obtenerSesion((int)($_GET['id'] ?? 0));
             if ($plenoSesionActual) {
@@ -267,6 +287,8 @@ $data = [
     'pleno_certificado_acuerdos' => $plenoCertificadoAcuerdos,
     'pleno_historial_votaciones' => $plenoHistorialVotaciones,
     'pleno_historial_filtros' => $plenoHistorialFiltros,
+    'pleno_historial_certificados' => $plenoHistorialCertificados,
+    'pleno_historial_certificados_filtros' => $plenoHistorialCertificadosFiltros,
     'pleno_crud_error' => $plenoCrudError,
 ];
 
