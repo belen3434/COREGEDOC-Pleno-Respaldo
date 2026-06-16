@@ -20,7 +20,7 @@ class SesionPlenaria
     public function listar(): array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, observaciones_finales, observaciones_finales_usuario, observaciones_finales_fecha, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE vigencia = 1
              ORDER BY fecha DESC, hora DESC, id_sesion DESC'
@@ -33,7 +33,7 @@ class SesionPlenaria
     public function obtenerPorId(int $id): ?array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, observaciones_finales, observaciones_finales_usuario, observaciones_finales_fecha, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE id_sesion = :id
              LIMIT 1'
@@ -47,7 +47,7 @@ class SesionPlenaria
     public function obtenerUltimaVigente(): ?array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, observaciones_finales, observaciones_finales_usuario, observaciones_finales_fecha, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE vigencia = 1
              ORDER BY fecha DESC, hora DESC, id_sesion DESC
@@ -62,7 +62,7 @@ class SesionPlenaria
     public function obtenerSesionVigenteHoy(): ?array
     {
         $stmt = $this->conn->prepare(
-            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
+            'SELECT id_sesion, tipo_pleno, numero_sesion, fecha, hora, lugar, estado, aprobacion_actas, observaciones, observaciones_finales, observaciones_finales_usuario, observaciones_finales_fecha, punto_actual, usuario_creador, fecha_creacion, fecha_actualizacion
              FROM sesiones_plenarias
              WHERE fecha = CURDATE()
                AND vigencia = 1
@@ -153,6 +153,54 @@ class SesionPlenaria
             ':id' => $id,
             ':punto_actual' => $puntoActual,
         ]);
+    }
+
+    public function actualizarObservacionesFinales(int $id, string $observacionesFinales, ?int $idUsuario): array
+    {
+        if ($id <= 0) {
+            return [
+                'success' => false,
+                'mensaje' => 'Debe indicar una sesion valida.',
+            ];
+        }
+
+        if ($this->obtenerPorId($id) === null) {
+            return [
+                'success' => false,
+                'mensaje' => 'La sesion solicitada no existe.',
+            ];
+        }
+
+        $stmt = $this->conn->prepare(
+            'UPDATE sesiones_plenarias
+             SET observaciones_finales = :observaciones_finales,
+                 observaciones_finales_usuario = :usuario,
+                 observaciones_finales_fecha = NOW(),
+                 fecha_actualizacion = NOW()
+             WHERE id_sesion = :id'
+        );
+
+        $guardado = $stmt->execute([
+            ':id' => $id,
+            ':observaciones_finales' => trim($observacionesFinales) !== '' ? $observacionesFinales : null,
+            ':usuario' => $idUsuario && $idUsuario > 0 ? $idUsuario : null,
+        ]);
+
+        if (!$guardado) {
+            return [
+                'success' => false,
+                'mensaje' => 'No fue posible guardar las observaciones finales.',
+            ];
+        }
+
+        $sesionActualizada = $this->obtenerPorId($id) ?? [];
+
+        return [
+            'success' => true,
+            'mensaje' => 'Observaciones finales guardadas correctamente.',
+            'observaciones_finales' => (string)($sesionActualizada['observaciones_finales'] ?? ''),
+            'observaciones_finales_fecha' => $sesionActualizada['observaciones_finales_fecha'] ?? null,
+        ];
     }
 
     public function generarNumeroSesion(): string
