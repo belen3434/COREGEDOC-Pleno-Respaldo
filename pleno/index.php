@@ -61,6 +61,7 @@ require_once __DIR__ . '/models/ResumenPleno.php';
 require_once __DIR__ . '/models/HistorialVotacionesPleno.php';
 require_once __DIR__ . '/models/AcuerdoPleno.php';
 require_once __DIR__ . '/models/CertificadoAcuerdoPleno.php';
+require_once __DIR__ . '/models/ResumenEjecutivoPleno.php';
 require_once __DIR__ . '/controllers/PlenoController.php';
 
 $plenoAuth = plenoRequireAuthorizedUser();
@@ -124,6 +125,10 @@ $plenoCertificadoAcuerdos = [
     'existen_acuerdos' => false,
     'certificado' => null,
     'existe_certificado' => false,
+];
+$plenoResumenEjecutivo = [
+    'resumen' => null,
+    'existe_resumen' => false,
 ];
 $plenoHistorialVotaciones = [];
 $plenoHistorialFiltros = [
@@ -218,6 +223,12 @@ if ($plenoAuth['authorized']) {
                     'certificado' => $plenoUltimoCertificado,
                     'existe_certificado' => $plenoUltimoCertificado !== null,
                 ];
+                $plenoResumenEjecutivoModelo = new ResumenEjecutivoPleno();
+                $plenoUltimoResumenEjecutivo = $plenoResumenEjecutivoModelo->obtenerUltimoResumen($idSesionActual);
+                $plenoResumenEjecutivo = [
+                    'resumen' => $plenoUltimoResumenEjecutivo,
+                    'existe_resumen' => $plenoUltimoResumenEjecutivo !== null,
+                ];
             }
         }
 
@@ -286,6 +297,7 @@ $data = [
     'pleno_acuerdos' => $plenoAcuerdos,
     'pleno_puntos_acuerdo' => $plenoPuntosAcuerdo,
     'pleno_certificado_acuerdos' => $plenoCertificadoAcuerdos,
+    'pleno_resumen_ejecutivo' => $plenoResumenEjecutivo,
     'pleno_historial_votaciones' => $plenoHistorialVotaciones,
     'pleno_historial_filtros' => $plenoHistorialFiltros,
     'pleno_historial_certificados' => $plenoHistorialCertificados,
