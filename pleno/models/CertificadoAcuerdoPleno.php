@@ -146,7 +146,7 @@ class CertificadoAcuerdoPleno
                 FROM pleno_certificados_acuerdos c
                 INNER JOIN sesiones_plenarias s ON s.id_sesion = c.id_sesion
                 $joinUsuarioSql
-                WHERE 1 = 1";
+                WHERE LOWER(TRIM(c.estado)) <> 'eliminado'";
         $params = [];
 
         if ($numeroSesion !== '') {
@@ -339,6 +339,54 @@ class CertificadoAcuerdoPleno
 
             return ['success' => false, 'mensaje' => 'No fue posible registrar el certificado.'];
         }
+    }
+
+    public function eliminarCertificado(int $idCertificado, int $idUsuario): array
+    {
+        if ($idCertificado <= 0) {
+            return ['success' => false, 'mensaje' => 'Debe indicar un certificado valido.'];
+        }
+
+        if (!$this->tablaExiste('pleno_certificados_acuerdos')) {
+            return ['success' => false, 'mensaje' => 'La tabla de certificados no esta disponible.'];
+        }
+
+        $stmt = $this->conn->prepare(
+            'SELECT id_certificado, estado
+             FROM pleno_certificados_acuerdos
+             WHERE id_certificado = :id_certificado
+             LIMIT 1'
+        );
+        $stmt->execute([':id_certificado' => $idCertificado]);
+        $certificado = $stmt->fetch();
+
+        if (!is_array($certificado)) {
+            return ['success' => false, 'mensaje' => 'El certificado indicado no existe.'];
+        }
+
+        if (strtolower(trim((string)($certificado['estado'] ?? ''))) === 'eliminado') {
+            return ['success' => false, 'mensaje' => 'El certificado ya fue eliminado.'];
+        }
+
+        $stmtUpdate = $this->conn->prepare(
+            "UPDATE pleno_certificados_acuerdos
+             SET estado = 'eliminado',
+                 fecha_eliminacion = NOW(),
+                 usuario_actualizador = :usuario_actualizador,
+                 fecha_actualizacion = NOW()
+             WHERE id_certificado = :id_certificado
+               AND LOWER(TRIM(estado)) <> 'eliminado'"
+        );
+        $stmtUpdate->execute([
+            ':usuario_actualizador' => $idUsuario > 0 ? $idUsuario : null,
+            ':id_certificado' => $idCertificado,
+        ]);
+
+        if ($stmtUpdate->rowCount() < 1) {
+            return ['success' => false, 'mensaje' => 'No fue posible eliminar el certificado.'];
+        }
+
+        return ['success' => true, 'mensaje' => 'Certificado eliminado correctamente.'];
     }
 
     private function normalizarCertificado(array $certificado, int $idSesion): array
