@@ -120,6 +120,8 @@ $idCertificadoActual = (int)($certificadoActual['id_certificado'] ?? ($certifica
 $resumenEjecutivoActual = is_array($resumenEjecutivoSesion['resumen'] ?? null) ? $resumenEjecutivoSesion['resumen'] : null;
 $existeResumenEjecutivo = !empty($resumenEjecutivoSesion['existe_resumen']) && $resumenEjecutivoActual !== null;
 $idResumenEjecutivoActual = (int)($resumenEjecutivoActual['id_resumen'] ?? ($resumenEjecutivoActual['raw']['id_resumen'] ?? 0));
+$observacionesFinales = trim((string)($sesion['observaciones_finales'] ?? ''));
+$observacionesFinalesFecha = $sesion['observaciones_finales_fecha'] ?? null;
 
 foreach ($resultados as $resultadoResumen) {
     $esInformativoResumen = !empty($resultadoResumen['es_informativo']) || (string)($resultadoResumen['resultado'] ?? '') === 'Exposición';
@@ -671,6 +673,28 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
 
     .pleno-observation-meta strong {
         color: #203949;
+    }
+
+    .pleno-final-observation-form {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .pleno-final-observation-textarea {
+        min-height: 150px;
+        border: 1px solid #d9e4df;
+        border-radius: 10px;
+        color: #1f3240;
+        background: #ffffff;
+        resize: vertical;
+    }
+
+    .pleno-final-observation-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        flex-wrap: wrap;
     }
 
     .pleno-executive-kpi-grid {
@@ -1381,10 +1405,30 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
             </button>
             <div id="plenoObservacionesCollapse" class="collapse" data-bs-parent="#plenoResumenBottomAccordion">
                 <div class="pleno-accordion-body">
-                    <p class="pleno-observation-text"><?php echo $h(trim((string)($sesion['observaciones'] ?? '')) ?: 'Sin observaciones registradas para esta sesi&oacute;n.'); ?></p>
+                    <?php if ($puedeGestionar): ?>
+                        <form class="pleno-final-observation-form" id="plenoObservacionesFinalesForm">
+                            <input type="hidden" name="id_sesion" value="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>">
+                            <textarea
+                                class="form-control pleno-final-observation-textarea"
+                                id="plenoObservacionesFinalesTexto"
+                                name="observaciones_finales"
+                                rows="6"
+                                placeholder="Escriba las observaciones finales de la sesi&oacute;n"
+                            ><?php echo $h($observacionesFinales); ?></textarea>
+                            <div class="pleno-final-observation-actions">
+                                <div class="alert d-none mb-0 flex-grow-1" id="plenoObservacionesFinalesFeedback" role="alert"></div>
+                                <button type="submit" class="btn btn-success" id="plenoObservacionesFinalesGuardar">
+                                    <i class="fas fa-save me-1"></i>
+                                    Guardar observaciones
+                                </button>
+                            </div>
+                        </form>
+                    <?php else: ?>
+                        <p class="pleno-observation-text" id="plenoObservacionesFinalesVista"><?php echo $h($observacionesFinales !== '' ? $observacionesFinales : 'Sin observaciones finales registradas para esta sesi&oacute;n.'); ?></p>
+                    <?php endif; ?>
                     <div class="pleno-observation-meta">
                         <span>Estado: <strong><?php echo $h($formatearEstado($sesion['estado'] ?? null)); ?></strong></span>
-                        <span>&Uacute;ltima actualizaci&oacute;n: <strong><?php echo $h($formatearFechaHora($sesion['fecha_actualizacion'] ?? $sesion['fecha_creacion'] ?? null)); ?></strong></span>
+                        <span>&Uacute;ltima actualizaci&oacute;n: <strong id="plenoObservacionesFinalesFecha"><?php echo $h($formatearFechaHora($observacionesFinalesFecha)); ?></strong></span>
                     </div>
                 </div>
             </div>
@@ -1823,12 +1867,61 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                     window.location.reload();
                 }
 
+                function formatearFechaHoraResumen(valor) {
+                    var fecha = String(valor || "").trim();
+                    var partes = fecha.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+                    if (!partes) {
+                        return fecha || "Sin registro";
+                    }
+
+                    return partes[3] + "/" + partes[2] + "/" + partes[1] + " " + partes[4] + ":" + partes[5] + " hrs.";
+                }
+
+                function mostrarFeedbackObservaciones(tipo, mensaje) {
+                    var feedback = document.getElementById("plenoObservacionesFinalesFeedback");
+                    if (!feedback) {
+                        return;
+                    }
+
+                    feedback.className = "alert mb-0 flex-grow-1 alert-" + tipo;
+                    feedback.textContent = mensaje;
+                }
+
                 var crearForm = document.getElementById("plenoAcuerdoForm");
                 var crearError = document.getElementById("plenoAcuerdoError");
                 var editarForm = document.getElementById("plenoEditarAcuerdoForm");
                 var editarError = document.getElementById("plenoEditarAcuerdoError");
                 var editarId = document.getElementById("plenoEditarAcuerdoId");
                 var editarTexto = document.getElementById("plenoEditarAcuerdoTexto");
+                var observacionesForm = document.getElementById("plenoObservacionesFinalesForm");
+                var observacionesGuardar = document.getElementById("plenoObservacionesFinalesGuardar");
+                var observacionesFecha = document.getElementById("plenoObservacionesFinalesFecha");
+
+                if (observacionesForm) {
+                    observacionesForm.addEventListener("submit", function (event) {
+                        event.preventDefault();
+
+                        if (observacionesGuardar) {
+                            observacionesGuardar.disabled = true;
+                        }
+
+                        enviarJson("ajax/guardar_observaciones_finales.php", {
+                            id_sesion: parseInt(observacionesForm.elements.id_sesion.value || "0", 10),
+                            observaciones_finales: observacionesForm.elements.observaciones_finales.value
+                        }).then(function (payload) {
+                            mostrarFeedbackObservaciones("success", payload.mensaje || "Observaciones finales guardadas correctamente.");
+                            if (observacionesFecha) {
+                                observacionesFecha.textContent = formatearFechaHoraResumen(payload.observaciones_finales_fecha);
+                            }
+                        }).catch(function (error) {
+                            mostrarFeedbackObservaciones("danger", error.message || "No fue posible guardar las observaciones finales.");
+                        }).finally(function () {
+                            if (observacionesGuardar) {
+                                observacionesGuardar.disabled = false;
+                            }
+                        });
+                    });
+                }
 
                 if (crearForm) {
                     crearForm.addEventListener("submit", function (event) {
