@@ -12,6 +12,10 @@ $certificadoAcuerdos = $data['pleno_certificado_acuerdos'] ?? [
     'certificado' => null,
     'existe_certificado' => false,
 ];
+$resumenEjecutivoSesion = $data['pleno_resumen_ejecutivo'] ?? [
+    'resumen' => null,
+    'existe_resumen' => false,
+];
 $puedeGestionar = (bool)($data['pleno_puede_gestionar'] ?? false);
 $puedeGenerarCertificados = (bool)($data['pleno_puede_generar_certificados'] ?? false);
 $participantes = is_array($asistenciaResumen) ? ($asistenciaResumen['participantes'] ?? []) : [];
@@ -113,6 +117,9 @@ $existenAcuerdosCertificado = !empty($certificadoAcuerdos['existen_acuerdos']);
 $certificadoActual = is_array($certificadoAcuerdos['certificado'] ?? null) ? $certificadoAcuerdos['certificado'] : null;
 $existeCertificadoAcuerdos = !empty($certificadoAcuerdos['existe_certificado']) && $certificadoActual !== null;
 $idCertificadoActual = (int)($certificadoActual['id_certificado'] ?? ($certificadoActual['raw']['id_certificado'] ?? 0));
+$resumenEjecutivoActual = is_array($resumenEjecutivoSesion['resumen'] ?? null) ? $resumenEjecutivoSesion['resumen'] : null;
+$existeResumenEjecutivo = !empty($resumenEjecutivoSesion['existe_resumen']) && $resumenEjecutivoActual !== null;
+$idResumenEjecutivoActual = (int)($resumenEjecutivoActual['id_resumen'] ?? ($resumenEjecutivoActual['raw']['id_resumen'] ?? 0));
 
 foreach ($resultados as $resultadoResumen) {
     $esInformativoResumen = !empty($resultadoResumen['es_informativo']) || (string)($resultadoResumen['resultado'] ?? '') === 'Exposición';
@@ -804,7 +811,8 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
     }
 
     .pleno-cert-layout .pleno-certificate-actions,
-    #plenoCertificadoAcuerdosCard .pleno-certificate-actions {
+    #plenoCertificadoAcuerdosCard .pleno-certificate-actions,
+    #plenoResumenEjecutivoCard .pleno-certificate-actions {
         grid-template-columns: 1fr;
     }
 
@@ -1259,6 +1267,70 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
                 <?php endif; ?>
             </div>
         </section>
+
+        <section class="pleno-resumen-card" id="plenoResumenEjecutivoCard" data-id-sesion="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>">
+            <div class="pleno-resumen-card-body">
+                <h2 class="pleno-resumen-card-title">
+                    <i class="fas fa-file-alt"></i>
+                    Resumen Ejecutivo de la Sesi&oacute;n
+                </h2>
+                <div class="alert d-none mb-3 pleno-summary-feedback" role="alert"></div>
+                <?php if (!$existeResumenEjecutivo): ?>
+                    <div class="pleno-certificate-box">
+                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                        <div>
+                            <div class="pleno-certificate-name">No hay resumen ejecutivo generado.</div>
+                            <div class="pleno-certificate-date">Se consolidar&aacute; asistencia, orden del d&iacute;a, votaciones y acuerdos.</div>
+                        </div>
+                    </div>
+                    <?php if ($puedeGenerarCertificados): ?>
+                        <div class="pleno-certificate-actions">
+                            <button type="button" class="btn btn-success pleno-summary-generate-btn" data-summary-mode="first">
+                                <i class="fas fa-file-export me-1"></i>
+                                Generar resumen
+                            </button>
+                        </div>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <div class="pleno-certificate-box">
+                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                        <div>
+                            <div class="pleno-certificate-name">Versi&oacute;n <?php echo $h($resumenEjecutivoActual['version'] ?? '1'); ?></div>
+                            <div class="pleno-certificate-date">Fecha generaci&oacute;n: <?php echo $h($formatearFechaHora($resumenEjecutivoActual['fecha_generacion'] ?? null)); ?></div>
+                            <div class="pleno-agreement-meta">
+                                <span>Usuario generador: <?php echo $h($resumenEjecutivoActual['usuario_generador'] ?? 'Sin registro'); ?></span>
+                                <span>Acuerdos: <?php echo (int)($resumenEjecutivoActual['total_acuerdos'] ?? 0); ?></span>
+                                <span>Votaciones: <?php echo (int)($resumenEjecutivoActual['total_votaciones'] ?? 0); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pleno-certificate-actions">
+                        <a
+                            class="btn btn-outline-success"
+                            href="resumenes/ver.php?id_resumen=<?php echo (int)$idResumenEjecutivoActual; ?>"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            <i class="fas fa-eye me-1"></i>
+                            Ver
+                        </a>
+                        <a
+                            class="btn btn-outline-success"
+                            href="resumenes/descargar.php?id_resumen=<?php echo (int)$idResumenEjecutivoActual; ?>"
+                        >
+                            <i class="fas fa-download me-1"></i>
+                            Descargar
+                        </a>
+                        <?php if ($puedeGenerarCertificados): ?>
+                            <button type="button" class="btn btn-success pleno-summary-generate-btn" data-summary-mode="version">
+                                <i class="fas fa-plus me-1"></i>
+                                Generar nueva versi&oacute;n
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </section>
     </div>
     <div class="pleno-dashboard-accordion" id="plenoResumenBottomAccordion">
         <section class="pleno-accordion-item">
@@ -1515,6 +1587,197 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
             }
 
             enlazarBotonesCertificado();
+        }());
+
+        (function () {
+            "use strict";
+
+            var resumenCard = document.getElementById("plenoResumenEjecutivoCard");
+            var puedeGenerarResumen = <?php echo $puedeGenerarCertificados ? 'true' : 'false'; ?>;
+
+            function htmlEscape(valor) {
+                return String(valor === null || valor === undefined ? "" : valor)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            function formatearFechaHora(valor) {
+                var fecha = String(valor || "").trim();
+                var partes = fecha.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+                if (!partes) {
+                    return fecha || "Sin registro";
+                }
+
+                return partes[3] + "/" + partes[2] + "/" + partes[1] + " " + partes[4] + ":" + partes[5] + " hrs.";
+            }
+
+            function obtenerFeedbackResumen() {
+                if (!resumenCard) {
+                    return null;
+                }
+
+                var feedback = resumenCard.querySelector(".pleno-summary-feedback");
+                if (feedback) {
+                    return feedback;
+                }
+
+                var titulo = resumenCard.querySelector(".pleno-resumen-card-title");
+                if (!titulo) {
+                    return null;
+                }
+
+                feedback = document.createElement("div");
+                feedback.className = "alert d-none mb-3 pleno-summary-feedback";
+                feedback.setAttribute("role", "alert");
+                titulo.insertAdjacentElement("afterend", feedback);
+
+                return feedback;
+            }
+
+            function mostrarFeedbackResumen(tipo, mensaje) {
+                var feedback = obtenerFeedbackResumen();
+                if (!feedback) {
+                    return;
+                }
+
+                feedback.className = "alert mb-3 pleno-summary-feedback alert-" + tipo;
+                feedback.textContent = mensaje;
+            }
+
+            function limpiarFeedbackResumen() {
+                var feedback = obtenerFeedbackResumen();
+                if (!feedback) {
+                    return;
+                }
+
+                feedback.className = "alert d-none mb-3 pleno-summary-feedback";
+                feedback.textContent = "";
+            }
+
+            function ponerBotonGenerando(boton) {
+                boton.setAttribute("data-original-html", boton.innerHTML);
+                boton.disabled = true;
+                boton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Generando...';
+            }
+
+            function restaurarBotonGenerar(boton) {
+                var original = boton.getAttribute("data-original-html");
+                boton.disabled = false;
+                if (original) {
+                    boton.innerHTML = original;
+                    boton.removeAttribute("data-original-html");
+                }
+            }
+
+            function enlazarBotonesResumen() {
+                document.querySelectorAll(".pleno-summary-generate-btn").forEach(function (boton) {
+                    boton.addEventListener("click", generarResumenEjecutivo);
+                });
+            }
+
+            function renderResumen(resumen) {
+                if (!resumenCard || !resumen) {
+                    return;
+                }
+
+                var body = resumenCard.querySelector(".pleno-resumen-card-body");
+                if (!body) {
+                    return;
+                }
+
+                var idResumen = parseInt(resumen.id_resumen || "0", 10);
+                var verHref = "resumenes/ver.php?id_resumen=" + encodeURIComponent(idResumen);
+                var descargarHref = "resumenes/descargar.php?id_resumen=" + encodeURIComponent(idResumen);
+                var botonGenerar = puedeGenerarResumen
+                    ? '<button type="button" class="btn btn-success pleno-summary-generate-btn" data-summary-mode="version"><i class="fas fa-plus me-1"></i>Generar nueva versi&oacute;n</button>'
+                    : '';
+
+                body.innerHTML = ''
+                    + '<h2 class="pleno-resumen-card-title">'
+                    + '<i class="fas fa-file-alt"></i>'
+                    + 'Resumen Ejecutivo de la Sesi&oacute;n'
+                    + '</h2>'
+                    + '<div class="alert d-none mb-3 pleno-summary-feedback" role="alert"></div>'
+                    + '<div class="pleno-certificate-box">'
+                    + '<span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>'
+                    + '<div>'
+                    + '<div class="pleno-certificate-name">Versi&oacute;n ' + htmlEscape(resumen.version || "1") + '</div>'
+                    + '<div class="pleno-certificate-date">Fecha generaci&oacute;n: ' + htmlEscape(formatearFechaHora(resumen.fecha_generacion)) + '</div>'
+                    + '<div class="pleno-agreement-meta">'
+                    + '<span>Usuario generador: ' + htmlEscape(resumen.usuario_generador || "Sin registro") + '</span>'
+                    + '<span>Acuerdos: ' + htmlEscape(resumen.total_acuerdos || "0") + '</span>'
+                    + '<span>Votaciones: ' + htmlEscape(resumen.total_votaciones || "0") + '</span>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '<div class="pleno-certificate-actions">'
+                    + '<a class="btn btn-outline-success" href="' + htmlEscape(verHref) + '" target="_blank" rel="noopener"><i class="fas fa-eye me-1"></i>Ver</a>'
+                    + '<a class="btn btn-outline-success" href="' + htmlEscape(descargarHref) + '"><i class="fas fa-download me-1"></i>Descargar</a>'
+                    + botonGenerar
+                    + '</div>';
+
+                enlazarBotonesResumen();
+            }
+
+            function generarResumenEjecutivo() {
+                if (!resumenCard) {
+                    return;
+                }
+
+                if (!puedeGenerarResumen) {
+                    mostrarFeedbackResumen("danger", "No tiene permisos para generar resumenes ejecutivos.");
+                    return;
+                }
+
+                var boton = this;
+                var modo = boton.getAttribute("data-summary-mode") || "version";
+                var mensajeConfirmacion = modo === "first"
+                    ? "Desea generar el resumen ejecutivo de esta sesion?"
+                    : "Desea generar una nueva version del resumen ejecutivo de esta sesion?";
+
+                if (!window.confirm(mensajeConfirmacion)) {
+                    return;
+                }
+
+                var idSesion = parseInt(resumenCard.getAttribute("data-id-sesion") || "0", 10);
+                limpiarFeedbackResumen();
+                ponerBotonGenerando(boton);
+
+                fetch("ajax/generar_resumen_ejecutivo.php", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id_sesion: idSesion
+                    })
+                }).then(function (response) {
+                    return response.json().then(function (payload) {
+                        if (!response.ok || !payload || payload.success !== true) {
+                            var errorBackend = new Error(payload && payload.mensaje ? payload.mensaje : "No fue posible generar el resumen ejecutivo.");
+                            errorBackend.esRespuestaBackend = true;
+                            throw errorBackend;
+                        }
+
+                        return payload;
+                    });
+                }).then(function (payload) {
+                    renderResumen(payload.resumen);
+                    mostrarFeedbackResumen("success", "Resumen ejecutivo generado correctamente.");
+                }).catch(function (error) {
+                    restaurarBotonGenerar(boton);
+                    mostrarFeedbackResumen(
+                        "danger",
+                        error && error.esRespuestaBackend ? error.message : "No se pudo generar el resumen ejecutivo. Intente nuevamente."
+                    );
+                });
+            }
+
+            enlazarBotonesResumen();
         }());
     </script>
     <?php if ($puedeGestionar): ?>
