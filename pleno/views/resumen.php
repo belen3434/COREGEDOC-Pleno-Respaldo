@@ -6,6 +6,12 @@ $asistenciaResumen = $data['pleno_asistencia_resumen'] ?? null;
 $resultados = $data['pleno_resumen_resultados'] ?? [];
 $acuerdos = $data['pleno_acuerdos'] ?? [];
 $puntosAcuerdo = $data['pleno_puntos_acuerdo'] ?? [];
+$certificadoAcuerdos = $data['pleno_certificado_acuerdos'] ?? [
+    'total_acuerdos' => 0,
+    'existen_acuerdos' => false,
+    'certificado' => null,
+    'existe_certificado' => false,
+];
 $puedeGestionar = (bool)($data['pleno_puede_gestionar'] ?? false);
 $participantes = is_array($asistenciaResumen) ? ($asistenciaResumen['participantes'] ?? []) : [];
 
@@ -101,6 +107,10 @@ $totalPuntosVotados = 0;
 $totalPuntosInformativos = 0;
 $totalVotacionesRealizadas = 0;
 $totalVotosEmitidos = 0;
+$totalAcuerdosCertificado = (int)($certificadoAcuerdos['total_acuerdos'] ?? 0);
+$existenAcuerdosCertificado = !empty($certificadoAcuerdos['existen_acuerdos']);
+$certificadoActual = is_array($certificadoAcuerdos['certificado'] ?? null) ? $certificadoAcuerdos['certificado'] : null;
+$existeCertificadoAcuerdos = !empty($certificadoAcuerdos['existe_certificado']) && $certificadoActual !== null;
 
 foreach ($resultados as $resultadoResumen) {
     $esInformativoResumen = !empty($resultadoResumen['es_informativo']) || (string)($resultadoResumen['resultado'] ?? '') === 'Exposición';
@@ -1112,19 +1122,67 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
             </div>
         </section>
 
-        <section class="pleno-resumen-card">
+        <section class="pleno-resumen-card" id="plenoCertificadoAcuerdosCard" data-id-sesion="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>">
             <div class="pleno-resumen-card-body">
                 <h2 class="pleno-resumen-card-title">
                     <i class="fas fa-file-signature"></i>
                     Certificado de Acuerdos
                 </h2>
-                <div class="pleno-certificate-box">
-                    <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
-                    <div>
-                        <div class="pleno-certificate-name">No hay certificado generado.</div>
-                        <div class="pleno-certificate-date">El certificado se mostrará cuando sea generado.</div>
+                <?php if (!$existenAcuerdosCertificado): ?>
+                    <div class="pleno-certificate-box">
+                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                        <div>
+                            <div class="pleno-certificate-name">No hay acuerdos registrados para generar certificado.</div>
+                            <div class="pleno-certificate-date">Total acuerdos: 0</div>
+                        </div>
                     </div>
-                </div>
+                    <div class="pleno-certificate-actions">
+                        <button type="button" class="btn btn-success" disabled>
+                            <i class="fas fa-file-export me-1"></i>
+                            Generar Certificado
+                        </button>
+                    </div>
+                <?php elseif (!$existeCertificadoAcuerdos): ?>
+                    <div class="pleno-certificate-box">
+                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                        <div>
+                            <div class="pleno-certificate-name">No hay certificado generado.</div>
+                            <div class="pleno-certificate-date">Total acuerdos: <?php echo (int)$totalAcuerdosCertificado; ?></div>
+                        </div>
+                    </div>
+                    <div class="pleno-certificate-actions">
+                        <button type="button" class="btn btn-success pleno-certificate-generate-btn">
+                            <i class="fas fa-file-export me-1"></i>
+                            Generar Certificado
+                        </button>
+                    </div>
+                <?php else: ?>
+                    <div class="pleno-certificate-box">
+                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                        <div>
+                            <div class="pleno-certificate-name">Versión <?php echo $h($certificadoActual['version'] ?? '1'); ?></div>
+                            <div class="pleno-certificate-date">Fecha generación: <?php echo $h($formatearFechaHora($certificadoActual['fecha_generacion'] ?? null)); ?></div>
+                            <div class="pleno-agreement-meta">
+                                <span>Usuario generador: <?php echo $h($certificadoActual['usuario_generador'] ?? 'Sin registro'); ?></span>
+                                <span>Total acuerdos: <?php echo (int)($certificadoActual['total_acuerdos'] ?? $totalAcuerdosCertificado); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pleno-certificate-actions">
+                        <button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn">
+                            <i class="fas fa-eye me-1"></i>
+                            Ver
+                        </button>
+                        <button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn">
+                            <i class="fas fa-download me-1"></i>
+                            Descargar
+                        </button>
+                        <button type="button" class="btn btn-success pleno-certificate-generate-btn">
+                            <i class="fas fa-plus me-1"></i>
+                            Generar nueva versión
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
     </div>
@@ -1142,6 +1200,117 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
             </div>
         </div>
     </section>
+    <script>
+        (function () {
+            "use strict";
+
+            var certificadoCard = document.getElementById("plenoCertificadoAcuerdosCard");
+
+            function htmlEscape(valor) {
+                return String(valor === null || valor === undefined ? "" : valor)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            function formatearFechaHora(valor) {
+                var fecha = String(valor || "").trim();
+                var partes = fecha.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+                if (!partes) {
+                    return fecha || "Sin registro";
+                }
+
+                return partes[3] + "/" + partes[2] + "/" + partes[1] + " " + partes[4] + ":" + partes[5] + " hrs.";
+            }
+
+            function mostrarMensajeTemporal() {
+                window.alert("Funcionalidad disponible en la siguiente etapa.");
+            }
+
+            function enlazarBotonesCertificado() {
+                document.querySelectorAll(".pleno-certificate-placeholder-btn").forEach(function (boton) {
+                    boton.addEventListener("click", mostrarMensajeTemporal);
+                });
+
+                document.querySelectorAll(".pleno-certificate-generate-btn").forEach(function (boton) {
+                    boton.addEventListener("click", generarCertificado);
+                });
+            }
+
+            function renderCertificado(certificado) {
+                if (!certificadoCard || !certificado) {
+                    return;
+                }
+
+                var body = certificadoCard.querySelector(".pleno-resumen-card-body");
+                if (!body) {
+                    return;
+                }
+
+                body.innerHTML = ''
+                    + '<h2 class="pleno-resumen-card-title">'
+                    + '<i class="fas fa-file-signature"></i>'
+                    + 'Certificado de Acuerdos'
+                    + '</h2>'
+                    + '<div class="pleno-certificate-box">'
+                    + '<span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>'
+                    + '<div>'
+                    + '<div class="pleno-certificate-name">Versión ' + htmlEscape(certificado.version || "1") + '</div>'
+                    + '<div class="pleno-certificate-date">Fecha generación: ' + htmlEscape(formatearFechaHora(certificado.fecha_generacion)) + '</div>'
+                    + '<div class="pleno-agreement-meta">'
+                    + '<span>Usuario generador: ' + htmlEscape(certificado.usuario_generador || "Sin registro") + '</span>'
+                    + '<span>Total acuerdos: ' + htmlEscape(certificado.total_acuerdos || "0") + '</span>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '<div class="pleno-certificate-actions">'
+                    + '<button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn"><i class="fas fa-eye me-1"></i>Ver</button>'
+                    + '<button type="button" class="btn btn-outline-success pleno-certificate-placeholder-btn"><i class="fas fa-download me-1"></i>Descargar</button>'
+                    + '<button type="button" class="btn btn-success pleno-certificate-generate-btn"><i class="fas fa-plus me-1"></i>Generar nueva versión</button>'
+                    + '</div>';
+
+                enlazarBotonesCertificado();
+            }
+
+            function generarCertificado() {
+                if (!certificadoCard) {
+                    return;
+                }
+
+                var boton = this;
+                var idSesion = parseInt(certificadoCard.getAttribute("data-id-sesion") || "0", 10);
+                boton.disabled = true;
+
+                fetch("ajax/generar_certificado_acuerdos.php", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id_sesion: idSesion
+                    })
+                }).then(function (response) {
+                    return response.json().then(function (payload) {
+                        if (!response.ok || !payload || payload.success !== true) {
+                            throw new Error(payload && payload.mensaje ? payload.mensaje : "No fue posible generar el certificado.");
+                        }
+
+                        return payload;
+                    });
+                }).then(function (payload) {
+                    renderCertificado(payload.certificado);
+                }).catch(function (error) {
+                    boton.disabled = false;
+                    window.alert(error.message || "No fue posible generar el certificado.");
+                });
+            }
+
+            enlazarBotonesCertificado();
+        }());
+    </script>
     <?php if ($puedeGestionar): ?>
         <script>
             (function () {

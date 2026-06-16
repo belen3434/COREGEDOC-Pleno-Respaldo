@@ -60,6 +60,7 @@ require_once __DIR__ . '/models/AsistenciaPleno.php';
 require_once __DIR__ . '/models/ResumenPleno.php';
 require_once __DIR__ . '/models/HistorialVotacionesPleno.php';
 require_once __DIR__ . '/models/AcuerdoPleno.php';
+require_once __DIR__ . '/models/CertificadoAcuerdoPleno.php';
 require_once __DIR__ . '/controllers/PlenoController.php';
 
 $plenoAuth = plenoRequireAuthorizedUser();
@@ -116,6 +117,12 @@ $plenoVotoUsuarioActual = null;
 $plenoResumenResultados = [];
 $plenoAcuerdos = [];
 $plenoPuntosAcuerdo = [];
+$plenoCertificadoAcuerdos = [
+    'total_acuerdos' => 0,
+    'existen_acuerdos' => false,
+    'certificado' => null,
+    'existe_certificado' => false,
+];
 $plenoHistorialVotaciones = [];
 $plenoHistorialFiltros = [
     'numero_sesion' => '',
@@ -193,6 +200,15 @@ if ($plenoAuth['authorized']) {
                 $plenoAcuerdosModelo = new AcuerdoPleno();
                 $plenoAcuerdos = $plenoAcuerdosModelo->listarPorSesion($idSesionActual);
                 $plenoPuntosAcuerdo = $plenoAcuerdosModelo->listarPuntosSesion($idSesionActual, $plenoSesionActual);
+                $plenoCertificadoModelo = new CertificadoAcuerdoPleno();
+                $plenoTotalAcuerdosCertificado = $plenoCertificadoModelo->contarAcuerdosVigentes($idSesionActual);
+                $plenoUltimoCertificado = $plenoCertificadoModelo->obtenerUltimoCertificado($idSesionActual);
+                $plenoCertificadoAcuerdos = [
+                    'total_acuerdos' => $plenoTotalAcuerdosCertificado,
+                    'existen_acuerdos' => $plenoTotalAcuerdosCertificado > 0,
+                    'certificado' => $plenoUltimoCertificado,
+                    'existe_certificado' => $plenoUltimoCertificado !== null,
+                ];
             }
         }
 
@@ -248,6 +264,7 @@ $data = [
     'pleno_resumen_resultados' => $plenoResumenResultados,
     'pleno_acuerdos' => $plenoAcuerdos,
     'pleno_puntos_acuerdo' => $plenoPuntosAcuerdo,
+    'pleno_certificado_acuerdos' => $plenoCertificadoAcuerdos,
     'pleno_historial_votaciones' => $plenoHistorialVotaciones,
     'pleno_historial_filtros' => $plenoHistorialFiltros,
     'pleno_crud_error' => $plenoCrudError,
