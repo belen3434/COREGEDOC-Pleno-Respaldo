@@ -243,6 +243,9 @@ $opcionesEstado = [
             <h1 class="historial-title">Historial de Certificados</h1>
             <p class="historial-subtitle">Consultar certificados de acuerdos generados por sesi&oacute;n.</p>
         </div>
+        <a href="index.php?vista=historiales" class="btn btn-pleno-back ms-auto">
+            <i class="fas fa-arrow-left me-2"></i>Atrás
+        </a>
     </div>
 
     <section class="historial-card">

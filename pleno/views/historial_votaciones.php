@@ -306,6 +306,9 @@ $opcionesTipoPleno = [
             <h1 class="historial-title">Historial de Votaciones</h1>
             <p class="historial-subtitle">Consultar votaciones realizadas en sesiones plenarias anteriores.</p>
         </div>
+        <a href="index.php?vista=historiales" class="btn btn-pleno-back ms-auto">
+            <i class="fas fa-arrow-left me-2"></i>Atrás
+        </a>
     </div>
 
     <section class="historial-card">
