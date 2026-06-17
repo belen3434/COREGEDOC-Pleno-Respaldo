@@ -1,2 +1,3 @@
-# COREGEDOC
-Repositorio para toda la documentación de CAPSTONE COREGEDOC
+# COREGEDOC - Módulo Pleno
+Proyecto desarrollado para el Consejo Regional de Valparaíso (CORE).
+Documentación del proyecto Capstone.
