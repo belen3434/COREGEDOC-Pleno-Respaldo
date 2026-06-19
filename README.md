@@ -15,7 +15,7 @@ La solución permite gestionar sesiones plenarias, organizar la tabla del día, 
 
 ## Equipo de Desarrollo
 
-* Belén Cote
+* Belén
 * Kiara
 * Marianella
 
