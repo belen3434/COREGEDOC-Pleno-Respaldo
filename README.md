@@ -26,7 +26,7 @@ La solución permite gestionar sesiones plenarias, organizar la tabla del día, 
 
 ## Tablero Kanban
 
-Pendiente de incorporación.
+La gestión del proyecto se realizó mediante un tablero Kanban utilizando Trello para el seguimiento de historias de usuario, tareas y avances de los distintos Sprints.
 
 ## Cliente
 
