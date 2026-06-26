@@ -1960,3 +1960,52 @@ body.sb-sidenav-toggled .navbar.fixed-top {
     box-shadow: none !important;
 }
 
+/* Colores suaves para botones de votacion. */
+.pleno-live-vote-btn[data-vote-option="SI"],
+.pleno-live-option-favor {
+    background-color: #e8f5ec !important;
+    border-color: #9fd8b5 !important;
+    color: #0f5132 !important;
+}
+
+.pleno-live-vote-btn[data-vote-option="NO"],
+.pleno-live-option-against {
+    background-color: #fbe9ec !important;
+    border-color: #efb6bf !important;
+    color: #842029 !important;
+}
+
+.pleno-live-vote-btn[data-vote-option="ABSTENCION"],
+.pleno-live-option-abstain {
+    background-color: #fff3cd !important;
+    border-color: #f3d27a !important;
+    color: #664d03 !important;
+}
+
+.pleno-live-vote-btn[data-vote-option="SI"]:hover,
+.pleno-live-vote-btn[data-vote-option="SI"]:focus,
+.pleno-live-option-favor:hover,
+.pleno-live-option-favor:focus {
+    background-color: #dff1e6 !important;
+    border-color: #8dcca6 !important;
+    color: #0f5132 !important;
+}
+
+.pleno-live-vote-btn[data-vote-option="NO"]:hover,
+.pleno-live-vote-btn[data-vote-option="NO"]:focus,
+.pleno-live-option-against:hover,
+.pleno-live-option-against:focus {
+    background-color: #f8dde2 !important;
+    border-color: #e7a2ad !important;
+    color: #842029 !important;
+}
+
+.pleno-live-vote-btn[data-vote-option="ABSTENCION"]:hover,
+.pleno-live-vote-btn[data-vote-option="ABSTENCION"]:focus,
+.pleno-live-option-abstain:hover,
+.pleno-live-option-abstain:focus {
+    background-color: #ffe9a6 !important;
+    border-color: #e6bf55 !important;
+    color: #664d03 !important;
+}
+
