@@ -1148,7 +1148,7 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
             </div>
         </div>
     <?php endif; ?>
-    <div class="pleno-resumen-lower-grid">
+    <div class="pleno-resumen-lower-grid d-block">
         <section class="pleno-resumen-card">
             <div class="pleno-resumen-card-body">
                 <div class="pleno-agreement-header">
@@ -1213,148 +1213,154 @@ $textoResumenEjecutivo = 'Se trataron ' . $totalPuntosTratados . ' puntos durant
             </div>
         </section>
 
-        <section class="pleno-resumen-card" id="plenoCertificadoAcuerdosCard" data-id-sesion="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>">
-            <div class="pleno-resumen-card-body">
-                <h2 class="pleno-resumen-card-title">
-                    <i class="fas fa-file-signature"></i>
-                    Certificado de Acuerdos
-                </h2>
-                <div class="alert d-none mb-3 pleno-certificate-feedback" role="alert"></div>
-                <?php if (!$existenAcuerdosCertificado): ?>
-                    <div class="pleno-certificate-box">
-                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
-                        <div>
-                            <div class="pleno-certificate-name">No hay acuerdos registrados para generar certificado.</div>
-                            <div class="pleno-certificate-date">Total acuerdos: 0</div>
-                        </div>
-                    </div>
-                    <?php if ($puedeGenerarCertificados): ?>
-                        <div class="pleno-certificate-actions">
-                            <button type="button" class="btn btn-success" disabled>
-                                <i class="fas fa-file-export me-1"></i>
-                                Generar Certificado
-                            </button>
-                        </div>
-                    <?php endif; ?>
-                <?php elseif (!$existeCertificadoAcuerdos): ?>
-                    <div class="pleno-certificate-box">
-                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
-                        <div>
-                            <div class="pleno-certificate-name">No hay certificado generado.</div>
-                            <div class="pleno-certificate-date">Total acuerdos: <?php echo (int)$totalAcuerdosCertificado; ?></div>
-                        </div>
-                    </div>
-                    <?php if ($puedeGenerarCertificados): ?>
-                        <div class="pleno-certificate-actions">
-                            <button type="button" class="btn btn-success pleno-certificate-generate-btn" data-certificate-mode="first">
-                                <i class="fas fa-file-export me-1"></i>
-                                Generar Certificado
-                            </button>
-                        </div>
-                    <?php endif; ?>
-                <?php else: ?>
-                    <div class="pleno-certificate-box">
-                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
-                        <div>
-                            <div class="pleno-certificate-name">Versi&oacute;n <?php echo $h($certificadoActual['version'] ?? '1'); ?></div>
-                            <div class="pleno-certificate-date">Fecha generaci&oacute;n: <?php echo $h($formatearFechaHora($certificadoActual['fecha_generacion'] ?? null)); ?></div>
-                            <div class="pleno-agreement-meta">
-                                <span>Usuario generador: <?php echo $h($certificadoActual['usuario_generador'] ?? 'Sin registro'); ?></span>
-                                <span>Total acuerdos: <?php echo (int)($certificadoActual['total_acuerdos'] ?? $totalAcuerdosCertificado); ?></span>
+        <div class="row g-4 mt-4">
+            <div class="col-12 col-lg-6 d-flex">
+                <section class="pleno-resumen-card h-100 w-100" id="plenoCertificadoAcuerdosCard" data-id-sesion="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>">
+                    <div class="pleno-resumen-card-body">
+                        <h2 class="pleno-resumen-card-title">
+                            <i class="fas fa-file-signature"></i>
+                            Certificado de Acuerdos
+                        </h2>
+                        <div class="alert d-none mb-3 pleno-certificate-feedback" role="alert"></div>
+                        <?php if (!$existenAcuerdosCertificado): ?>
+                            <div class="pleno-certificate-box">
+                                <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                                <div>
+                                    <div class="pleno-certificate-name">No hay acuerdos registrados para generar certificado.</div>
+                                    <div class="pleno-certificate-date">Total acuerdos: 0</div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="pleno-certificate-actions">
-                        <a
-                            class="btn btn-outline-success"
-                            href="certificados/ver.php?id_certificado=<?php echo (int)$idCertificadoActual; ?>"
-                            target="_blank"
-                            rel="noopener"
-                        >
-                            <i class="fas fa-eye me-1"></i>
-                            Ver
-                        </a>
-                        <a
-                            class="btn btn-outline-success"
-                            href="certificados/descargar.php?id_certificado=<?php echo (int)$idCertificadoActual; ?>"
-                        >
-                            <i class="fas fa-download me-1"></i>
-                            Descargar
-                        </a>
-                        <?php if ($puedeGenerarCertificados): ?>
-                            <button type="button" class="btn btn-success pleno-certificate-generate-btn" data-certificate-mode="version">
-                                <i class="fas fa-plus me-1"></i>
-                                Generar nueva versi&oacute;n
-                            </button>
+                            <?php if ($puedeGenerarCertificados): ?>
+                                <div class="pleno-certificate-actions">
+                                    <button type="button" class="btn btn-success" disabled>
+                                        <i class="fas fa-file-export me-1"></i>
+                                        Generar Certificado
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+                        <?php elseif (!$existeCertificadoAcuerdos): ?>
+                            <div class="pleno-certificate-box">
+                                <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                                <div>
+                                    <div class="pleno-certificate-name">No hay certificado generado.</div>
+                                    <div class="pleno-certificate-date">Total acuerdos: <?php echo (int)$totalAcuerdosCertificado; ?></div>
+                                </div>
+                            </div>
+                            <?php if ($puedeGenerarCertificados): ?>
+                                <div class="pleno-certificate-actions">
+                                    <button type="button" class="btn btn-success pleno-certificate-generate-btn" data-certificate-mode="first">
+                                        <i class="fas fa-file-export me-1"></i>
+                                        Generar Certificado
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <div class="pleno-certificate-box">
+                                <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                                <div>
+                                    <div class="pleno-certificate-name">Versi&oacute;n <?php echo $h($certificadoActual['version'] ?? '1'); ?></div>
+                                    <div class="pleno-certificate-date">Fecha generaci&oacute;n: <?php echo $h($formatearFechaHora($certificadoActual['fecha_generacion'] ?? null)); ?></div>
+                                    <div class="pleno-agreement-meta">
+                                        <span>Usuario generador: <?php echo $h($certificadoActual['usuario_generador'] ?? 'Sin registro'); ?></span>
+                                        <span>Total acuerdos: <?php echo (int)($certificadoActual['total_acuerdos'] ?? $totalAcuerdosCertificado); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pleno-certificate-actions">
+                                <a
+                                    class="btn btn-outline-success"
+                                    href="certificados/ver.php?id_certificado=<?php echo (int)$idCertificadoActual; ?>"
+                                    target="_blank"
+                                    rel="noopener"
+                                >
+                                    <i class="fas fa-eye me-1"></i>
+                                    Ver
+                                </a>
+                                <a
+                                    class="btn btn-outline-success"
+                                    href="certificados/descargar.php?id_certificado=<?php echo (int)$idCertificadoActual; ?>"
+                                >
+                                    <i class="fas fa-download me-1"></i>
+                                    Descargar
+                                </a>
+                                <?php if ($puedeGenerarCertificados): ?>
+                                    <button type="button" class="btn btn-success pleno-certificate-generate-btn" data-certificate-mode="version">
+                                        <i class="fas fa-plus me-1"></i>
+                                        Generar nueva versi&oacute;n
+                                    </button>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
-                <?php endif; ?>
+                </section>
             </div>
-        </section>
 
-        <section class="pleno-resumen-card" id="plenoResumenEjecutivoCard" data-id-sesion="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>">
-            <div class="pleno-resumen-card-body">
-                <h2 class="pleno-resumen-card-title">
-                    <i class="fas fa-file-alt"></i>
-                    Resumen Ejecutivo de la Sesi&oacute;n
-                </h2>
-                <div class="alert d-none mb-3 pleno-summary-feedback" role="alert"></div>
-                <?php if (!$existeResumenEjecutivo): ?>
-                    <div class="pleno-certificate-box">
-                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
-                        <div>
-                            <div class="pleno-certificate-name">No hay resumen ejecutivo generado.</div>
-                            <div class="pleno-certificate-date">Se consolidar&aacute; asistencia, orden del d&iacute;a, votaciones y acuerdos.</div>
-                        </div>
-                    </div>
-                    <?php if ($puedeGenerarCertificados): ?>
-                        <div class="pleno-certificate-actions">
-                            <button type="button" class="btn btn-success pleno-summary-generate-btn" data-summary-mode="first">
-                                <i class="fas fa-file-export me-1"></i>
-                                Generar resumen
-                            </button>
-                        </div>
-                    <?php endif; ?>
-                <?php else: ?>
-                    <div class="pleno-certificate-box">
-                        <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
-                        <div>
-                            <div class="pleno-certificate-name">Versi&oacute;n <?php echo $h($resumenEjecutivoActual['version'] ?? '1'); ?></div>
-                            <div class="pleno-certificate-date">Fecha generaci&oacute;n: <?php echo $h($formatearFechaHora($resumenEjecutivoActual['fecha_generacion'] ?? null)); ?></div>
-                            <div class="pleno-agreement-meta">
-                                <span>Usuario generador: <?php echo $h($resumenEjecutivoActual['usuario_generador'] ?? 'Sin registro'); ?></span>
-                                <span>Acuerdos: <?php echo (int)($resumenEjecutivoActual['total_acuerdos'] ?? 0); ?></span>
-                                <span>Votaciones: <?php echo (int)($resumenEjecutivoActual['total_votaciones'] ?? 0); ?></span>
+            <div class="col-12 col-lg-6 d-flex">
+                <section class="pleno-resumen-card h-100 w-100" id="plenoResumenEjecutivoCard" data-id-sesion="<?php echo (int)($sesion['id_sesion'] ?? 0); ?>">
+                    <div class="pleno-resumen-card-body">
+                        <h2 class="pleno-resumen-card-title">
+                            <i class="fas fa-file-alt"></i>
+                            Resumen Ejecutivo de la Sesi&oacute;n
+                        </h2>
+                        <div class="alert d-none mb-3 pleno-summary-feedback" role="alert"></div>
+                        <?php if (!$existeResumenEjecutivo): ?>
+                            <div class="pleno-certificate-box">
+                                <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                                <div>
+                                    <div class="pleno-certificate-name">No hay resumen ejecutivo generado.</div>
+                                    <div class="pleno-certificate-date">Se consolidar&aacute; asistencia, orden del d&iacute;a, votaciones y acuerdos.</div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="pleno-certificate-actions">
-                        <a
-                            class="btn btn-outline-success"
-                            href="resumenes/ver.php?id_resumen=<?php echo (int)$idResumenEjecutivoActual; ?>"
-                            target="_blank"
-                            rel="noopener"
-                        >
-                            <i class="fas fa-eye me-1"></i>
-                            Ver
-                        </a>
-                        <a
-                            class="btn btn-outline-success"
-                            href="resumenes/descargar.php?id_resumen=<?php echo (int)$idResumenEjecutivoActual; ?>"
-                        >
-                            <i class="fas fa-download me-1"></i>
-                            Descargar
-                        </a>
-                        <?php if ($puedeGenerarCertificados): ?>
-                            <button type="button" class="btn btn-success pleno-summary-generate-btn" data-summary-mode="version">
-                                <i class="fas fa-plus me-1"></i>
-                                Generar nueva versi&oacute;n
-                            </button>
+                            <?php if ($puedeGenerarCertificados): ?>
+                                <div class="pleno-certificate-actions">
+                                    <button type="button" class="btn btn-success pleno-summary-generate-btn" data-summary-mode="first">
+                                        <i class="fas fa-file-export me-1"></i>
+                                        Generar resumen
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <div class="pleno-certificate-box">
+                                <span class="pleno-pdf-icon"><i class="fas fa-file-pdf"></i></span>
+                                <div>
+                                    <div class="pleno-certificate-name">Versi&oacute;n <?php echo $h($resumenEjecutivoActual['version'] ?? '1'); ?></div>
+                                    <div class="pleno-certificate-date">Fecha generaci&oacute;n: <?php echo $h($formatearFechaHora($resumenEjecutivoActual['fecha_generacion'] ?? null)); ?></div>
+                                    <div class="pleno-agreement-meta">
+                                        <span>Usuario generador: <?php echo $h($resumenEjecutivoActual['usuario_generador'] ?? 'Sin registro'); ?></span>
+                                        <span>Acuerdos: <?php echo (int)($resumenEjecutivoActual['total_acuerdos'] ?? 0); ?></span>
+                                        <span>Votaciones: <?php echo (int)($resumenEjecutivoActual['total_votaciones'] ?? 0); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pleno-certificate-actions">
+                                <a
+                                    class="btn btn-outline-success"
+                                    href="resumenes/ver.php?id_resumen=<?php echo (int)$idResumenEjecutivoActual; ?>"
+                                    target="_blank"
+                                    rel="noopener"
+                                >
+                                    <i class="fas fa-eye me-1"></i>
+                                    Ver
+                                </a>
+                                <a
+                                    class="btn btn-outline-success"
+                                    href="resumenes/descargar.php?id_resumen=<?php echo (int)$idResumenEjecutivoActual; ?>"
+                                >
+                                    <i class="fas fa-download me-1"></i>
+                                    Descargar
+                                </a>
+                                <?php if ($puedeGenerarCertificados): ?>
+                                    <button type="button" class="btn btn-success pleno-summary-generate-btn" data-summary-mode="version">
+                                        <i class="fas fa-plus me-1"></i>
+                                        Generar nueva versi&oacute;n
+                                    </button>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
-                <?php endif; ?>
+                </section>
             </div>
-        </section>
+        </div>
     </div>
     <div class="pleno-dashboard-accordion" id="plenoResumenBottomAccordion">
         <section class="pleno-accordion-item">
