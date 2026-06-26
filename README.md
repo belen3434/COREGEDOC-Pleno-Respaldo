@@ -15,9 +15,9 @@ La solución permite gestionar sesiones plenarias, organizar la tabla del día, 
 
 ## Equipo de Desarrollo
 
-* Belén
-* Kiara
-* Marianella
+* Belén Parra
+* Kiara Gatica
+* Marianella Ciacciarelli
 
 ## Metodología
 
@@ -31,4 +31,10 @@ La gestión del proyecto se realizó mediante un tablero Kanban utilizando Trell
 ## Cliente
 
 Consejo Regional de Valparaíso (CORE)
+
+## Rubro
+
+Administración Pública Regional
+
+
 
