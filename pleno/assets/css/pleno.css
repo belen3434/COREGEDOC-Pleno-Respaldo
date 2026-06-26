@@ -1444,3 +1444,519 @@ body.sb-sidenav-toggled .navbar.fixed-top {
     }
 }
 
+/* ============================================================
+   Homologacion visual con el sistema COREGEDOC
+   Mantiene las clases existentes para no afectar JavaScript.
+============================================================ */
+.pleno-main-offset {
+    padding-top: 1.5rem !important;
+}
+
+.pleno-sidebar-link,
+.btn-pleno-back,
+#sidebar-wrapper .btn-pleno-volver,
+.pleno-tool-btn,
+.pleno-btn-soft,
+.pleno-btn-success,
+.btn-pleno-cancelar,
+.btn-pleno-guardar-final,
+.secretaria-start-btn,
+.secretaria-control-btn,
+.pleno-live-option,
+.pleno-vote-close-btn,
+.historial-back-btn,
+.historial-card-link,
+.pleno-summary-generate-btn {
+    border-radius: 0.375rem !important;
+    box-shadow: none !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    transform: none !important;
+}
+
+#sidebar-wrapper .btn-pleno-volver,
+.btn-pleno-back,
+.btn-pleno-guardar-final {
+    background: #198754 !important;
+    border: 1px solid #198754 !important;
+}
+
+.btn-pleno-cancelar,
+.pleno-btn-soft {
+    background: #ffffff !important;
+    border: 1px solid #ced4da !important;
+    color: #495057 !important;
+}
+
+.pleno-tool-btn-primary,
+.pleno-btn-success,
+.secretaria-start-btn,
+.secretaria-control-btn.btn-success,
+.pleno-summary-generate-btn {
+    background: #198754 !important;
+    border-color: #198754 !important;
+    color: #ffffff !important;
+}
+
+.pleno-tool-btn-outline,
+.secretaria-control-btn.btn-outline-success {
+    background: #ffffff !important;
+    border-color: #198754 !important;
+    color: #198754 !important;
+}
+
+.pleno-tool-btn-warning,
+.pleno-tool-btn-governador,
+.secretaria-control-btn.btn-warning {
+    background: #ffc107 !important;
+    border-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.pleno-tool-btn:hover,
+.pleno-tool-btn:focus,
+.pleno-btn-soft:hover,
+.pleno-btn-soft:focus,
+.pleno-btn-success:hover,
+.pleno-btn-success:focus,
+.btn-pleno-back:hover,
+.btn-pleno-back:focus,
+#sidebar-wrapper .btn-pleno-volver:hover,
+#sidebar-wrapper .btn-pleno-volver:focus,
+.secretaria-control-btn:hover,
+.secretaria-control-btn:focus,
+.pleno-live-option:hover,
+.pleno-live-option:focus,
+.pleno-vote-close-btn:hover,
+.pleno-vote-close-btn:focus,
+.historial-card-link:hover,
+.historial-card-link:focus {
+    transform: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+.pleno-session-card,
+.pleno-summary-card,
+.pleno-kpi-card,
+.pleno-panel,
+.pleno-topic-card,
+.pleno-budget-card,
+.pleno-attendance-tile,
+.pleno-certificate-box,
+.pleno-accordion-item,
+.pleno-live-profile,
+.pleno-live-card,
+.pleno-live-session-card,
+.pleno-vote-main-card,
+.pleno-vote-table-card,
+.pleno-resumen-card,
+.historial-panel,
+.historial-card,
+.secretaria-hero,
+.secretaria-card,
+.orden-dia-card,
+.orden-dia-seccion,
+.orden-dia-item,
+.pleno-attendance-self-card,
+.pleno-certificate-card,
+.pleno-summary-version-card,
+.pleno-session-summary-item,
+.pleno-result-card,
+.pleno-agreement-card {
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    background: #ffffff !important;
+}
+
+.pleno-live-view,
+.pleno-vote-page,
+.pleno-resumen-page,
+.pleno-resumen-view,
+.historiales-page,
+.historial-votaciones-page,
+.historial-certificados-page,
+.historial-view,
+.secretaria-pleno-view,
+.pleno-comisiones-view {
+    color: #212529 !important;
+    background: transparent !important;
+}
+
+.pleno-live-title,
+.pleno-vote-title,
+.pleno-resumen-title,
+.historial-title,
+.secretaria-title,
+.pleno-page-title {
+    color: #212529 !important;
+    font-size: 1.5rem !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+}
+
+.pleno-live-topic-card h2,
+.pleno-vote-topic,
+.pleno-resumen-card-title,
+.historial-card-title,
+.secretaria-card-title,
+.pleno-section-title,
+.pleno-topic-card h3,
+.point-detail-title {
+    color: #212529 !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+.pleno-eyebrow,
+.pleno-live-status,
+.pleno-vote-eyebrow,
+.secretaria-live-label,
+.historial-eyebrow,
+.pleno-meta-label,
+.pleno-kpi-label,
+.pleno-live-meta-item span,
+.pleno-summary-table thead th,
+.secretaria-attendance-table th,
+.pleno-vote-table th,
+.historial-table th {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+}
+
+.pleno-live-subtitle,
+.pleno-live-meta-item strong,
+.pleno-live-observations,
+.pleno-vote-meta,
+.secretaria-session-name,
+.secretaria-meta,
+.secretaria-observations,
+.point-detail-text,
+.historial-subtitle,
+.pleno-session-value,
+.pleno-result-description,
+.pleno-certificate-text {
+    font-size: 0.95rem !important;
+    font-weight: 400 !important;
+}
+
+.pleno-kpi-number,
+.pleno-kpi-value,
+.pleno-vote-counter-number,
+.secretaria-attendance-count strong,
+.pleno-attendance-number,
+.historial-detail-item strong,
+.pleno-result-number,
+.pleno-certificate-icon,
+.pleno-summary-version-number {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+}
+
+.pleno-avatar,
+.pleno-live-profile-avatar,
+.pleno-vote-counter-icon,
+.pending-state-icon,
+.pleno-kpi-icon,
+.pleno-resumen-heading-icon,
+.historial-heading-icon,
+.historial-card-icon,
+.pleno-result-icon,
+.pleno-pdf-icon,
+.pleno-agreement-check,
+.pleno-certificate-icon,
+.pleno-attendance-icon {
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    height: 2.5rem !important;
+    font-size: 1rem !important;
+}
+
+.pleno-summary-count,
+.pleno-point-badge,
+.pleno-live-profile-badge,
+.pleno-live-topic-badge,
+.secretaria-status-badge,
+.secretaria-badge,
+.pleno-vote-pill,
+.pleno-vote-status,
+.historial-status,
+.historial-badge,
+.pleno-result-badge,
+.pleno-status-badge,
+.pleno-vote-badge-si,
+.pleno-vote-badge-no,
+.pleno-vote-badge-abstencion,
+.pleno-badge-generado,
+.pleno-badge-warning,
+.pleno-badge-finalizado {
+    border-radius: 0.375rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+}
+
+.pleno-summary-table,
+.pleno-vote-table,
+.secretaria-attendance-table,
+.historial-table,
+.pleno-results-table,
+.pleno-resumen-table {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+    color: #212529 !important;
+    border-color: #dee2e6 !important;
+}
+
+.pleno-summary-table thead th,
+.pleno-vote-table th,
+.secretaria-attendance-table th,
+.historial-table th,
+.pleno-results-table th,
+.pleno-resumen-table th {
+    padding: 0.5rem !important;
+    color: #495057 !important;
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.pleno-summary-table tbody td,
+.pleno-vote-table td,
+.secretaria-attendance-table td,
+.historial-table td,
+.pleno-results-table td,
+.pleno-resumen-table td {
+    padding: 0.5rem !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    color: #212529 !important;
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
+}
+
+.pleno-live-option,
+.pleno-vote-counter,
+.pleno-live-meta-item,
+.pleno-live-observations,
+.pleno-live-subpoint,
+.pleno-live-progress-dot,
+.pleno-live-info-box,
+.secretaria-status-badge,
+.secretaria-badge,
+.agenda-item,
+.agenda-subitem,
+.pending-state,
+.pleno-vote-status,
+.pleno-vote-empty,
+.historial-filter-control,
+.historial-detail-card,
+.historial-detail-item,
+.pleno-accordion-button,
+.pleno-final-observation-textarea,
+.pleno-agreement-textarea {
+    border-radius: 0.375rem !important;
+    box-shadow: none !important;
+}
+
+.pleno-live-option {
+    min-height: 42px !important;
+    padding: 0.5rem 0.75rem !important;
+}
+
+.pleno-vote-counter {
+    padding: 0.75rem !important;
+}
+
+.pleno-vote-counter-label,
+.pleno-vote-table-title,
+.pleno-vote-participants,
+.pleno-live-progress-item,
+.agenda-label,
+.agenda-number,
+.agenda-subitem,
+.secretaria-control-btn,
+.pending-state-title,
+.pending-state-text,
+.secretaria-attendance-table td,
+.secretaria-attendance-action {
+    font-weight: 500 !important;
+}
+
+.pleno-session-label,
+.pleno-attendance-text,
+.pleno-agreement-number,
+.pleno-agreement-point,
+.pleno-agreement-form-label,
+.pleno-certificate-name,
+.pleno-observation-meta strong,
+.pleno-accordion-button,
+.pleno-accordion-count,
+.historial-label,
+.historial-detail-item span {
+    font-weight: 600 !important;
+}
+
+.pleno-agreement-text,
+.pleno-agreement-meta,
+.pleno-observation-text,
+.pleno-certificate-date,
+.historial-card-text {
+    font-size: 0.95rem !important;
+    font-weight: 400 !important;
+}
+
+.pleno-vote-timer-ring,
+.pleno-vote-timer-inner {
+    width: 5rem !important;
+    height: 5rem !important;
+}
+
+.pleno-vote-timer-inner {
+    font-size: 1rem !important;
+}
+
+.pleno-live-metrics,
+.pleno-vote-counters,
+.pleno-kpi-grid,
+.pleno-resumen-kpi-grid {
+    gap: 0.75rem !important;
+}
+
+.pleno-live-card,
+.pleno-live-profile,
+.pleno-live-session-body,
+.pleno-panel-body,
+.pleno-kpi-card,
+.pleno-resumen-card-body,
+.historial-panel,
+.historial-card-body,
+.secretaria-card-body,
+.secretaria-hero {
+    padding: 1rem !important;
+}
+
+.orden-dia-card,
+.orden-dia-seccion,
+.orden-dia-item,
+.orden-dia-seccion-titulo,
+.orden-dia-handle {
+    border-radius: 0.375rem !important;
+}
+
+.orden-dia-item {
+    box-shadow: none !important;
+}
+
+@media (max-width: 768px) {
+    .pleno-live-title,
+    .pleno-vote-title,
+    .pleno-resumen-title,
+    .historial-title,
+    .secretaria-title,
+    .pleno-page-title {
+        font-size: 1.25rem !important;
+    }
+
+    .pleno-vote-counter-number,
+    .pleno-kpi-number,
+    .pleno-kpi-value {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* Ajuste acotado: Crear Sesion Plenaria conserva su apariencia original. */
+#plenoCrearSesionBackLink.btn-pleno-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0.55rem 1rem;
+    border: 0 !important;
+    border-radius: 12px !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #0071bc 0%, #00a650 100%) !important;
+    box-shadow: 0 6px 14px rgba(0, 113, 188, 0.22) !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+}
+
+#plenoCrearSesionForm .pleno-session-card,
+#plenoCrearSesionForm .pleno-summary-card {
+    border: 1px solid rgba(0, 113, 188, 0.08) !important;
+    border-radius: 18px !important;
+}
+
+#plenoCrearSesionForm .pleno-session-card .card-body {
+    padding: 1.5rem !important;
+}
+
+#plenoCrearSesionForm .pleno-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 42px;
+    padding: 0.65rem 1rem;
+    border-radius: 12px !important;
+    border: 1px solid transparent;
+    box-shadow: 0 8px 18px rgba(15, 38, 56, 0.08) !important;
+    font-weight: 600 !important;
+}
+
+#plenoCrearSesionForm .pleno-tool-btn-outline {
+    color: #0f7c46 !important;
+    border-color: #80c69c !important;
+    background: linear-gradient(180deg, #ffffff 0%, #effaf3 100%) !important;
+}
+
+#plenoCrearSesionForm .pleno-tool-btn-warning {
+    color: #7a5b16 !important;
+    border-color: #e9cf88 !important;
+    background: linear-gradient(180deg, #fffefb 0%, #fff4d5 100%) !important;
+}
+
+#plenoCrearSesionForm .pleno-tool-btn-primary {
+    color: #ffffff !important;
+    border-color: #007a9d !important;
+    background: linear-gradient(135deg, #0a93b1 0%, #006f94 100%) !important;
+}
+
+#plenoCrearSesionForm .btn-pleno-cancelar {
+    min-height: 46px;
+    padding: 12px 24px;
+    border: 1px solid #b9cddb !important;
+    border-radius: 14px !important;
+    background-color: #ffffff !important;
+    color: #3f5d70 !important;
+    box-shadow: 0 4px 10px rgba(63, 93, 112, 0.08) !important;
+    font-weight: 600 !important;
+}
+
+#plenoCrearSesionForm .btn-pleno-guardar-final {
+    min-height: 46px;
+    padding: 12px 24px;
+    border: 1px solid #00659f !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, #0071bc 0%, #00a650 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 9px 18px rgba(0, 113, 188, 0.28) !important;
+    font-weight: 600 !important;
+}
+
+#plenoCrearSesionForm .pleno-pill-toggle-btn {
+    border-radius: 12px !important;
+    font-size: 0.92rem !important;
+    font-weight: 500 !important;
+}
+
+#modalAgregarComision .modal-footer .btn,
+#modalComisionImprevista .modal-footer .btn,
+#modalPuntoTabla .modal-footer .btn,
+#plenoConfirmarSalidaModal .modal-footer .btn {
+    border-radius: 0.25rem !important;
+    box-shadow: none !important;
+}
+
