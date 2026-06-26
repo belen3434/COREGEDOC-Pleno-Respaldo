@@ -223,7 +223,7 @@ class CertificadoAcuerdoPleno
             $version = $this->calcularSiguienteVersion($idSesion);
             $numeroCertificado = 'CERT-' . trim((string)$sesion['numero_sesion']) . '-V' . $version;
             $usuario = $this->obtenerUsuario($idUsuario);
-            $fechaGeneracion = date('Y-m-d H:i:s');
+            $fechaGeneracion = (new DateTimeImmutable('now', new DateTimeZone('America/Santiago')))->format('Y-m-d H:i:s');
             error_log('[CertificadoModelo] version=' . $version . ' numero_certificado=' . $numeroCertificado . ' fecha_generacion=' . $fechaGeneracion);
 
             $stmtReemplazar = $this->conn->prepare(

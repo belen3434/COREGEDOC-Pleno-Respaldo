@@ -65,7 +65,7 @@ class ResumenEjecutivoPleno
             $version = $this->calcularSiguienteVersion($idSesion);
             $numeroResumen = 'RES-EJEC-' . trim((string)$sesion['numero_sesion']) . '-V' . $version;
             $usuario = $this->obtenerUsuario($idUsuario);
-            $fechaGeneracion = date('Y-m-d H:i:s');
+            $fechaGeneracion = (new DateTimeImmutable('now', new DateTimeZone('America/Santiago')))->format('Y-m-d H:i:s');
             $snapshot = $this->construirSnapshot($idSesion, $sesion, $usuario, $fechaGeneracion, $version);
             $snapshotJson = json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             if ($snapshotJson === false) {
