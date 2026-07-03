@@ -1584,6 +1584,14 @@ body.sb-sidenav-toggled .navbar.fixed-top {
     background: transparent !important;
 }
 
+#plenoVoteMonitor:fullscreen,
+#plenoVoteMonitor:-webkit-full-screen,
+#plenoVoteMonitor:fullscreen::backdrop,
+#plenoVoteMonitor:-webkit-full-screen::backdrop {
+    background: #f6f8fa;
+    margin: 0;
+}
+
 .pleno-live-title,
 .pleno-vote-title,
 .pleno-resumen-title,
