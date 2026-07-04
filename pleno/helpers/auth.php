@@ -14,7 +14,7 @@ if (!function_exists('plenoRequireAuthorizedUser')) {
             exit();
         }
 
-        $allowedTipoUsuario = [1, 6, 20, 21, 22];
+        $allowedTipoUsuario = [1, 5, 6, 20, 21, 22];
         $tipoUsuarioId = (int)($_SESSION['tipoUsuario_id'] ?? 0);
 
         if (!in_array($tipoUsuarioId, $allowedTipoUsuario, true)) {

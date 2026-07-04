@@ -2,6 +2,7 @@
 $plenoVistaActual = $_GET['vista'] ?? 'index';
 $rol = (int)($_SESSION['usuario']['tipoUsuario_id'] ?? $_SESSION['tipoUsuario_id'] ?? 0);
 $puedeVerMenuCompleto = in_array($rol, [6, 20], true);
+$esRolSoloResumen = $rol === 5;
 
 $plenoMenuPrincipal = [];
 
@@ -41,6 +42,12 @@ $plenoMenuPrincipal += [
         'href' => 'index.php?vista=historiales',
     ],
 ];
+
+if ($esRolSoloResumen) {
+    $plenoMenuPrincipal = [
+        'resumen' => $plenoMenuPrincipal['resumen'],
+    ];
+}
 
 $plenoMenuInferior = [
     'ayuda' => [

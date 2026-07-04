@@ -71,6 +71,7 @@ $vista = $vistaSolicitada ?? 'index';
 $action = $_GET['action'] ?? null;
 $tipoUsuarioId = (int)($plenoAuth['tipoUsuarioId'] ?? 0);
 $rolesSoloVisualizacion = [1, 21, 22];
+$rolSoloResumen = 5;
 
 $vistasPermitidas = [
     'index' => __DIR__ . '/views/index.php',
@@ -90,6 +91,11 @@ $vistasPermitidas = [
 ];
 
 $vistasSoloVisualizacion = ['tabla', 'pleno_vivo', 'votacion', 'resumen', 'historiales', 'historial_votaciones', 'historial_certificados'];
+
+if ($tipoUsuarioId === $rolSoloResumen && $vista !== 'resumen') {
+    header('Location: index.php?vista=resumen');
+    exit();
+}
 
 if ($tipoUsuarioId === 1 && ($vistaSolicitada === null || $vistaSolicitada === '' || in_array($vista, ['index', 'configuracion', 'tabla'], true))) {
     header('Location: index.php?vista=pleno_vivo');
