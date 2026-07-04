@@ -49,7 +49,7 @@
             <?php
             $rolesGestion = [ROL_ADMINISTRADOR, ROL_SECRETARIO_TECNICO, ROL_PRESIDENTE_COMISION, 20, 21, 22];
             $rolesAvanzados = [ROL_ADMINISTRADOR, 20, 21, 22];
-            $rolesPleno = [1, 6, 20, 21, 22];
+            $rolesPleno = [1, 5, 6, 20, 21, 22];
             ?>
 
             <?php if (in_array($tipoUsuario, $rolesGestion)): ?>
