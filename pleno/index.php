@@ -87,10 +87,11 @@ $vistasPermitidas = [
     'historiales' => __DIR__ . '/views/historiales.php',
     'historial_votaciones' => __DIR__ . '/views/historial_votaciones.php',
     'historial_certificados' => __DIR__ . '/views/historial_certificados.php',
+    'historial_resumenes' => __DIR__ . '/views/historial_resumenes.php',
     'ayuda' => __DIR__ . '/views/ayuda.php',
 ];
 
-$vistasSoloVisualizacion = ['tabla', 'pleno_vivo', 'votacion', 'resumen', 'historiales', 'historial_votaciones', 'historial_certificados'];
+$vistasSoloVisualizacion = ['tabla', 'pleno_vivo', 'votacion', 'resumen', 'historiales', 'historial_votaciones', 'historial_certificados', 'historial_resumenes'];
 
 if ($tipoUsuarioId === $rolSoloResumen && $vista !== 'resumen') {
     header('Location: index.php?vista=resumen');
@@ -149,6 +150,13 @@ $plenoHistorialCertificadosFiltros = [
     'fecha' => '',
     'estado' => 'todos',
     'numero_certificado' => '',
+];
+$plenoHistorialResumenes = [];
+$plenoHistorialResumenesFiltros = [
+    'numero_sesion' => '',
+    'fecha' => '',
+    'estado' => 'todos',
+    'numero_resumen' => '',
 ];
 
 if ($plenoAuth['authorized']) {
@@ -261,6 +269,17 @@ if ($plenoAuth['authorized']) {
             $plenoHistorialCertificados = $historialCertificados->listarHistorial($plenoHistorialCertificadosFiltros);
         }
 
+        if ($vista === 'historial_resumenes') {
+            $plenoHistorialResumenesFiltros = [
+                'numero_sesion' => trim((string)($_GET['numero_sesion'] ?? '')),
+                'fecha' => trim((string)($_GET['fecha'] ?? '')),
+                'estado' => trim((string)($_GET['estado'] ?? 'todos')),
+                'numero_resumen' => trim((string)($_GET['numero_resumen'] ?? '')),
+            ];
+            $historialResumenes = new ResumenEjecutivoPleno();
+            $plenoHistorialResumenes = $historialResumenes->listarHistorial($plenoHistorialResumenesFiltros);
+        }
+
         if ($vista === 'editar_sesion') {
             $plenoSesionActual = $plenoController->obtenerSesion((int)($_GET['id'] ?? 0));
             if ($plenoSesionActual) {
@@ -308,6 +327,8 @@ $data = [
     'pleno_historial_filtros' => $plenoHistorialFiltros,
     'pleno_historial_certificados' => $plenoHistorialCertificados,
     'pleno_historial_certificados_filtros' => $plenoHistorialCertificadosFiltros,
+    'pleno_historial_resumenes' => $plenoHistorialResumenes,
+    'pleno_historial_resumenes_filtros' => $plenoHistorialResumenesFiltros,
     'pleno_crud_error' => $plenoCrudError,
 ];
 

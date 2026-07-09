@@ -40,7 +40,7 @@ require __DIR__ . '/partials/sidebar_pleno.php';
 
     .historiales-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1.25rem;
     }
 
@@ -94,6 +94,12 @@ require __DIR__ . '/partials/sidebar_pleno.php';
             grid-template-columns: 1fr;
         }
     }
+
+    @media (min-width: 768px) and (max-width: 1199.98px) {
+        .historiales-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
 </style>
 
 <div class="container-fluid mt-4 historiales-page">
@@ -126,6 +132,19 @@ require __DIR__ . '/partials/sidebar_pleno.php';
                 <p class="historial-card-text">Consultar certificados de acuerdos generados por sesi&oacute;n.</p>
                 <div class="historial-card-action">
                     <a class="btn btn-primary" href="index.php?vista=historial_certificados">
+                        <i class="fas fa-arrow-right me-2"></i>Abrir historial
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="historial-card">
+            <div class="historial-card-body">
+                <span class="historial-card-icon"><i class="fas fa-file-alt"></i></span>
+                <h2 class="historial-card-title">Historial de Res&uacute;menes Ejecutivos</h2>
+                <p class="historial-card-text">Consultar res&uacute;menes ejecutivos generados por sesi&oacute;n.</p>
+                <div class="historial-card-action">
+                    <a class="btn btn-primary" href="index.php?vista=historial_resumenes">
                         <i class="fas fa-arrow-right me-2"></i>Abrir historial
                     </a>
                 </div>

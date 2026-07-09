@@ -44,6 +44,84 @@ class ResumenEjecutivoPleno
         return is_array($resumen) ? $this->normalizarResumen($resumen) : null;
     }
 
+    public function listarHistorial(array $filtros = []): array
+    {
+        if (!$this->tablaExiste('pleno_resumenes_ejecutivos') || !$this->tablaExiste('sesiones_plenarias')) {
+            return [];
+        }
+
+        $numeroSesion = trim((string)($filtros['numero_sesion'] ?? ''));
+        $fechaFiltro = trim((string)($filtros['fecha'] ?? ''));
+        $estado = strtolower(trim((string)($filtros['estado'] ?? 'todos')));
+        $numeroResumen = trim((string)($filtros['numero_resumen'] ?? ''));
+        $joinUsuario = $this->tablaExiste('t_usuario');
+
+        $selectUsuario = $joinUsuario
+            ? ", TRIM(CONCAT(u.pNombre, ' ', COALESCE(NULLIF(u.sNombre, ''), ''), ' ', u.aPaterno, ' ', u.aMaterno)) AS usuario_generador_nombre"
+            : ", NULL AS usuario_generador_nombre";
+        $joinUsuarioSql = $joinUsuario
+            ? ' LEFT JOIN t_usuario u ON u.idUsuario = r.usuario_generador'
+            : '';
+
+        $sql = "SELECT
+                    r.id_resumen,
+                    r.id_sesion,
+                    r.version,
+                    r.numero_resumen,
+                    r.total_asistentes,
+                    r.total_votaciones,
+                    r.total_acuerdos,
+                    r.usuario_generador,
+                    r.fecha_generacion,
+                    r.estado,
+                    r.nombre_archivo,
+                    r.path_archivo,
+                    s.numero_sesion,
+                    s.tipo_pleno,
+                    s.fecha AS fecha_sesion
+                    $selectUsuario
+                FROM pleno_resumenes_ejecutivos r
+                INNER JOIN sesiones_plenarias s ON s.id_sesion = r.id_sesion
+                $joinUsuarioSql
+                WHERE LOWER(TRIM(r.estado)) <> 'eliminado'";
+        $params = [];
+
+        if ($numeroSesion !== '') {
+            $sql .= ' AND s.numero_sesion LIKE :numero_sesion';
+            $params[':numero_sesion'] = '%' . $numeroSesion . '%';
+        }
+
+        if ($numeroResumen !== '') {
+            $sql .= ' AND r.numero_resumen LIKE :numero_resumen';
+            $params[':numero_resumen'] = '%' . $numeroResumen . '%';
+        }
+
+        if ($fechaFiltro !== '') {
+            $fechaNormalizada = $this->normalizarFechaBusqueda($fechaFiltro);
+            if ($fechaNormalizada !== '') {
+                $sql .= ' AND s.fecha = :fecha';
+                $params[':fecha'] = $fechaNormalizada;
+            }
+        }
+
+        if ($estado !== '' && $estado !== 'todos') {
+            $sql .= ' AND LOWER(TRIM(r.estado)) = :estado';
+            $params[':estado'] = $estado;
+        }
+
+        $sql .= ' ORDER BY r.fecha_generacion DESC, r.id_resumen DESC';
+
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll();
+        } catch (Throwable $e) {
+            return [];
+        }
+
+        return is_array($rows) ? $rows : [];
+    }
+
     public function generarResumen(int $idSesion, int $idUsuario): array
     {
         if ($idSesion <= 0) {
@@ -307,6 +385,34 @@ class ResumenEjecutivoPleno
             'total_acuerdos' => (int)($resumen['total_acuerdos'] ?? 0),
             'raw' => $resumen,
         ];
+    }
+
+    private function normalizarFechaBusqueda(string $busqueda): string
+    {
+        $busqueda = trim($busqueda);
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $busqueda, $matches) === 1) {
+            return $matches[1] . '-' . $matches[2] . '-' . $matches[3];
+        }
+
+        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $busqueda, $matches) === 1) {
+            return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+        }
+
+        return '';
+    }
+
+    private function tablaExiste(string $tabla): bool
+    {
+        $stmt = $this->conn->prepare(
+            'SELECT COUNT(*)
+             FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = :tabla'
+        );
+        $stmt->execute([':tabla' => $tabla]);
+
+        return (int)$stmt->fetchColumn() > 0;
     }
 
     private function asegurarTablaHistorial(): void
